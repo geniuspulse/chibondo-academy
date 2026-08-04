@@ -673,8 +673,9 @@ async function handleIncomingMessage(req, res) {
 
           // Respond to login and registration requests
           const isRegister = lower.startsWith('register');
+          const isReset = lower.startsWith('reset') || lower.includes('forgot');
           const isLogin = lower.includes('login') || lower.includes('verify') || lower.includes('hi') || lower.includes('hello') || lower.includes('start');
-          if (!isLogin && !isRegister) {
+          if (!isLogin && !isRegister && !isReset) {
             console.log('[wa-otp/webhook] ignoring message:', text.slice(0, 50));
             continue;
           }
@@ -711,7 +712,8 @@ async function handleIncomingMessage(req, res) {
 
           // Generate magic link token
           const token = generateToken();
-          const verifyLink = `${APP_URL}/verify-link?t=${token}`;
+          const linkSuffix = isReset ? '&reset=true' : '';
+          const verifyLink = `${APP_URL}/verify-link?t=${token}${linkSuffix}`;
 
           // Store in otp_codes (5-min expiry)
           await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
@@ -725,6 +727,16 @@ async function handleIncomingMessage(req, res) {
           });
 
           // Reply with magic link (free-form text — within 24h window)
+          if (isReset) {
+            const name = userRows.length > 0 ? (userRows[0].full_name || 'there') : 'there';
+            await sendTextReply(fromPhone,
+              `Hi ${name}! 🔒\n\n` +
+              `Tap here to set a new password:\n${verifyLink}\n\n` +
+              `Link expires in 5 minutes. Do not share it with anyone.`
+            );
+            continue;
+          }
+
           if (isRegister) {
             // Registration flow — create the account via wa-register endpoint
             const parts = text.split(/\s+/);

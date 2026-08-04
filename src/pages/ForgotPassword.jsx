@@ -1,68 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2, CheckCircle2, Eye, EyeOff, MessageCircle } from "lucide-react";
+import { Phone, Lock, Loader2, CheckCircle2, Eye, EyeOff, MessageCircle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import SEO from "@/components/SEO";
 import { db } from "@/api/supabaseClient";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Recovery token state (from Supabase redirect)
-  const [recoveryToken, setRecoveryToken] = useState(null);
+  // Set-password state (after magic link verification)
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [resetDone, setResetDone] = useState(false);
 
-  // Check for Supabase recovery redirect (hash contains type=recovery&access_token=...)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.slice(1);
-      const params = new URLSearchParams(hash);
-      const type = params.get('type');
-      const token = params.get('access_token');
-      if (type === 'recovery' && token) {
-        setRecoveryToken(token);
-        window.history.replaceState(null, '', '/forgot-password');
-      }
-    }
-  }, []);
+  // If we got here from a magic link with setpw=1, show the set-password form
+  const isSetPwMode = searchParams.get("setpw") === "1";
 
-  // ── Send recovery email ──
-  const handleSendReset = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!email.trim()) {
-      setError("Please enter your email address");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await db.auth.resetPasswordRequest(
-        email.trim(),
-        `${window.location.origin}/forgot-password`
-      );
-      setSent(true);
-    } catch (err) {
-      // Supabase returns success even for unknown emails (security)
-      setSent(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ── Set new password (after recovery link click) ──
+  // ── Set new password (after WhatsApp magic link verification) ──
   const handleSetPassword = async (e) => {
     e.preventDefault();
     setError("");
@@ -72,20 +36,20 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      await db.auth.resetPassword(newPw, recoveryToken);
+      await db.auth.changePassword(newPw);
       setResetDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 2000);
     } catch (err) {
-      setError(err?.message || "Could not set password. The link may have expired.");
+      setError(err?.message || "Could not set password. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const pwType = showPw ? 'text' : 'password';
+  const pwType = showPw ? "text" : "password";
 
-  // ── Recovery: set new password ──
-  if (recoveryToken && !resetDone) {
+  // ── Set New Password screen ──
+  if (isSetPwMode && !resetDone) {
     return (
       <>
         <SEO title="Set New Password" description="Set a new password for your Chibondo Academy account." />
@@ -149,7 +113,7 @@ export default function ForgotPassword() {
                       : i <= 2 ? 'bg-amber-400'
                       : i <= 3 ? 'bg-yellow-400'
                       : 'bg-emerald-500'
-                    : 'bg-muted'
+                      : 'bg-muted'
                   }`} />
                 ))}
               </div>
@@ -187,17 +151,35 @@ export default function ForgotPassword() {
     );
   }
 
-  // ── Default: request password reset email ──
+  // ── Default: request WhatsApp reset link ──
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 9) {
+      setError("Please enter a valid phone number");
+      return;
+    }
+
+    setSent(true);
+
+    // Open WhatsApp with "Reset" message — webhook will reply with a magic link
+    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || "265991234567";
+    const prefilled = encodeURIComponent("Reset");
+    window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
+  };
+
   return (
     <>
       <SEO
         title="Reset Password"
-        description="Reset your Chibondo Academy account password."
+        description="Reset your Chibondo Academy account password via WhatsApp."
         canonical={`${window.location.origin}/forgot-password`}
       />
       <AuthLayout
         title="Reset your password"
-        subtitle="Enter your email and we'll send a reset link"
+        subtitle="Verify via WhatsApp to set a new password"
         footer={
           <>
             Remembered your login?{" "}
@@ -212,15 +194,14 @@ export default function ForgotPassword() {
         )}
 
         {sent ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-              <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
+              <MessageCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                Check your email
+                WhatsApp is opening…
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                We've sent a password reset link to <span className="font-medium">{email}</span>.
-                Click the link in the email to set a new password.
+                Send the "Reset" message to receive a link. Tap it to set your new password.
               </p>
             </div>
             <Button
@@ -228,49 +209,35 @@ export default function ForgotPassword() {
               variant="outline"
               className="w-full h-10 text-sm"
             >
-              Use a different email
+              Back
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSendReset} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="phone">WhatsApp Number</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
+                  id="phone"
+                  type="tel"
                   autoFocus
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="tel"
+                  placeholder="0991234567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="pl-10 h-12"
                   required
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                We'll send a password reset link to this email. Check your spam folder if you don't see it.
+                Tap below to open WhatsApp with a pre-filled message. Send it and we'll reply with a link to set your new password.
               </p>
             </div>
 
-            <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
-              {loading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending…</>
-              ) : (
-                <><Mail className="w-4 h-4 mr-2" />Send Reset Link</>
-              )}
+            <Button type="submit" className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700">
+              <MessageCircle className="w-4 h-4 mr-2" />Get Reset Link
             </Button>
-
-            <div className="text-center text-xs text-muted-foreground pt-2">
-              <p>Registered with WhatsApp only?</p>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-1 text-green-600 hover:underline font-medium mt-1"
-              >
-                <MessageCircle className="w-3 h-3" /> Use WhatsApp login instead
-              </Link>
-            </div>
           </form>
         )}
       </AuthLayout>

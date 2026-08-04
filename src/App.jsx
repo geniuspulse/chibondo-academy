@@ -30,13 +30,13 @@ if (typeof window !== 'undefined') {
 function RoleHome() {
   const { user } = useOutletContext() ?? {};
 
-  // Supabase sends password-reset links to site_url (homepage).
-  // Redirect to /forgot-password preserving the hash so it can read the recovery token.
+  // Supabase recovery links land here — redirect to forgot-password
+  // (which now uses WhatsApp-based password reset, not email)
   if (typeof window !== 'undefined') {
     const hash = window.location.hash.slice(1);
     const params = new URLSearchParams(hash);
     if (params.get('type') === 'recovery' && params.get('access_token')) {
-      return <Navigate to={`/forgot-password${window.location.hash}`} replace />;
+      return <Navigate to="/forgot-password" replace />;
     }
   }
 

@@ -11,6 +11,7 @@ export default function VerifyLink() {
   const navigate = useNavigate();
   const { isAuthenticated, authChecked } = useAuth();
   const token = searchParams.get("t");
+  const isReset = searchParams.get("reset") === "true";
 
   const [status, setStatus] = useState("verifying"); // verifying | success | error
   const [error, setError] = useState("");
@@ -59,7 +60,7 @@ export default function VerifyLink() {
         }
         setStatus("success");
         setTimeout(() => {
-          window.location.replace(`/dashboard`);
+          window.location.replace(isReset ? `/forgot-password?setpw=1` : `/dashboard`);
         }, 1000);
       } else {
         setError("No token returned. Please try logging in again.");
@@ -94,7 +95,7 @@ export default function VerifyLink() {
               </div>
               <div className="text-center space-y-1">
                 <p className="text-lg font-semibold text-foreground">Verified!</p>
-                <p className="text-sm text-muted-foreground">Redirecting to your dashboard…</p>
+                <p className="text-sm text-muted-foreground">{isReset ? "Redirecting to set your new password…" : "Redirecting to your dashboard…"}</p>
               </div>
             </>
           )}
