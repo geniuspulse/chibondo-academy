@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Smartphone, Loader2, CheckCircle2, AlertCircle, Phone,
-  ShieldCheck, Zap, Crown, Award, GraduationCap, Lock, ChevronRight,
+  ShieldCheck, Zap, Crown, Award, Lock, ChevronRight,
   CreditCard, Receipt, Wifi
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -213,17 +213,6 @@ export default function PayFees() {
         <Link to="/subscription" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to plans
         </Link>
-
-        {/* ── Branded Hero — matches SubscriptionPage ── */}
-        <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-center text-primary-foreground">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3 bg-primary-foreground/15">
-            <GraduationCap className="w-3.5 h-3.5" /> Chibondo Academy
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1">Checkout</h1>
-          <p className="text-primary-foreground/70 text-sm max-w-md mx-auto">
-            Pay your school fees securely via mobile money. No redirects — everything happens right here.
-          </p>
-        </div>
 
         {/* ═════════════════════════════════════════════════════════════════════
             CHECKOUT BODY
