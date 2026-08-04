@@ -82,7 +82,6 @@ export default function PayFees() {
   const amount = pricing?.[planKey] || plan.price || 10000;
   const formatPrice = (n) => n.toLocaleString('en-MW');
   const network = detectNetwork(phone);
-  const features = PLAN_FEATURES[planKey] || PLAN_FEATURES.monthly;
 
   // Pre-fill phone from user profile
   useEffect(() => {
@@ -251,16 +250,6 @@ export default function PayFees() {
                     </div>
                   </div>
 
-                  {/* Features list */}
-                  <div className="space-y-1.5 pt-1">
-                    {features.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-
                   {/* Divider */}
                   <div className="border-t border-border pt-3 space-y-2">
                     <div className="flex justify-between text-sm">
@@ -292,44 +281,26 @@ export default function PayFees() {
                   {/* Phone input */}
                   <div>
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-                      Mobile money number
+                      Enter your mobile money phone number
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium pointer-events-none">
-                        +265
-                      </div>
                       <Input
                         type="tel"
                         inputMode="numeric"
                         autoFocus
-                        placeholder="881234567"
+                        placeholder="Airtel Money or Mpamba number"
                         value={phone}
                         onChange={handlePhoneChange}
-                        className="pl-[4.5rem] h-12 text-base"
+                        className="pl-10 h-12 text-base"
                         onKeyDown={e => e.key === 'Enter' && handlePay()}
                       />
                     </div>
-
-                    {/* Auto-detected network badge */}
-                    {network && phone.length >= 2 && (
-                      <div className="mt-2.5 flex items-center gap-2.5 p-2.5 rounded-lg bg-muted/50 border border-border">
-                        <div className={`w-3 h-3 rounded-full ${network.color}`} />
-                        <span className="text-sm font-medium">{network.name}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">Auto-detected</span>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      </div>
-                    )}
-                    {!network && phone.length >= 2 && (
-                      <p className="mt-2 text-xs text-amber-600">
-                        Could not detect network. Numbers start with 08 (TNM) or 09 (Airtel).
-                      </p>
-                    )}
-                    {!network && phone.length < 2 && (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Enter your number starting with 08 (TNM) or 09 (Airtel)
-                      </p>
-                    )}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {network
+                        ? `${network.name} number where you have the money to pay your fees`
+                        : 'Enter your Airtel Money or Mpamba number where you have the money to pay your fees'}
+                    </p>
                   </div>
 
                   {/* Error */}
@@ -339,26 +310,6 @@ export default function PayFees() {
                       <p className="text-sm text-destructive">{error}</p>
                     </div>
                   )}
-
-                  {/* How it works — steps */}
-                  <div className="space-y-2.5 pt-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">How to pay</p>
-                    <div className="space-y-2">
-                      {[
-                        'Enter your Airtel Money or Mpamba number',
-                        'We send a payment prompt to your phone',
-                        'Enter your MoMo PIN to confirm',
-                        'Your lessons unlock instantly',
-                      ].map((t, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
-                            {i + 1}
-                          </div>
-                          <p className="text-xs text-muted-foreground">{t}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Pay button */}
                   <Button
@@ -407,7 +358,7 @@ export default function PayFees() {
                 <p className="text-lg font-semibold text-foreground">Check your phone</p>
                 <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
                   A {network?.name || 'mobile money'} payment prompt has been sent to{' '}
-                  <span className="font-semibold text-foreground">+265 {phone}</span>.
+                  <span className="font-semibold text-foreground">{phone}</span>.
                 </p>
                 <p className="text-sm font-medium text-primary mt-2">
                   Enter your MoMo PIN to confirm the payment.
