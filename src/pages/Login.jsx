@@ -221,7 +221,7 @@ export default function Login() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                We'll send a verification code to your WhatsApp. If delivery fails, we'll fall back to SMS or show it here.
+                We'll send a verification code to your WhatsApp. If delivery fails, we'll show it here on screen.
               </p>
             </div>
 
@@ -233,7 +233,7 @@ export default function Login() {
               )}
             </Button>
 
-            {/* Hint: if WhatsApp delivery fails, we fall back to SMS or on-screen */}
+            {/* Hint: if WhatsApp delivery fails, we show the code on-screen */}
             <div className="text-center text-xs text-muted-foreground space-y-1">
               <p>Not receiving the code? Send "HI" to our WhatsApp first, then try again.</p>
               <a

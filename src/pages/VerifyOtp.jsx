@@ -16,8 +16,8 @@ export default function VerifyOtp() {
   const isNew = location.state?.isNew || false;
   const isReset = location.state?.isReset || false;
   const mode = location.state?.mode || null;
-  const fallbackCode = location.state?.fallbackCode || null;
-  const deliveryMethod = location.state?.deliveryMethod || null;
+  const [fallbackCode, setFallbackCode] = useState(location.state?.fallbackCode || null);
+  const [deliveryMethod, setDeliveryMethod] = useState(location.state?.deliveryMethod || null);
   const [failCount, setFailCount] = useState(parseInt(localStorage.getItem("otp_fail_count") || "0", 10));
 
   const [code, setCode] = useState("");
@@ -146,7 +146,7 @@ export default function VerifyOtp() {
       const token = data.access_token;
       if (token) {
         setSuccess(true);
-        db.auth.setToken(token);
+        db.auth.setToken(token, data.refresh_token);
 
         // Track referral if code exists (fire and forget)
         if (refCode) {
@@ -181,15 +181,26 @@ export default function VerifyOtp() {
       const res = await fetch("/api/wa-otp?action=send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, mode: mode || undefined }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "Could not resend code. Please try again.");
       } else {
-        startCooldown(30);
-        setTimeout(() => inputRef.current?.focus(), 50);
+        // Update fallback code if WhatsApp delivery failed again
+        if (data.fallback_code) {
+          setFallbackCode(data.fallback_code);
+          setDeliveryMethod(data.delivery_method || 'onscreen');
+          setCode(data.fallback_code);
+          setTimeout(() => handleVerify(data.fallback_code), 300);
+        } else {
+          setFallbackCode(null);
+          setDeliveryMethod(data.delivery_method || 'whatsapp');
+          startCooldown(30);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }
       }
     } catch {
       setError("Could not resend code. Please try again.");
@@ -224,7 +235,7 @@ export default function VerifyOtp() {
                 </>
               ) : deliveryMethod === 'sms' ? (
                 <>
-                  <p className="text-sm text-muted-foreground">A 6-digit code was sent via SMS to</p>
+                  <p className="text-sm text-muted-foreground">A 6-digit code was sent to</p>
                   <p className="font-bold text-foreground mt-0.5">+{phone}</p>
                 </>
               ) : (

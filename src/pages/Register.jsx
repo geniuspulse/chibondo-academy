@@ -149,7 +149,7 @@ export default function Register() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              We'll send a verification code via WhatsApp. If delivery fails, we'll use SMS or show it on screen.
+              We'll send a verification code via WhatsApp. If delivery fails, we'll show it on screen.
             </p>
           </div>
 
