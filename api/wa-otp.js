@@ -139,17 +139,19 @@ async function sendOTP(req, res) {
 
   // Send via WhatsApp Business Cloud API
   try {
-    // Use login_verification template (includes both magic link + code)
+    // Use login_verification template (code in body + magic link as URL button)
+    // Template body: "Your verification code is: {{1}}..."
+    // Template button: "Verify Login" → https://chibondoacademy.com/verify-link?t={{2}}
     const waRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone,
         type: 'template', template: { name: 'login_verification', language: { code: 'en' },
-          components: [{ type: 'body', parameters: [
-            { type: 'text', text: verifyLink },
-            { type: 'text', text: code },
-          ]}] },
+          components: [
+            { type: 'body', parameters: [{ type: 'text', text: code }] },
+            { type: 'button', sub_type: 'url', index: 0, parameters: [{ type: 'text', text: token }] },
+          ]},
       }),
     });
 
