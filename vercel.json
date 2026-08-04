@@ -23,6 +23,18 @@
     },
     "api/notify.js": {
       "maxDuration": 30
+    },
+    "api/direct-charge.js": {
+      "maxDuration": 30
+    },
+    "api/create-payment.js": {
+      "maxDuration": 30
+    },
+    "api/verify-payment.js": {
+      "maxDuration": 30
+    },
+    "api/paychangu-webhook.js": {
+      "maxDuration": 30
     }
   }
 }
