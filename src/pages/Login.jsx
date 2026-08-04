@@ -8,10 +8,12 @@ import AuthLayout from "@/components/AuthLayout";
 import SEO from "@/components/SEO";
 import { getReferralCode } from "@/lib/referralCookie";
 import { db } from "@/api/supabaseClient";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Login() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated, authChecked } = useAuth();
   const refCode = searchParams.get("ref") || getReferralCode();
 
   const [loginMethod, setLoginMethod] = useState("whatsapp"); // whatsapp | email
@@ -29,6 +31,11 @@ export default function Login() {
   useEffect(() => {
     if (refCode) localStorage.setItem("pending_referral_code", refCode.toUpperCase());
   }, [refCode]);
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (authChecked && isAuthenticated) window.location.replace("/dashboard");
+  }, [authChecked, isAuthenticated]);
 
   const recordFailure = () => {
     const count = failedAttempts + 1;

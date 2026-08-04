@@ -5,10 +5,12 @@ import AuthLayout from "@/components/AuthLayout";
 import SEO from "@/components/SEO";
 import { getReferralCode, clearReferralTracking } from "@/lib/referralCookie";
 import { db } from "@/api/supabaseClient";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function VerifyOtp() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, authChecked } = useAuth();
 
   const phone = location.state?.phone || "";
   const name = location.state?.name || "";
@@ -32,6 +34,11 @@ export default function VerifyOtp() {
   const verifying = useRef(false);
 
   // Guard: no phone state → back to login
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (authChecked && isAuthenticated) window.location.replace("/dashboard");
+  }, [authChecked, isAuthenticated]);
+
   useEffect(() => {
     if (!phone) navigate("/login", { replace: true });
   }, [phone]);

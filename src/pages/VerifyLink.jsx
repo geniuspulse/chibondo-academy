@@ -4,14 +4,21 @@ import { Loader2, CheckCircle2, XCircle, MessageCircle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import SEO from "@/components/SEO";
 import { db } from "@/api/supabaseClient";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function VerifyLink() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated, authChecked } = useAuth();
   const token = searchParams.get("t");
 
   const [status, setStatus] = useState("verifying"); // verifying | success | error
   const [error, setError] = useState("");
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (authChecked && isAuthenticated) window.location.replace("/dashboard");
+  }, [authChecked, isAuthenticated]);
 
   useEffect(() => {
     if (!token) {
