@@ -68,6 +68,7 @@ async function sendWhatsAppOTP(phone, name) {
 
   // Try template first, fall back to text
   try {
+    // Use login_verification template (includes both magic link + code)
     const templateRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
@@ -77,33 +78,38 @@ async function sendWhatsAppOTP(phone, name) {
         to: cleanPhone,
         type: 'template',
         template: {
-          name: 'otp_verification',
-          language: { code: 'en_US' },
-          components: [{ type: 'body', parameters: [{ type: 'text', text: code }] }],
+          name: 'login_verification',
+          language: { code: 'en' },
+          components: [{ type: 'body', parameters: [
+            { type: 'text', text: verifyLink },
+            { type: 'text', text: code },
+          ]}],
         },
       }),
     });
 
     if (!templateRes.ok) {
-      console.warn('[wa-register] Template send failed, using text fallback');
-      const textRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+      console.warn('[wa-register] login_verification template failed, trying otp_verification fallback');
+      // Fallback: try old otp_verification template (code only)
+      const otpRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
           to: cleanPhone,
-          type: 'text',
-          text: { body: messageBody },
+          type: 'template',
+          template: {
+            name: 'otp_verification',
+            language: { code: 'en_US' },
+            components: [{ type: 'body', parameters: [{ type: 'text', text: code }] }],
+          },
         }),
       });
 
-      if (!textRes.ok) {
-        console.error('[wa-register] WhatsApp text send failed:', JSON.stringify(await textRes.json().catch(() => ({}))));
-        // Try SMS fallback
-    const smsResult = await sendSMSOTP(phone, code);
-    if (smsResult.ok) return { ok: true, verifyLink, code, delivery_method: 'sms' };
-    return { ok: true, verifyLink, code, delivery_method: 'fallback' };
+      if (!otpRes.ok) {
+        console.error('[wa-register] All template sends failed, returning on-screen code');
+        return { ok: true, verifyLink, code, delivery_method: 'fallback' };
       }
     }
   } catch (err) {

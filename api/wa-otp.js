@@ -139,32 +139,35 @@ async function sendOTP(req, res) {
 
   // Send via WhatsApp Business Cloud API
   try {
+    // Use login_verification template (includes both magic link + code)
     const waRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone,
-        type: 'template', template: { name: 'otp_verification', language: { code: 'en_US' },
-          components: [{ type: 'body', parameters: [{ type: 'text', text: code }] }] },
+        type: 'template', template: { name: 'login_verification', language: { code: 'en' },
+          components: [{ type: 'body', parameters: [
+            { type: 'text', text: verifyLink },
+            { type: 'text', text: code },
+          ]}] },
       }),
     });
 
     if (!waRes.ok) {
       console.error('WhatsApp template send failed:', JSON.stringify(await waRes.json().catch(() => ({}))));
-      const messageBody =
-        `🔐 *Chibondo Academy*\n\n` +
-        `Tap this link to verify your login:\n${verifyLink}\n\n` +
-        `Or enter code: *${code}*\n\n` +
-        `Expires in 5 minutes. Don't share it with anyone.`;
-
+      // Fallback: try old otp_verification template (code only)
       const fallbackRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'text', text: { body: messageBody } }),
+        body: JSON.stringify({
+          messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone,
+          type: 'template', template: { name: 'otp_verification', language: { code: 'en_US' },
+            components: [{ type: 'body', parameters: [{ type: 'text', text: code }] }] },
+        }),
       });
       if (!fallbackRes.ok) {
         console.error('[wa-otp] All WhatsApp delivery methods failed, returning on-screen code');
-        return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Showing code on screen', delivery_method: 'onscreen', fallback_code: code });
+        return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Showing code on screen', delivery_method: 'onscreen', fallback_code: code, verify_link: verifyLink });
       }
     }
   } catch (err) {
