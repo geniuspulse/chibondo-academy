@@ -34,6 +34,14 @@ function normalisePhone(raw) {
   return p;
 }
 
+// PayChangu expects 9-digit phone numbers WITHOUT country code (e.g. 991234567)
+function paychanguPhone(raw) {
+  let p = String(raw).replace(/\D/g, '');
+  if (p.startsWith('265')) p = p.slice(3);
+  if (p.startsWith('0'))   p = p.slice(1);
+  return p; // 9 digits, no country code
+}
+
 // Auto-detect mobile network from phone number prefix
 // Malawi: 08* → TNM (088, 089, 081, etc.), 09* → Airtel (099, 098, 091, etc.)
 function detectOperator(phoneStr) {
@@ -216,7 +224,7 @@ async function chargeMobileMoney(req, res) {
       method: 'POST',
       headers: { Authorization: `Bearer ${PAYCHANGU_SECRET}`, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        mobile: `+${cleanPhone}`,
+        mobile: paychanguPhone(mobile),
         mobile_money_operator_ref_id: resolvedOperatorRefId,
         amount: String(amount),
         charge_id: chargeId,
