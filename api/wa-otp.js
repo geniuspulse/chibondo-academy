@@ -44,38 +44,7 @@ function buildPhoneOrQuery(cleanPhone, extraFields = []) {
 }
 
 
-// ─── SMS Fallback via Africa's Talking ─────────────────────────────────────────
-async function sendSMSOTP(cleanPhone, code) {
-  const AT_KEY      = process.env.AT_API_KEY;
-  const AT_USERNAME = process.env.AT_USERNAME;
-  const AT_SENDER   = process.env.AT_SENDER_ID || 'CHIBONDO';
-  if (!AT_KEY || !AT_USERNAME) return { ok: false, reason: 'not_configured' };
-
-  try {
-    const body = new URLSearchParams({
-      username: AT_USERNAME,
-      to: `+${cleanPhone}`,
-      message: `Chibondo Academy: Your verification code is ${code}. It expires in 5 minutes. Do not share it with anyone.`,
-      from: AT_SENDER,
-    });
-    const smsRes = await fetch('https://api.africastalking.com/version1/messaging', {
-      method: 'POST',
-      headers: { apiKey: AT_KEY, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    });
-    if (smsRes.ok) {
-      const smsData = await smsRes.json().catch(() => ({}));
-      console.log('[wa-otp] SMS sent via Africa\'s Talking:', JSON.stringify(smsData));
-      return { ok: true };
-    }
-    console.error('[wa-otp] SMS send failed:', await smsRes.text());
-    return { ok: false, reason: 'api_error' };
-  } catch (err) {
-    console.error('[wa-otp] SMS error:', err.message);
-    return { ok: false, reason: 'exception' };
-  }
-}
-
+// ─── SEND ────────────────────────────────────────────────────────────────────
 // ─── SEND ────────────────────────────────────────────────────────────────────
 
 async function sendOTP(req, res) {
@@ -194,23 +163,12 @@ async function sendOTP(req, res) {
         body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'text', text: { body: messageBody } }),
       });
       if (!fallbackRes.ok) {
-        console.error('WhatsApp fallback send also failed, trying SMS...');
-        // Try SMS via Africa's Talking
-        const smsResult = await sendSMSOTP(cleanPhone, code);
-        if (smsResult.ok) {
-          return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Verification code sent via SMS', delivery_method: 'sms' });
-        }
-        // Last resort: return the code for on-screen display
-        console.warn('[wa-otp] All delivery methods failed, returning on-screen code');
+        console.error('[wa-otp] All WhatsApp delivery methods failed, returning on-screen code');
         return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Showing code on screen', delivery_method: 'onscreen', fallback_code: code });
       }
     }
   } catch (err) {
-    console.error('WhatsApp send error:', err.message, '— trying SMS...');
-    const smsResult = await sendSMSOTP(cleanPhone, code);
-    if (smsResult.ok) {
-      return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Verification code sent via SMS', delivery_method: 'sms' });
-    }
+    console.error('WhatsApp send error:', err.message, '— returning on-screen code');
     return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Showing code on screen', delivery_method: 'onscreen', fallback_code: code });
   }
 
