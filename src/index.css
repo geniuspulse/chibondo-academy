@@ -184,3 +184,12 @@ html { scroll-behavior: smooth; }
   overflow: hidden;
   /* no extra padding needed — SubjectGroupChat uses calc() height directly */
 }
+
+/* ── NyasaDesk WhatsApp widget — lift above BottomNav on mobile ──
+   The widget hard-codes bottom:24px which sits on top of the bottom nav
+   and hides the Fees button. Push it up on screens where BottomNav shows. */
+@media (max-width: 1023px) {
+  #nyasa-wa-widget {
+    bottom: 72px !important;
+  }
+}
