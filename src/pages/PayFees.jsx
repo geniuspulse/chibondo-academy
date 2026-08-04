@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/AuthContext';
+
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 
@@ -36,7 +37,6 @@ const PLAN_META = {
 export default function PayFees() {
   const { planId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [phone, setPhone] = useState('');
   const [step, setStep] = useState('input');
@@ -84,9 +84,15 @@ export default function PayFees() {
 
   useEffect(() => () => clearInterval(pollRef.current), []);
 
+  const { user, isLoadingAuth, authChecked } = useAuth();
+
   useEffect(() => {
+    // Wait for the auth check to finish before deciding to redirect.
+    // Without this guard, a hard reload (e.g. pull-to-refresh) briefly
+    // sees user=null and bounces to /login before checkUserAuth() resolves.
+    if (!authChecked || isLoadingAuth) return;
     if (!user) navigate('/login?redirect=/pay-fees/' + planKey);
-  }, [user, navigate, planKey]);
+  }, [user, navigate, planKey, authChecked, isLoadingAuth]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handlePhoneChange = (e) => {
@@ -206,7 +212,7 @@ export default function PayFees() {
       <div className="max-w-md mx-auto">
 
         {/* ── Back link ── */}
-        <Link to="/subscription" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
+        <Link to="/fees" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to plans
         </Link>
 
@@ -376,7 +382,7 @@ export default function PayFees() {
                 <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">{error}</p>
               </div>
               <div className="flex gap-2 max-w-xs mx-auto">
-                <Button variant="outline" onClick={() => navigate('/subscription')} className="flex-1">Back to plans</Button>
+                <Button variant="outline" onClick={() => navigate('/fees')} className="flex-1">Back to plans</Button>
                 <Button onClick={handleRetry} className="flex-1">Try again</Button>
               </div>
             </div>

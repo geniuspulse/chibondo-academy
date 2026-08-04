@@ -19,6 +19,7 @@ export default function AppLayout() {
   });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarPhotoOpen, setSidebarPhotoOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleToggle = () => {
     setCollapsed(prev => {
@@ -177,8 +178,16 @@ export default function AppLayout() {
     setPullDistance(0);
     if (dy > pullThreshold && !isRefreshing) {
       setIsRefreshing(true);
-      // Hard reload — actually refreshes everything: data, images, state
-      setTimeout(() => window.location.reload(), 400);
+      // Invalidate all React Query caches so every page refetches fresh data
+      // from the server. This preserves auth state (no redirect to /login)
+      // while still giving the user a "fresh page" experience.
+      queryClient.invalidateQueries().then(() => {
+        // Brief delay so the spinner is visible
+        setTimeout(() => {
+          setIsRefreshing(false);
+          setPullDistance(0);
+        }, 600);
+      });
     }
   }, [isRefreshing]);
 
