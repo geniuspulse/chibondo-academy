@@ -61,7 +61,7 @@ async function sendWhatsAppMessage(phone, message, template) {
       : { messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'text', text: { body: message } };
     await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json` },
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
   } catch (err) {
