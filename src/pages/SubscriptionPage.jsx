@@ -8,6 +8,7 @@ import { Check, GraduationCap, Zap, Crown, Loader2, BookOpen, Calendar, Users, A
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
+import InlineCheckout from '@/components/InlineCheckout';
 
 export default function SubscriptionPage() {
   const { user } = useOutletContext() ?? {};
@@ -22,6 +23,7 @@ export default function SubscriptionPage() {
 
   const [processing, setProcessing] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null); // plan object for inline checkout
 
   const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing'],
@@ -170,39 +172,21 @@ export default function SubscriptionPage() {
     },
   ];
 
-  const initiatePayment = useMutation({
-    mutationFn: async (plan) => {
-      // return_url — Paychangu appends tx_ref as query param on redirect
-      const return_url = `${window.location.origin}/subscription`;
-      const resp = await fetch('/api/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, return_url, user_id: user?.id, email: user?.email,
-          first_name: user?.full_name?.split(' ')[0] || 'Student',
-          last_name: user?.full_name?.split(' ').slice(1).join(' ') || '' }),
-      });
-      const res = await resp.json();
-      if (!res?.checkout_url) throw new Error(res?.error || 'Could not get payment link');
-      return res;
-    },
-    onSuccess: (data) => {
-      setProcessing(false);
-      window.location.href = data.checkout_url || data.data?.checkout_url;
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Payment failed. Please try again.');
-      setProcessing(false);
-    },
-  });
-
   const handlePlanSelect = (planId) => {
     if (!user) {
       toast.error('Please log in to subscribe');
       navigate('/login');
       return;
     }
-    setProcessing(true);
-    initiatePayment.mutate(planId);
+    const selectedPlan = plans.find(p => p.id === planId);
+    if (!selectedPlan) return;
+    setCheckoutPlan(selectedPlan);
+  };
+
+  const handleCheckoutSuccess = (data) => {
+    setCheckoutPlan(null);
+    refetchSubscription();
+    navigate('/dashboard');
   };
 
   const formatPrice = (price) => price.toLocaleString('en-MW');
@@ -400,12 +384,10 @@ export default function SubscriptionPage() {
                 <Button
                   className="w-full"
                   variant={isCurrent ? "secondary" : "default"}
-                  disabled={isCurrent || isLoading || processing || verifying}
+                  disabled={isCurrent || isLoading || verifying}
                   onClick={() => handlePlanSelect(plan.id)}
                 >
-                  {processing ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</>
-                  ) : isCurrent ? 'Current Plan' : `Pay MWK ${formatPrice(plan.price)}`}
+                  {isCurrent ? 'Current Plan' : `Pay MWK ${formatPrice(plan.price)}`}
                 </Button>
               </div>
             );
@@ -451,7 +433,18 @@ export default function SubscriptionPage() {
         </div>
       )}
 
-    </div>
+      </div>
+
+      {/* ── Inline checkout modal ── */}
+      {checkoutPlan && (
+        <InlineCheckout
+          plan={checkoutPlan}
+          user={user}
+          pricing={pricing}
+          onClose={() => setCheckoutPlan(null)}
+          onSuccess={handleCheckoutSuccess}
+        />
+      )}
     </>
   );
 }
