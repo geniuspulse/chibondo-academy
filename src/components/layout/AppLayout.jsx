@@ -132,45 +132,74 @@ export default function AppLayout() {
   const sRoleLabel = enrichedUser?.role === 'admin' ? 'Admin' : enrichedUser?.role === 'teacher' ? 'Tutor' : 'Student';
   const sSettingsPath = enrichedUser?.role === 'admin' ? '/admin/settings' : enrichedUser?.role === 'teacher' ? '/teacher/settings' : '/settings';
 
-  // Pull-to-refresh — invalidate all queries
-  const queryClient = useQueryClient();
+  // Pull-to-refresh — real page reload with visual pull feedback
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [pullDistance, setPullDistance] = React.useState(0);
   const touchStartY = React.useRef(0);
   const isPulling   = React.useRef(false);
+  const pullThreshold = 70; // px needed to trigger refresh
+  const maxPull = 100;      // visual cap
+
+  // Check if the page is scrolled to the very top
+  const isAtTop = () => {
+    return window.scrollY <= 0 && (document.documentElement.scrollTop || document.body.scrollTop) <= 0;
+  };
 
   const onTouchStart = React.useCallback((e) => {
-    if (window.scrollY === 0) {
+    if (isAtTop() && !isRefreshing) {
       touchStartY.current = e.touches[0].clientY;
       isPulling.current = true;
     }
-  }, []);
-  const onTouchEnd = React.useCallback(async (e) => {
-    if (!isPulling.current) return;
+  }, [isRefreshing]);
+
+  const onTouchMove = React.useCallback((e) => {
+    if (!isPulling.current || isRefreshing) return;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (dy > 0 && isAtTop()) {
+      // Resistance: the further you pull, the harder it gets
+      const dampened = Math.min(dy * 0.5, maxPull);
+      setPullDistance(dampened);
+      // Prevent native scroll bounce while pulling
+      if (dy > 10) e.preventDefault();
+    } else if (dy <= 0) {
+      setPullDistance(0);
+      isPulling.current = false;
+    }
+  }, [isRefreshing]);
+
+  const onTouchEnd = React.useCallback((e) => {
+    if (!isPulling.current) {
+      setPullDistance(0);
+      return;
+    }
     isPulling.current = false;
     const dy = (e.changedTouches[0]?.clientY || 0) - touchStartY.current;
-    if (dy > 70 && !isRefreshing) {
+    setPullDistance(0);
+    if (dy > pullThreshold && !isRefreshing) {
       setIsRefreshing(true);
-      await queryClient.invalidateQueries();
-      setTimeout(() => setIsRefreshing(false), 800);
+      // Hard reload — actually refreshes everything: data, images, state
+      setTimeout(() => window.location.reload(), 400);
     }
-  }, [isRefreshing, queryClient]);
-
-  const handlePullRefresh = React.useCallback(async () => {
-    setIsRefreshing(true);
-    await queryClient.invalidateQueries();
-    setTimeout(() => setIsRefreshing(false), 600);
-  }, [queryClient]);
+  }, [isRefreshing]);
 
   return (
     <>
-      {/* Pull-to-refresh indicator */}
+      {/* Pull-to-refresh indicator — visible during pull and refresh */}
       <div
         className="fixed top-0 left-0 right-0 z-[9998] flex items-center justify-center pointer-events-none"
-        style={{ transition: 'opacity 0.2s', opacity: isRefreshing ? 1 : 0, paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        style={{
+          transition: isPulling.current ? 'none' : 'opacity 0.2s, transform 0.2s',
+          opacity: (isRefreshing || pullDistance > 0) ? 1 : 0,
+          transform: `translateY(${isRefreshing ? 20 : Math.max(0, pullDistance - 10)}px)`,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
       >
         <div className="mt-2 flex items-center gap-2 bg-card border border-border rounded-full px-3 py-1.5 shadow-lg text-xs font-medium text-muted-foreground">
-          <RefreshCw className={cn('w-3.5 h-3.5', isRefreshing && 'animate-spin')} />
-          {isRefreshing ? 'Refreshing…' : 'Release to refresh'}
+          <RefreshCw
+            className={cn('w-3.5 h-3.5', (isRefreshing || pullDistance >= pullThreshold) && 'animate-spin')}
+            style={!isRefreshing && pullDistance > 0 && pullDistance < pullThreshold ? { transform: `rotate(${pullDistance * 3.6}deg)` } : {}}
+          />
+          {isRefreshing ? 'Refreshing…' : pullDistance >= pullThreshold ? 'Release to refresh' : 'Pull to refresh'}
         </div>
       </div>
       {/* ── Sidebar avatar lightbox ── */}
@@ -240,6 +269,7 @@ export default function AppLayout() {
           !isGuest && collapsed ? "lg:ml-16" : !isGuest ? "lg:ml-64" : ""
         )}
         onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         <TopBar
