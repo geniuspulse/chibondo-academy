@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Smartphone, Loader2, CheckCircle2, AlertCircle, Phone, ShieldCheck, Zap, Crown, Award } from 'lucide-react';
+import { ArrowLeft, Smartphone, Loader2, CheckCircle2, AlertCircle, Phone, ShieldCheck, Zap, Crown, Award, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/AuthContext';
@@ -10,8 +10,8 @@ import SEO from '@/components/SEO';
 
 // ── Network auto-detection ─────────────────────────────────────────────────────
 // Malawi mobile prefixes (after stripping the leading 0):
-//   88           → TNM Mpamba
-//   99, 98, 91   → Airtel Money
+//   08*  → TNM Mpamba   (088, 089, 081, etc.)
+//   09*  → Airtel Money (099, 098, 097, 091, etc.)
 const OPERATORS = {
   tnm:    { name: 'TNM Mpamba',   ref_id: '27494cb5-ba9e-437f-a114-4e7a7686bcca', short_code: 'tnm' },
   airtel: { name: 'Airtel Money', ref_id: '20be6c20-adeb-4b5b-a7ba-0769820df4fb', short_code: 'airtel' },
@@ -22,15 +22,15 @@ function detectNetwork(phoneStr) {
   if (p.startsWith('265')) p = p.slice(3);
   if (p.startsWith('0'))   p = p.slice(1);
   // p is now the 9-digit number without prefix, e.g. 881234567
-  if (p.startsWith('88'))  return OPERATORS.tnm;
-  if (p.startsWith('99') || p.startsWith('98') || p.startsWith('91')) return OPERATORS.airtel;
+  if (p.startsWith('8'))  return OPERATORS.tnm;     // 088, 089, 081, etc.
+  if (p.startsWith('9'))  return OPERATORS.airtel;  // 099, 098, 091, etc.
   return null;
 }
 
 // ── Plan metadata (mirrors SubscriptionPage) ───────────────────────────────────
 const PLAN_META = {
-  monthly:  { name: 'Monthly',  duration: '1 Month', period: 'per month',  icon: Zap,    months: 1  },
-  annual:   { name: 'Annual',   duration: '1 Year',  period: 'per year',   icon: Crown,  months: 12 },
+  monthly:  { name: 'Monthly',  duration: '1 Month',  period: 'per month',  icon: Zap,    months: 1  },
+  annual:   { name: 'Annual',   duration: '1 Year',   period: 'per year',   icon: Crown,  months: 12 },
   biannual: { name: 'Biannual', duration: '2 Years',  period: 'for 2 years', icon: Award,  months: 24 },
 };
 
@@ -102,12 +102,12 @@ export default function PayFees() {
     setError('');
     const digits = phone.replace(/\D/g, '');
     if (digits.length < 9) {
-      setError('Please enter a valid phone number (e.g. 0991234567)');
+      setError('Please enter a valid phone number (e.g. 0881234567)');
       return;
     }
     const detected = detectNetwork(digits);
     if (!detected) {
-      setError('Could not detect the network. Please check your number — it should start with 088 (TNM), 099 or 091 (Airtel).');
+      setError('Could not detect the network. Your number should start with 08 (TNM) or 09 (Airtel).');
       return;
     }
 
@@ -198,212 +198,207 @@ export default function PayFees() {
   return (
     <>
       <SEO title="Pay School Fees" description="Pay your school fees via mobile money." canonical={`${window.location.origin}/pay-fees/${planKey}`} />
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+      <div className="space-y-6 max-w-4xl mx-auto">
 
-          {/* ── Back link ── */}
-          <Link to="/subscription" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to plans
-          </Link>
+        {/* ── Back link ── */}
+        <Link to="/subscription" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to plans
+        </Link>
 
-          {/* ── Card ── */}
-          <div className="bg-card text-card-foreground rounded-2xl shadow-xl border border-border overflow-hidden">
+        {/* ── Branded Hero — matches SubscriptionPage style ── */}
+        <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-center text-primary-foreground">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3 bg-primary-foreground/15">
+            <GraduationCap className="w-3.5 h-3.5" /> Chibondo Academy
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1">Pay School Fees</h1>
+          <p className="text-primary-foreground/70 text-sm max-w-md mx-auto">
+            Secure mobile money payment — enter your number, confirm on your phone, and unlock instantly.
+          </p>
+        </div>
 
-            {/* Header */}
-            <div className="bg-gradient-to-br from-primary to-primary/80 px-6 py-5 text-primary-foreground">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-lg bg-primary-foreground/15 flex items-center justify-center">
-                  <span className="text-xs font-bold">CA</span>
-                </div>
-                <span className="text-sm font-semibold">Chibondo Academy</span>
-              </div>
-              <h1 className="text-xl font-display font-bold">Pay School Fees</h1>
-              <p className="text-xs text-primary-foreground/70 mt-0.5">Secure mobile money payment</p>
+        {/* ── Plan summary card ── */}
+        <div className="bg-card text-card-foreground rounded-2xl border border-border p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+              <PlanIcon className="w-5 h-5 text-primary" />
             </div>
-
-            {/* Plan summary */}
-            <div className="px-6 py-3.5 bg-muted/50 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <PlanIcon className="w-4.5 h-4.5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">{plan.name} Plan</p>
-                    <p className="text-xs text-muted-foreground">{plan.duration} of access</p>
-                  </div>
-                </div>
-                <p className="text-2xl font-bold font-display text-primary">
-                  MWK {formatPrice(amount)}
-                </p>
-              </div>
+            <div>
+              <p className="text-sm font-semibold">{plan.name} Plan</p>
+              <p className="text-xs text-muted-foreground">{plan.duration} of access</p>
             </div>
+          </div>
+          <p className="text-2xl font-bold font-display text-primary">
+            MWK {formatPrice(amount)}
+          </p>
+        </div>
 
-            {/* ── Body ── */}
-            <div className="p-6">
+        {/* ── Payment card ── */}
+        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border border-border overflow-hidden">
 
-              {/* Step: Enter phone */}
-              {step === 'input' && (
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-                      Mobile money number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium pointer-events-none">
-                        +265
-                      </div>
-                      <Input
-                        type="tel"
-                        inputMode="numeric"
-                        autoFocus
-                        placeholder="991234567"
-                        value={phone}
-                        onChange={handlePhoneChange}
-                        className="pl-[4.5rem] h-12 text-base"
-                        onKeyDown={e => e.key === 'Enter' && handlePay()}
-                      />
+          {/* ── Body ── */}
+          <div className="p-6">
+
+            {/* Step: Enter phone */}
+            {step === 'input' && (
+              <div className="space-y-5">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+                    Mobile money number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium pointer-events-none">
+                      +265
                     </div>
-
-                    {/* Auto-detected network badge */}
-                    {network && phone.length >= 3 && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${network.short_code === 'tnm' ? 'bg-blue-500' : 'bg-red-500'}`} />
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {network.name} detected
-                        </span>
-                      </div>
-                    )}
-                    {!network && phone.length >= 3 && (
-                      <p className="mt-2 text-xs text-amber-600">
-                        Could not detect network. Numbers start with 088 (TNM), 099/091 (Airtel).
-                      </p>
-                    )}
+                    <Input
+                      type="tel"
+                      inputMode="numeric"
+                      autoFocus
+                      placeholder="881234567"
+                      value={phone}
+                      onChange={handlePhoneChange}
+                      className="pl-[4.5rem] h-12 text-base"
+                      onKeyDown={e => e.key === 'Enter' && handlePay()}
+                    />
                   </div>
 
-                  {/* Error */}
-                  {error && (
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                      <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-                      <p className="text-sm text-destructive">{error}</p>
+                  {/* Auto-detected network badge */}
+                  {network && phone.length >= 2 && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${network.short_code === 'tnm' ? 'bg-blue-500' : 'bg-red-500'}`} />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {network.name} detected
+                      </span>
                     </div>
                   )}
-
-                  <Button
-                    onClick={handlePay}
-                    className="w-full h-12 text-base font-semibold"
-                    disabled={phone.replace(/\D/g, '').length < 9 || !network}
-                  >
-                    Pay MWK {formatPrice(amount)}
-                  </Button>
-
-                  {/* Info */}
-                  <div className="bg-muted/50 rounded-xl p-3 space-y-1.5">
-                    <p className="text-xs font-semibold text-foreground">How it works:</p>
-                    <p className="text-xs text-muted-foreground">1. Enter your Airtel Money or Mpamba number</p>
-                    <p className="text-xs text-muted-foreground">2. We'll send a payment prompt to your phone</p>
-                    <p className="text-xs text-muted-foreground">3. Enter your MoMo PIN to confirm the payment</p>
-                    <p className="text-xs text-muted-foreground">4. Your lessons unlock instantly</p>
-                  </div>
-
-                  {/* Trust badges */}
-                  <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Secure
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> No redirect
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Zap className="w-3.5 h-3.5 text-emerald-500" /> Instant access
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Step: Waiting for payment */}
-              {step === 'waiting' && (
-                <div className="space-y-5 text-center py-2">
-                  <div className="relative mx-auto w-24 h-24">
-                    <div className="absolute inset-0 rounded-2xl bg-primary/10 animate-ping opacity-75" style={{ animationDuration: '2s' }} />
-                    <div className="relative w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Smartphone className="w-10 h-10 text-primary" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">Check your phone</p>
-                    <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                      A {network?.name || 'mobile money'} payment prompt has been sent to{' '}
-                      <span className="font-semibold text-foreground">+265 {phone}</span>.
+                  {!network && phone.length >= 2 && (
+                    <p className="mt-2 text-xs text-amber-600">
+                      Could not detect network. Numbers start with 08 (TNM) or 09 (Airtel).
                     </p>
-                    <p className="text-sm font-medium text-primary mt-2">
-                      Enter your MoMo PIN to confirm the payment.
-                    </p>
+                  )}
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                    <p className="text-sm text-destructive">{error}</p>
                   </div>
+                )}
 
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Waiting for confirmation... ({pollCount * 5}s)
-                  </div>
+                <Button
+                  onClick={handlePay}
+                  className="w-full h-12 text-base font-semibold"
+                  disabled={phone.replace(/\D/g, '').length < 9 || !network}
+                >
+                  Pay MWK {formatPrice(amount)}
+                </Button>
 
-                  <Button variant="outline" onClick={() => { clearInterval(pollRef.current); setStep('input'); }} className="w-full">
-                    Cancel payment
-                  </Button>
+                {/* Info */}
+                <div className="bg-muted/50 rounded-xl p-3 space-y-1.5">
+                  <p className="text-xs font-semibold text-foreground">How it works:</p>
+                  <p className="text-xs text-muted-foreground">1. Enter your Airtel Money or Mpamba number</p>
+                  <p className="text-xs text-muted-foreground">2. We'll send a payment prompt to your phone</p>
+                  <p className="text-xs text-muted-foreground">3. Enter your MoMo PIN to confirm the payment</p>
+                  <p className="text-xs text-muted-foreground">4. Your lessons unlock instantly</p>
+                </div>
 
-                  <div className="bg-muted/50 rounded-xl p-3 text-left space-y-1.5">
-                    <p className="text-xs font-semibold text-foreground">Tips:</p>
-                    <p className="text-xs text-muted-foreground">• Make sure you have enough balance</p>
-                    <p className="text-xs text-muted-foreground">• The prompt may take a few seconds to appear</p>
-                    <p className="text-xs text-muted-foreground">• Dial *150*00# (TNM) or *150*01# (Airtel) if you don't see it</p>
+                {/* Trust badges */}
+                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Secure
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> No redirect
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-emerald-500" /> Instant access
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Step: Waiting for payment */}
+            {step === 'waiting' && (
+              <div className="space-y-5 text-center py-2">
+                <div className="relative mx-auto w-24 h-24">
+                  <div className="absolute inset-0 rounded-2xl bg-primary/10 animate-ping opacity-75" style={{ animationDuration: '2s' }} />
+                  <div className="relative w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Smartphone className="w-10 h-10 text-primary" />
                   </div>
                 </div>
-              )}
 
-              {/* Step: Success */}
-              {step === 'success' && (
-                <div className="text-center py-8 space-y-4">
-                  <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-foreground">Payment Confirmed!</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Your {plan.name} subscription is now active. Redirecting to your dashboard...
-                    </p>
-                  </div>
-                  <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
+                <div>
+                  <p className="text-lg font-semibold text-foreground">Check your phone</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                    A {network?.name || 'mobile money'} payment prompt has been sent to{' '}
+                    <span className="font-semibold text-foreground">+265 {phone}</span>.
+                  </p>
+                  <p className="text-sm font-medium text-primary mt-2">
+                    Enter your MoMo PIN to confirm the payment.
+                  </p>
                 </div>
-              )}
 
-              {/* Step: Error */}
-              {step === 'error' && (
-                <div className="text-center py-6 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-                    <AlertCircle className="w-8 h-8 text-destructive" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">Payment failed</p>
-                    <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">{error}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => navigate('/subscription')} className="flex-1">Back to plans</Button>
-                    <Button onClick={handleRetry} className="flex-1">Try again</Button>
-                  </div>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Waiting for confirmation... ({pollCount * 5}s)
                 </div>
-              )}
-            </div>
 
-            {/* Footer */}
-            {step === 'input' && (
-              <div className="px-6 py-3 bg-muted/30 border-t border-border text-center">
-                <p className="text-xs text-muted-foreground">
-                  Powered by Paychangu • Your number is never stored
-                </p>
+                <Button variant="outline" onClick={() => { clearInterval(pollRef.current); setStep('input'); }} className="w-full">
+                  Cancel payment
+                </Button>
+
+                <div className="bg-muted/50 rounded-xl p-3 text-left space-y-1.5">
+                  <p className="text-xs font-semibold text-foreground">Tips:</p>
+                  <p className="text-xs text-muted-foreground">• Make sure you have enough balance</p>
+                  <p className="text-xs text-muted-foreground">• The prompt may take a few seconds to appear</p>
+                  <p className="text-xs text-muted-foreground">• Dial *150*00# (TNM) or *150*01# (Airtel) if you don't see it</p>
+                </div>
+              </div>
+            )}
+
+            {/* Step: Success */}
+            {step === 'success' && (
+              <div className="text-center py-8 space-y-4">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-foreground">Payment Confirmed!</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Your {plan.name} subscription is now active. Redirecting to your dashboard...
+                  </p>
+                </div>
+                <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
+              </div>
+            )}
+
+            {/* Step: Error */}
+            {step === 'error' && (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                  <AlertCircle className="w-8 h-8 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">Payment failed</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">{error}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => navigate('/subscription')} className="flex-1">Back to plans</Button>
+                  <Button onClick={handleRetry} className="flex-1">Try again</Button>
+                </div>
               </div>
             )}
           </div>
+
+          {/* Footer */}
+          {step === 'input' && (
+            <div className="px-6 py-3 bg-muted/30 border-t border-border text-center">
+              <p className="text-xs text-muted-foreground">
+                Powered by Paychangu • Your number is never stored
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -35,14 +35,13 @@ function normalisePhone(raw) {
 }
 
 // Auto-detect mobile network from phone number prefix
-// Malawi: 088 → TNM, 099/098/091 → Airtel
+// Malawi: 08* → TNM (088, 089, 081, etc.), 09* → Airtel (099, 098, 091, etc.)
 function detectOperator(phoneStr) {
   let p = String(phoneStr).replace(/\D/g, '');
   if (p.startsWith('265')) p = p.slice(3);
   if (p.startsWith('0'))   p = p.slice(1);
-  if (p.startsWith('88'))  return { name: 'TNM Mpamba',   ref_id: '27494cb5-ba9e-437f-a114-4e7a7686bcca' };
-  if (p.startsWith('99') || p.startsWith('98') || p.startsWith('91'))
-    return { name: 'Airtel Money', ref_id: '20be6c20-adeb-4b5b-a7ba-0769820df4fb' };
+  if (p.startsWith('8'))  return { name: 'TNM Mpamba',   ref_id: '27494cb5-ba9e-437f-a114-4e7a7686bcca' };
+  if (p.startsWith('9'))  return { name: 'Airtel Money', ref_id: '20be6c20-adeb-4b5b-a7ba-0769820df4fb' };
   return null;
 }
 
