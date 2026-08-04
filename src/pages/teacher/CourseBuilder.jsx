@@ -952,6 +952,14 @@ function LessonEditor({ lesson, subjectId, subjectName, onSaved }) {
 
 A new lesson has been published. Log in to view it:
 chibondoacademy.com`,
+              type: 'template',
+              template: {
+                name: 'new_lesson_published',
+                language: { code: 'en' },
+                components: [{ type: 'body', parameters: [
+                  { type: 'text', text: clean.title },
+                ]}],
+              },
             }),
           }).catch(() => {});
         }

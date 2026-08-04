@@ -156,6 +156,15 @@ ${subject_.trim()}
 ${body.trim()}
 
 Login: chibondoacademy.com`,
+            type: 'template',
+            template: {
+              name: 'admin_notification',
+              language: { code: 'en' },
+              components: [{ type: 'body', parameters: [
+                { type: 'text', text: subject_.trim() },
+                { type: 'text', text: body.trim() },
+              ]}],
+            },
           }),
         });
         const waData = await waRes.json().catch(() => ({}));
