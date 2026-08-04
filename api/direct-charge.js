@@ -160,15 +160,25 @@ async function activateSubscription(uid, plan, amount, chargeRef) {
     const u = Array.isArray(userRows) ? userRows[0] : null;
     if (u?.phone_number && WA_TOKEN && WA_PHONE_ID) {
       const phone = normalisePhone(u.phone_number);
+      const expiryStr = new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json` },
         body: JSON.stringify({
           messaging_product: 'whatsapp', recipient_type: 'individual', to: phone,
-          type: 'text',
-          text: { body: `*Chibondo Academy*\n\n✅ Payment Confirmed!\n\nPlan: ${plan}\nAmount: MWK ${amount.toLocaleString()}\nStatus: Active\nExpires: ${new Date(expiresAt).toLocaleDateString('en-GB')}\n\nYour lessons are now unlocked. Login:\nchibondoacademy.com` },
+          type: 'template',
+          template: {
+            name: 'payment_confirmation',
+            language: { code: 'en' },
+            components: [{ type: 'body', parameters: [
+              { type: 'text', text: plan },
+              { type: 'text', text: amount.toLocaleString() },
+              { type: 'text', text: expiryStr },
+            ]}],
+          },
         }),
       }).catch(() => {});
+    }
     }
   } catch (_) {}
 

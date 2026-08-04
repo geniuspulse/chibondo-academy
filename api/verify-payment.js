@@ -206,15 +206,16 @@ export default async function handler(req, res) {
               headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 messaging_product: 'whatsapp', recipient_type: 'individual',
-                to: cleanPhone, type: 'text',
-                text: { body: `*Chibondo Academy*
-
-✅ Payment Confirmed!
-
-Plan: ${plan}\nAmount: MWK ${amount.toLocaleString()}\nStatus: Active\nExpires: ${new Date(endsAt).toLocaleDateString()}
-
-Your lessons are now unlocked. Login:
-chibondoacademy.com` },
+                to: cleanPhone, type: 'template',
+                template: {
+                  name: 'payment_confirmation',
+                  language: { code: 'en' },
+                  components: [{ type: 'body', parameters: [
+                    { type: 'text', text: plan },
+                    { type: 'text', text: amount.toLocaleString() },
+                    { type: 'text', text: new Date(endsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
+                  ]}],
+                },
               }),
             }).catch(() => {});
           }

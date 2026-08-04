@@ -33,8 +33,9 @@ const DEFAULT_REMINDER_TEMPLATE = {
     {
       type: 'body',
       parameters: [
-        { type: 'text', text: 'student' },      // {{1}} student name
-        { type: 'text', text: 'Chibondo Academy' }, // {{2}} academy name
+        { type: 'text', text: 'Student' },       // {{1}} student name
+        { type: 'text', text: 'Monthly' },        // {{2}} plan
+        { type: 'text', text: '7' },              // {{3}} days left
       ],
     },
   ],
@@ -143,13 +144,15 @@ async function sendSingleWhatsApp(phone, message, opts = {}) {
 
       // Fall back to template
       const template = opts.fallbackTemplate || {
-        ...DEFAULT_REMINDER_TEMPLATE,
+        name: 'payment_reminder',
+        language: { code: 'en' },
         components: [
           {
             type: 'body',
             parameters: [
               { type: 'text', text: opts.studentName || 'Student' },
-              { type: 'text', text: 'Chibondo Academy' },
+              { type: 'text', text: 'Monthly' },
+              { type: 'text', text: '7' },
             ],
           },
         ],

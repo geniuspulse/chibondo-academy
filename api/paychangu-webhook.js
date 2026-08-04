@@ -50,22 +50,19 @@ async function supabasePatch(path, body) {
   });
 }
 
-async function sendWhatsAppMessage(phone, message) {
+async function sendWhatsAppMessage(phone, message, template) {
   if (!WA_TOKEN || !WA_PHONE_ID) return;
   let cleanPhone = phone.replace(/\D/g, '');
   if (cleanPhone.startsWith('0')) cleanPhone = '265' + cleanPhone.slice(1);
   if (!cleanPhone.startsWith('265')) cleanPhone = '265' + cleanPhone;
   try {
+    const body = template
+      ? { messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'template', template }
+      : { messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'text', text: { body: message } };
     await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: cleanPhone,
-        type: 'text',
-        text: { body: message },
-      }),
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json` },
+      body: JSON.stringify(body),
     });
   } catch (err) {
     console.error('[webhook/whatsapp] send error:', err.message);
@@ -111,14 +108,14 @@ async function processReferralCommission(uid, txRef) {
       const affiliateUsers = await supabaseGet(`/users?id=eq.${encodeURIComponent(ref.referrer_id)}&select=phone_number,full_name&limit=1`);
       const affUser = Array.isArray(affiliateUsers) ? affiliateUsers[0] : null;
       if (affUser?.phone_number) {
-        await sendWhatsAppMessage(affUser.phone_number,
-          `*Chibondo Academy*
-
-💰 Commission Earned!
-
-${ref.referred_name || 'Your referral'} just subscribed. You earned MWK ${commissionAmt.toLocaleString()}!
-
-Login: chibondoacademy.com`);
+        await sendWhatsAppMessage(affUser.phone_number, null, {
+          name: 'commission_earned',
+          language: { code: 'en' },
+          components: [{ type: 'body', parameters: [
+            { type: 'text', text: ref.referred_name || 'Your referral' },
+            { type: 'text', text: commissionAmt.toLocaleString() },
+          ]}],
+        });
       }
     } catch (_) {}
   } catch (err) {
@@ -199,18 +196,15 @@ export default async function handler(req, res) {
       const user = Array.isArray(userRows) ? userRows[0] : null;
       if (user?.phone_number) {
         const expiryDate = new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-        await sendWhatsAppMessage(user.phone_number,
-          `*Chibondo Academy*
-
-✅ Payment Confirmed!
-
-Plan: ${plan}
-Amount: MWK ${amount.toLocaleString()}
-Status: Active
-Expires: ${expiryDate}
-
-Your lessons are now unlocked. Login:
-chibondoacademy.com`);
+        await sendWhatsAppMessage(user.phone_number, null, {
+          name: 'payment_confirmation',
+          language: { code: 'en' },
+          components: [{ type: 'body', parameters: [
+            { type: 'text', text: plan },
+            { type: 'text', text: amount.toLocaleString() },
+            { type: 'text', text: expiryDate },
+          ]}],
+        });
       }
     } catch (err) {
       console.error('[webhook/whatsapp] student notification error:', err.message);
