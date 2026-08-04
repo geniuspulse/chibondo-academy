@@ -138,26 +138,27 @@ async function sendOTP(req, res) {
   } catch (err) { console.error('OTP store error:', err.message); return res.status(500).json({ error: 'Failed to generate code' }); }
 
   // Send via WhatsApp Business Cloud API
+  // Primary: login_verification (Authentication category, Copy-code button) — the
+  // reliable, Meta-approved delivery method. Magic link (verifyLink) is still
+  // generated/stored above and works via the /verify-link page for other uses,
+  // but is no longer the primary WhatsApp delivery mechanism.
   try {
-    // Use login_verification template (code in body + magic link as URL button)
-    // Template body: "Your verification code is: {{1}}..."
-    // Template button: "Verify Login" → https://chibondoacademy.com/verify-link?t={{2}}
     const waRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone,
-        type: 'template', template: { name: 'login_verification', language: { code: 'en' },
+        type: 'template', template: { name: 'login_verification', language: { code: 'en_US' },
           components: [
             { type: 'body', parameters: [{ type: 'text', text: code }] },
-            { type: 'button', sub_type: 'url', index: 0, parameters: [{ type: 'text', text: token }] },
+            { type: 'button', sub_type: 'copy_code', index: '0', parameters: [{ type: 'coupon_code', coupon_code: code }] },
           ]},
       }),
     });
 
     if (!waRes.ok) {
       console.error('WhatsApp template send failed:', JSON.stringify(await waRes.json().catch(() => ({}))));
-      // Fallback: try old otp_verification template (code only)
+      // Fallback: try old otp_verification template (code only, no button)
       const fallbackRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },

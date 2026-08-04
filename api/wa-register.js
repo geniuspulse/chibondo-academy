@@ -57,20 +57,11 @@ async function sendWhatsAppOTP(phone, name) {
   }
 
   // Send WhatsApp message with verification link + code
-  const firstName = name ? name.split(' ')[0] : '';
-  const greeting = firstName ? `Hi ${firstName}! ` : '';
-
-  const messageBody =
-    `${greeting}Welcome to *Chibondo Academy*! 🎉\n\n` +
-    `Tap this link to verify and log in:\n${verifyLink}\n\n` +
-    `Or enter code: *${code}*\n\n` +
-    `Expires in 5 minutes. Don't share it with anyone.`;
-
-  // Try template first, fall back to text
+  // Primary: login_verification (Authentication category, Copy-code button) —
+  // the reliable, Meta-approved delivery method. Magic link (verifyLink) is
+  // still generated/stored above and works via the /verify-link page for
+  // other uses, but is no longer the primary WhatsApp delivery mechanism.
   try {
-    // Use login_verification template (code in body + magic link as URL button)
-    // Template body: "Your verification code is: {{1}}..."
-    // Template button: "Verify Login" → https://chibondoacademy.com/verify-link?t={{2}}
     const templateRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
@@ -81,10 +72,10 @@ async function sendWhatsAppOTP(phone, name) {
         type: 'template',
         template: {
           name: 'login_verification',
-          language: { code: 'en' },
+          language: { code: 'en_US' },
           components: [
             { type: 'body', parameters: [{ type: 'text', text: code }] },
-            { type: 'button', sub_type: 'url', index: 0, parameters: [{ type: 'text', text: token }] },
+            { type: 'button', sub_type: 'copy_code', index: '0', parameters: [{ type: 'coupon_code', coupon_code: code }] },
           ],
         },
       }),
@@ -92,7 +83,7 @@ async function sendWhatsAppOTP(phone, name) {
 
     if (!templateRes.ok) {
       console.warn('[wa-register] login_verification template failed, trying otp_verification fallback');
-      // Fallback: try old otp_verification template (code only)
+      // Fallback: try old otp_verification template (code only, no button)
       const otpRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
@@ -115,10 +106,7 @@ async function sendWhatsAppOTP(phone, name) {
       }
     }
   } catch (err) {
-    console.error('[wa-register] WhatsApp send error:', err.message);
-    // Try SMS fallback
-    const smsResult = await sendSMSOTP(phone, code);
-    if (smsResult.ok) return { ok: true, verifyLink, code, delivery_method: 'sms' };
+    console.error('[wa-register] WhatsApp send error:', err.message, '— returning on-screen code');
     return { ok: true, verifyLink, code, delivery_method: 'fallback' };
   }
 
@@ -126,29 +114,6 @@ async function sendWhatsAppOTP(phone, name) {
 }
 
 
-
-// ─── SMS Fallback via Africa's Talking ─────────────────────────────────────────
-async function sendSMSOTP(phone, code) {
-  const AT_KEY      = process.env.AT_API_KEY;
-  const AT_USERNAME = process.env.AT_USERNAME;
-  const AT_SENDER   = process.env.AT_SENDER_ID || 'CHIBONDO';
-  if (!AT_KEY || !AT_USERNAME) return { ok: false };
-
-  try {
-    const body = new URLSearchParams({
-      username: AT_USERNAME,
-      to: `+${phone}`,
-      message: `Chibondo Academy: Your verification code is ${code}. It expires in 5 minutes.`,
-      from: AT_SENDER,
-    });
-    const smsRes = await fetch('https://api.africastalking.com/version1/messaging', {
-      method: 'POST',
-      headers: { apiKey: AT_KEY, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    });
-    return { ok: smsRes.ok };
-  } catch { return { ok: false }; }
-}
 
 // ─── Free Trial Auto-Activation ──────────────────────────────────────────────
 async function maybeCreateTrialSubscription(sb, userId, fullName) {
