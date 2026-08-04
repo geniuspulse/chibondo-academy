@@ -506,10 +506,10 @@ function MessageActionSheet({ msg, isMine, isStaff, onReply, onCopy, onDelete, o
 }
 
 // ── Message Bubble ────────────────────────────────────────────────────────────
-function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAction, isAdmin }) {
+function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAction }) {
   const t         = THEMES[theme] || THEMES.classic;
   const color     = nameColor(msg.author_id);
-  const isStaff   = msg.author_role === 'teacher' || msg.author_role === 'admin' || isAdmin;
+  const isStaff   = msg.author_role === 'teacher' || msg.author_role === 'admin';
   const textColor = t.textColor || '#111';
   const receivedBg = t.received || 'white';
 
@@ -1326,7 +1326,6 @@ export default function SubjectGroupChat() {
                 onReply={setReplyTo}
                 onImageTap={setLightboxUrl}
                 onAction={handleMsgAction}
-                isAdmin={user?.role === 'admin' || user?.role === 'teacher'}
               />
             )
           )}
