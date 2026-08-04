@@ -34,6 +34,18 @@ function normalisePhone(raw) {
   return p;
 }
 
+// Auto-detect mobile network from phone number prefix
+// Malawi: 088 → TNM, 099/098/091 → Airtel
+function detectOperator(phoneStr) {
+  let p = String(phoneStr).replace(/\D/g, '');
+  if (p.startsWith('265')) p = p.slice(3);
+  if (p.startsWith('0'))   p = p.slice(1);
+  if (p.startsWith('88'))  return { name: 'TNM Mpamba',   ref_id: '27494cb5-ba9e-437f-a114-4e7a7686bcca' };
+  if (p.startsWith('99') || p.startsWith('98') || p.startsWith('91'))
+    return { name: 'Airtel Money', ref_id: '20be6c20-adeb-4b5b-a7ba-0769820df4fb' };
+  return null;
+}
+
 function generateChargeId(userId, plan) {
   const ts  = Date.now().toString(36).toUpperCase();
   const uid = (userId || 'ANON').slice(-6).toUpperCase();
@@ -169,8 +181,14 @@ async function chargeMobileMoney(req, res) {
     return res.status(400).json({ error: 'Invalid plan' });
   if (!mobile)
     return res.status(400).json({ error: 'Phone number is required' });
-  if (!operator_ref_id)
-    return res.status(400).json({ error: 'Please select a mobile money operator' });
+  // Auto-detect operator if not explicitly provided
+  let resolvedOperatorRefId = operator_ref_id;
+  if (!resolvedOperatorRefId) {
+    const detected = detectOperator(mobile);
+    if (!detected)
+      return res.status(400).json({ error: 'Could not detect the mobile network from this phone number. Please check and try again.' });
+    resolvedOperatorRefId = detected.ref_id;
+  }
 
   const cleanPhone = normalisePhone(mobile);
   if (cleanPhone.length < 12 || cleanPhone.length > 13)
@@ -200,7 +218,7 @@ async function chargeMobileMoney(req, res) {
       headers: { Authorization: `Bearer ${PAYCHANGU_SECRET}`, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
         mobile: `+${cleanPhone}`,
-        mobile_money_operator_ref_id: operator_ref_id,
+        mobile_money_operator_ref_id: resolvedOperatorRefId,
         amount: String(amount),
         charge_id: chargeId,
         email: email || `${cleanPhone}@chibondoacademy.com`,

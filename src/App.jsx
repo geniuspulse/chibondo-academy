@@ -77,6 +77,7 @@ const DiscussionsPage = lazy(() => import('@/pages/DiscussionsPage'));
 const ProgressPage = lazy(() => import('@/pages/ProgressPage'));
 const ProgressAnalytics = lazy(() => import('@/pages/ProgressAnalytics'));
 const SubscriptionPage = lazy(() => import('@/pages/SubscriptionPage'));
+const PayFees = lazy(() => import('@/pages/PayFees'));
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const LibraryPage = lazy(() => import('@/pages/LibraryPage'));
 const DocumentViewer = lazy(() => import('@/pages/DocumentViewer'));
@@ -198,6 +199,8 @@ const AppRoutes = () => {
         <Route path="/library/read/:resourceId" element={<DocumentViewer />} />
         <Route path="/subscription" element={<SubscriptionPage />} />
         <Route path="/fees" element={<SubscriptionPage />} />
+      <Route path="/pay-fees" element={<PayFees />} />
+      <Route path="/pay-fees/:planId" element={<PayFees />} />
         {/* ── AUTHENTICATED-ONLY ROUTES (redirect to login if guest) ── */}
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/lesson/:lessonId" element={<LessonPage />} />

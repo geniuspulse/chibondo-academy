@@ -8,7 +8,6 @@ import { Check, GraduationCap, Zap, Crown, Loader2, BookOpen, Calendar, Users, A
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
-import InlineCheckout from '@/components/InlineCheckout';
 
 export default function SubscriptionPage() {
   const { user } = useOutletContext() ?? {};
@@ -23,7 +22,6 @@ export default function SubscriptionPage() {
 
   const [processing, setProcessing] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState(null); // plan object for inline checkout
 
   const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing'],
@@ -175,18 +173,10 @@ export default function SubscriptionPage() {
   const handlePlanSelect = (planId) => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      navigate('/login');
+      navigate('/login?redirect=/pay-fees/' + planId);
       return;
     }
-    const selectedPlan = plans.find(p => p.id === planId);
-    if (!selectedPlan) return;
-    setCheckoutPlan(selectedPlan);
-  };
-
-  const handleCheckoutSuccess = (data) => {
-    setCheckoutPlan(null);
-    refetchSubscription();
-    navigate('/dashboard');
+    navigate('/pay-fees/' + planId);
   };
 
   const formatPrice = (price) => price.toLocaleString('en-MW');
@@ -434,17 +424,6 @@ export default function SubscriptionPage() {
       )}
 
       </div>
-
-      {/* ── Inline checkout modal ── */}
-      {checkoutPlan && (
-        <InlineCheckout
-          plan={checkoutPlan}
-          user={user}
-          pricing={pricing}
-          onClose={() => setCheckoutPlan(null)}
-          onSuccess={handleCheckoutSuccess}
-        />
-      )}
     </>
   );
 }
