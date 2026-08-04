@@ -16,12 +16,18 @@ const SUPABASE_SRK      = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const FROM_EMAIL         = 'noreply@chibondoacademy.com';
 const MAX_BATCH         = 50;
 
-// VAPID for push
-webpush.setVapidDetails(
-  'mailto:admin@chibondoacademy.com',
-  process.env.VITE_VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+// VAPID for push (initialised lazily so missing keys don't crash
+// email/push-only requests at module load)
+let _vapidReady = false;
+function ensureVapid() {
+  if (_vapidReady) return;
+  webpush.setVapidDetails(
+    'mailto:admin@chibondoacademy.com',
+    process.env.VITE_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+  _vapidReady = true;
+}
 
 function decodeJwt(token) {
   try {
@@ -111,6 +117,7 @@ export default async function handler(req, res) {
   // CHANNEL: PUSH
   // ═══════════════════════════════════════════════════════════════════════════
   if (channel === 'push') {
+    ensureVapid();
     const { subscriptions, notification } = body;
     if (!subscriptions?.length || !notification) {
       return res.status(400).json({ error: 'Missing subscriptions or notification' });
