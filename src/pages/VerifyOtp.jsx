@@ -71,10 +71,17 @@ export default function VerifyOtp() {
     }
   }, [code]);
 
-  // SMS OTP Credential API (Android Chrome)
+  // SMS OTP Credential API (Android Chrome).
+  // Bounded to 30s: the code SMS normally lands within seconds, and Chrome's
+  // native SMS listener can outlive our own abort() on some Android builds —
+  // if left open indefinitely it can pop the "Allow Chrome to read this
+  // message?" dialog later on a completely different page (e.g. mid-payment)
+  // whenever any SMS with a number sequence arrives. Cutting it short here
+  // keeps that native prompt from leaking into later, unrelated screens.
   useEffect(() => {
     if (!("OTPCredential" in window)) return;
     const ac = new AbortController();
+    const timeoutId = setTimeout(() => ac.abort(), 30000);
     navigator.credentials
       .get({ otp: { transport: ["sms"] }, signal: ac.signal })
       .then(cred => {
@@ -84,7 +91,7 @@ export default function VerifyOtp() {
         }
       })
       .catch(() => {});
-    return () => ac.abort();
+    return () => { clearTimeout(timeoutId); ac.abort(); };
   }, []);
 
   const recordOtpFailure = () => {
