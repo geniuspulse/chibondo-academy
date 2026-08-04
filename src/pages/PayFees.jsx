@@ -3,8 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Smartphone, Loader2, CheckCircle2, AlertCircle, Phone,
-  ShieldCheck, Zap, Crown, Award, Lock, ChevronRight,
-  CreditCard, Receipt, Wifi
+  ShieldCheck, Zap, Crown, Award, Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,12 +12,9 @@ import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 
 // ── Network auto-detection ─────────────────────────────────────────────────────
-// Malawi mobile prefixes (after stripping the leading 0):
-//   08*  → TNM Mpamba   (088, 089, 081, etc.)
-//   09*  → Airtel Money (099, 098, 097, 091, etc.)
 const OPERATORS = {
-  tnm:    { name: 'TNM Mpamba',   ref_id: '27494cb5-ba9e-437f-a114-4e7a7686bcca', short_code: 'tnm',    color: 'bg-blue-500',  ussd: '*150*00#' },
-  airtel: { name: 'Airtel Money', ref_id: '20be6c20-adeb-4b5b-a7ba-0769820df4fb', short_code: 'airtel', color: 'bg-red-500',   ussd: '*150*01#' },
+  tnm:    { name: 'TNM Mpamba',   ref_id: '27494cb5-ba9e-437f-a114-4e7a7686bcca', short_code: 'tnm',    ussd: '*150*00#' },
+  airtel: { name: 'Airtel Money', ref_id: '20be6c20-adeb-4b5b-a7ba-0769820df4fb', short_code: 'airtel', ussd: '*150*01#' },
 };
 
 function detectNetwork(phoneStr) {
@@ -30,17 +26,11 @@ function detectNetwork(phoneStr) {
   return null;
 }
 
-// ── Plan metadata (mirrors SubscriptionPage) ───────────────────────────────────
+// ── Plan metadata ──────────────────────────────────────────────────────────────
 const PLAN_META = {
-  monthly:  { name: 'Monthly',  duration: '1 Month',  period: 'per month',  icon: Zap,    months: 1  },
-  annual:   { name: 'Annual',   duration: '1 Year',   period: 'per year',   icon: Crown,  months: 12 },
-  biannual: { name: 'Biannual', duration: '2 Years',  period: 'for 2 years', icon: Award,  months: 24 },
-};
-
-const PLAN_FEATURES = {
-  monthly: ['All lessons & videos', 'Quizzes & tests', 'Past papers', 'Assignment submissions', 'Progress tracking'],
-  annual:  ['Everything in Monthly', 'Priority support', 'Exam tips & strategies', 'Revision resources'],
-  biannual:['Everything in Annual', 'Certificate of completion', 'Dedicated support', 'Offline access'],
+  monthly:  { name: 'Monthly',  duration: '1 Month',  icon: Zap,    months: 1  },
+  annual:   { name: 'Annual',   duration: '1 Year',   icon: Crown,  months: 12 },
+  biannual: { name: 'Biannual', duration: '2 Years',  icon: Award,  months: 24 },
 };
 
 export default function PayFees() {
@@ -49,9 +39,8 @@ export default function PayFees() {
   const { user } = useAuth();
 
   const [phone, setPhone] = useState('');
-  const [step, setStep] = useState('input'); // input | waiting | success | error
+  const [step, setStep] = useState('input');
   const [error, setError] = useState('');
-  const [chargeData, setChargeData] = useState(null);
   const [pollCount, setPollCount] = useState(0);
   const pollRef = useRef(null);
 
@@ -79,11 +68,11 @@ export default function PayFees() {
   const planKey = planId || 'monthly';
   const plan = PLAN_META[planKey] || PLAN_META.monthly;
   const PlanIcon = plan.icon;
-  const amount = pricing?.[planKey] || plan.price || 10000;
+  const amount = pricing?.[planKey] || 10000;
   const formatPrice = (n) => n.toLocaleString('en-MW');
   const network = detectNetwork(phone);
 
-  // Pre-fill phone from user profile
+  // Pre-fill phone from user profile (strip 265, add 0 prefix)
   useEffect(() => {
     if (user?.phone_number) {
       let p = user.phone_number.replace(/\D/g, '');
@@ -92,10 +81,8 @@ export default function PayFees() {
     }
   }, [user]);
 
-  // Cleanup polling on unmount
   useEffect(() => () => clearInterval(pollRef.current), []);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!user) navigate('/login?redirect=/pay-fees/' + planKey);
   }, [user, navigate, planKey]);
@@ -116,7 +103,7 @@ export default function PayFees() {
     }
     const detected = detectNetwork(digits);
     if (!detected) {
-      setError('Could not detect the network. Your number should start with 08 (TNM) or 09 (Airtel).');
+      setError('Your number should start with 08 (TNM) or 09 (Airtel).');
       return;
     }
 
@@ -145,7 +132,6 @@ export default function PayFees() {
         return;
       }
 
-      setChargeData(data);
       startPolling(data.paychangu_charge_id, data.charge_id);
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -199,7 +185,6 @@ export default function PayFees() {
   const handleRetry = () => {
     setStep('input');
     setError('');
-    setChargeData(null);
     setPollCount(0);
   };
 
@@ -207,123 +192,76 @@ export default function PayFees() {
   return (
     <>
       <SEO title="Checkout — Pay School Fees" description="Secure mobile money checkout for Chibondo Academy." canonical={`${window.location.origin}/pay-fees/${planKey}`} />
-      <div className="space-y-5 max-w-3xl mx-auto">
+      <div className="max-w-md mx-auto">
 
         {/* ── Back link ── */}
-        <Link to="/subscription" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <Link to="/subscription" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to plans
         </Link>
 
-        {/* ═════════════════════════════════════════════════════════════════════
-            CHECKOUT BODY
-           ═════════════════════════════════════════════════════════════════════ */}
+        {/* ═══ INPUT STEP — compact single card ═══ */}
         {step === 'input' && (
-          <div className="grid gap-5 md:grid-cols-5">
-
-            {/* ═══ LEFT: Order Summary ═══ */}
-            <div className="md:col-span-2 space-y-4">
-              <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
-                <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center gap-2">
-                  <Receipt className="w-4 h-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold">Order Summary</h2>
+          <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
+            {/* Plan + price header */}
+            <div className="px-5 py-4 bg-muted/50 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <PlanIcon className="w-4.5 h-4.5 text-primary" />
                 </div>
-                <div className="p-4 space-y-3">
-                  {/* Plan item */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <PlanIcon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold">{plan.name} Plan</p>
-                      <p className="text-xs text-muted-foreground">{plan.duration} of full access</p>
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="border-t border-border pt-3 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium">MWK {formatPrice(amount)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Processing fee</span>
-                      <span className="font-medium text-emerald-600">Free</span>
-                    </div>
-                    <div className="flex justify-between text-base font-bold pt-1 border-t border-border">
-                      <span>Total</span>
-                      <span className="text-primary">MWK {formatPrice(amount)}</span>
-                    </div>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold">{plan.name} Plan</p>
+                  <p className="text-xs text-muted-foreground">{plan.duration}</p>
                 </div>
               </div>
+              <p className="text-lg font-bold text-primary">MWK {formatPrice(amount)}</p>
             </div>
 
-            {/* ═══ RIGHT: Payment ═══ */}
-            <div className="md:col-span-3 space-y-4">
-              <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
-                <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold">Payment Method</h2>
+            {/* Phone input + pay */}
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                  Airtel Money or Mpamba number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="tel"
+                    inputMode="numeric"
+                    autoFocus
+                    placeholder="e.g. 0991234567"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    className="pl-10 h-12 text-base"
+                    onKeyDown={e => e.key === 'Enter' && handlePay()}
+                  />
                 </div>
-                <div className="p-4 space-y-5">
-
-                  {/* Phone input */}
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-                      Enter your mobile money phone number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="tel"
-                        inputMode="numeric"
-                        autoFocus
-                        placeholder="Airtel Money or Mpamba number"
-                        value={phone}
-                        onChange={handlePhoneChange}
-                        className="pl-10 h-12 text-base"
-                        onKeyDown={e => e.key === 'Enter' && handlePay()}
-                      />
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {network
-                        ? `${network.name} number where you have the money to pay your fees`
-                        : 'Enter your Airtel Money or Mpamba number where you have the money to pay your fees'}
-                    </p>
-                  </div>
-
-                  {/* Error */}
-                  {error && (
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                      <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-                      <p className="text-sm text-destructive">{error}</p>
-                    </div>
-                  )}
-
-                  {/* Pay button */}
-                  <Button
-                    onClick={handlePay}
-                    className="w-full h-12 text-base font-semibold"
-                    disabled={phone.replace(/\D/g, '').length < 9 || !network}
-                  >
-                    <Lock className="w-4 h-4 mr-2" />
-                    Pay MWK {formatPrice(amount)}
-                  </Button>
-                </div>
+                {/* Subtle network hint — no bold notice */}
+                {network && (
+                  <p className="mt-1.5 text-xs text-muted-foreground/70">
+                    {network.name} detected
+                  </p>
+                )}
               </div>
 
-              {/* Trust badges */}
-              <div className="flex items-center justify-center gap-5 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Secure
-                </span>
-                <span className="flex items-center gap-1">
-                  <Wifi className="w-3.5 h-3.5 text-emerald-500" /> No redirect
-                </span>
-                <span className="flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5 text-emerald-500" /> Instant access
-                </span>
-              </div>
+              {error && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
+              )}
+
+              <Button
+                onClick={handlePay}
+                className="w-full h-12 text-base font-semibold"
+                disabled={phone.replace(/\D/g, '').length < 9 || !network}
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Pay MWK {formatPrice(amount)}
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                Enter the number where you have the money to pay your fees
+              </p>
             </div>
           </div>
         )}
@@ -331,30 +269,25 @@ export default function PayFees() {
         {/* ═══ Waiting for payment ═══ */}
         {step === 'waiting' && (
           <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
-            <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold">Waiting for confirmation</h2>
-            </div>
             <div className="p-6 space-y-5 text-center">
-              <div className="relative mx-auto w-24 h-24">
+              <div className="relative mx-auto w-20 h-20">
                 <div className="absolute inset-0 rounded-2xl bg-primary/10 animate-ping opacity-75" style={{ animationDuration: '2s' }} />
-                <div className="relative w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Smartphone className="w-10 h-10 text-primary" />
+                <div className="relative w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Smartphone className="w-9 h-9 text-primary" />
                 </div>
               </div>
 
               <div>
-                <p className="text-lg font-semibold text-foreground">Check your phone</p>
+                <p className="text-base font-semibold text-foreground">Check your phone</p>
                 <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                  A {network?.name || 'mobile money'} payment prompt has been sent to{' '}
+                  A {network?.name || 'mobile money'} prompt was sent to{' '}
                   <span className="font-semibold text-foreground">{phone}</span>.
                 </p>
                 <p className="text-sm font-medium text-primary mt-2">
-                  Enter your MoMo PIN to confirm the payment.
+                  Enter your MoMo PIN to confirm.
                 </p>
               </div>
 
-              {/* Progress bar */}
               <div className="max-w-xs mx-auto">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
                   <span>Waiting for confirmation</span>
@@ -370,15 +303,14 @@ export default function PayFees() {
 
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Listening for payment confirmation...
+                Listening for confirmation...
               </div>
 
               <Button variant="outline" onClick={() => { clearInterval(pollRef.current); setStep('input'); }} className="w-full max-w-xs mx-auto">
                 Cancel payment
               </Button>
 
-              <div className="bg-muted/50 rounded-xl p-3 text-left space-y-1.5 max-w-sm mx-auto">
-                <p className="text-xs font-semibold text-foreground">Tips:</p>
+              <div className="bg-muted/50 rounded-xl p-3 text-left space-y-1 max-w-sm mx-auto">
                 <p className="text-xs text-muted-foreground">• Make sure you have enough balance</p>
                 <p className="text-xs text-muted-foreground">• The prompt may take a few seconds to appear</p>
                 <p className="text-xs text-muted-foreground">• Dial {network?.ussd || '*150*00#'} if you don't see it</p>
@@ -390,18 +322,16 @@ export default function PayFees() {
         {/* ═══ Success ═══ */}
         {step === 'success' && (
           <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
-            <div className="p-8 text-center space-y-5">
-              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+            <div className="p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
               <div>
-                <p className="text-xl font-bold text-foreground">Payment Confirmed!</p>
+                <p className="text-lg font-semibold text-foreground">Payment confirmed!</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your {plan.name} subscription is now active. Redirecting to your dashboard...
+                  Your {plan.name} subscription is active. Redirecting to dashboard...
                 </p>
               </div>
-
-              {/* Receipt summary */}
               <div className="bg-muted/50 rounded-xl p-4 max-w-xs mx-auto text-left space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Plan</span>
@@ -411,10 +341,6 @@ export default function PayFees() {
                   <span className="text-muted-foreground">Amount</span>
                   <span className="font-medium">MWK {formatPrice(amount)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span className="font-medium">{plan.duration}</span>
-                </div>
                 <div className="flex justify-between text-sm pt-2 border-t border-border">
                   <span className="text-muted-foreground">Status</span>
                   <span className="font-medium text-emerald-600 flex items-center gap-1">
@@ -422,7 +348,6 @@ export default function PayFees() {
                   </span>
                 </div>
               </div>
-
               <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
             </div>
           </div>
@@ -444,15 +369,6 @@ export default function PayFees() {
                 <Button onClick={handleRetry} className="flex-1">Try again</Button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ── Footer ── */}
-        {step === 'input' && (
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3" /> Powered by Paychangu • Your number is never stored
-            </p>
           </div>
         )}
       </div>
