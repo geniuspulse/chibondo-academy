@@ -99,7 +99,6 @@ export default function Login() {
             phone: data.phone || digits,
             refCode: refCode || null,
             mode: "login",
-            fallbackCode: data.fallback_code || null,
             deliveryMethod: data.delivery_method || null,
           },
         });
@@ -240,7 +239,6 @@ export default function Login() {
               )}
             </Button>
 
-            {/* Hint: if WhatsApp delivery fails, we show the code on-screen */}
             <div className="text-center text-xs text-muted-foreground space-y-1">
               <p>Not receiving the code? Send "HI" to our WhatsApp first, then try again.</p>
               <a

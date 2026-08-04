@@ -138,11 +138,17 @@ async function sendOTP(req, res) {
   } catch (err) { console.error('OTP store error:', err.message); return res.status(500).json({ error: 'Failed to generate code' }); }
 
   // Send via WhatsApp Business Cloud API
-  // Primary: login_verification (Authentication category, Copy-code button) — the
-  // reliable, Meta-approved delivery method. Magic link (verifyLink) is still
-  // generated/stored above and works via the /verify-link page for other uses,
-  // but is no longer the primary WhatsApp delivery mechanism.
+  // Delivery priority:
+  //   1. login_verification template (Authentication, Copy-code button) — needs template approval
+  //   2. otp_verification template (code only) — needs template approval
+  //   3. Free-form text message — works WITHOUT template approval, but ONLY if the
+  //      user has messaged our business number within the last 24 hours ( Meta's
+  //      24-hour customer service window). This is the secure fallback: the code
+  //      goes to the user's actual WhatsApp on their phone, not a browser screen.
+  //   4. If all three fail → return an error telling the user to message the
+  //      business number first so the 24h window opens.
   try {
+    // Attempt 1: login_verification template
     const waRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
@@ -156,29 +162,64 @@ async function sendOTP(req, res) {
       }),
     });
 
-    if (!waRes.ok) {
-      console.error('WhatsApp template send failed:', JSON.stringify(await waRes.json().catch(() => ({}))));
-      // Fallback: try old otp_verification template (code only, no button)
-      const fallbackRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone,
-          type: 'template', template: { name: 'otp_verification', language: { code: 'en_US' },
-            components: [{ type: 'body', parameters: [{ type: 'text', text: code }] }] },
-        }),
-      });
-      if (!fallbackRes.ok) {
-        console.error('[wa-otp] All WhatsApp delivery methods failed, returning on-screen code');
-        return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Showing code on screen', delivery_method: 'onscreen', fallback_code: code, verify_link: verifyLink });
-      }
+    if (waRes.ok) {
+      return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Verification code sent via WhatsApp', delivery_method: 'whatsapp' });
     }
-  } catch (err) {
-    console.error('WhatsApp send error:', err.message, '— returning on-screen code');
-    return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Showing code on screen', delivery_method: 'onscreen', fallback_code: code });
-  }
+    console.error('[wa-otp] login_verification template failed:', JSON.stringify(await waRes.json().catch(() => ({}))));
 
-  return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Verification code sent via WhatsApp', delivery_method: 'whatsapp' });
+    // Attempt 2: otp_verification template
+    const otpRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone,
+        type: 'template', template: { name: 'otp_verification', language: { code: 'en_US' },
+          components: [{ type: 'body', parameters: [{ type: 'text', text: code }] }] },
+      }),
+    });
+
+    if (otpRes.ok) {
+      return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Verification code sent via WhatsApp', delivery_method: 'whatsapp' });
+    }
+    console.error('[wa-otp] otp_verification template failed:', JSON.stringify(await otpRes.json().catch(() => ({}))));
+
+    // Attempt 3: Free-form text message (works within 24h customer service window)
+    const messageBody =
+      `*Chibondo Academy*\n\n` +
+      `Your verification code is: *${code}*\n\n` +
+      `Or tap to verify: ${verifyLink}\n\n` +
+      `Expires in 5 minutes. Do not share it with anyone.`;
+
+    const textRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'text', text: { body: messageBody } }),
+    });
+
+    if (textRes.ok) {
+      return res.status(200).json({ ok: true, phone: cleanPhone, message: 'Verification code sent via WhatsApp', delivery_method: 'whatsapp' });
+    }
+    console.error('[wa-otp] free-form text also failed:', JSON.stringify(await textRes.json().catch(() => ({}))));
+
+    // All delivery methods failed — user likely hasn't messaged the business
+    // number recently, so the 24h window is closed AND templates aren't approved.
+    // Do NOT show the code on screen (security risk). Instead instruct the user.
+    return res.status(200).json({
+      ok: true, phone: cleanPhone,
+      message: 'Could not deliver code via WhatsApp.',
+      delivery_method: 'initiate_required',
+      verify_link: verifyLink,
+    });
+
+  } catch (err) {
+    console.error('WhatsApp send error:', err.message);
+    return res.status(200).json({
+      ok: true, phone: cleanPhone,
+      message: 'Could not deliver code via WhatsApp.',
+      delivery_method: 'initiate_required',
+      verify_link: verifyLink,
+    });
+  }
 }
 
 // ─── VERIFY ──────────────────────────────────────────────────────────────────

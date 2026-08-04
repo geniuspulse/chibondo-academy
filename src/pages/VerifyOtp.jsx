@@ -18,7 +18,6 @@ export default function VerifyOtp() {
   const isNew = location.state?.isNew || false;
   const isReset = location.state?.isReset || false;
   const mode = location.state?.mode || null;
-  const [fallbackCode, setFallbackCode] = useState(location.state?.fallbackCode || null);
   const [deliveryMethod, setDeliveryMethod] = useState(location.state?.deliveryMethod || null);
   const [failCount, setFailCount] = useState(parseInt(localStorage.getItem("otp_fail_count") || "0", 10));
 
@@ -43,13 +42,9 @@ export default function VerifyOtp() {
     if (!phone) navigate("/login", { replace: true });
   }, [phone]);
 
-  // Auto-focus input (skip if fallback code is pre-filled)
+  // Auto-focus input on mount
   useEffect(() => {
-    if (fallbackCode) {
-      setCode(fallbackCode);
-      // Auto-verify immediately
-      setTimeout(() => handleVerify(fallbackCode), 300);
-    } else {
+    if (deliveryMethod !== 'initiate_required') {
       setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, []);
@@ -203,15 +198,8 @@ export default function VerifyOtp() {
       if (!res.ok) {
         setError(data.error || "Could not resend code. Please try again.");
       } else {
-        // Update fallback code if WhatsApp delivery failed again
-        if (data.fallback_code) {
-          setFallbackCode(data.fallback_code);
-          setDeliveryMethod(data.delivery_method || 'onscreen');
-          setCode(data.fallback_code);
-          setTimeout(() => handleVerify(data.fallback_code), 300);
-        } else {
-          setFallbackCode(null);
-          setDeliveryMethod(data.delivery_method || 'whatsapp');
+        setDeliveryMethod(data.delivery_method || 'whatsapp');
+        if (data.delivery_method !== 'initiate_required') {
           startCooldown(30);
           setTimeout(() => inputRef.current?.focus(), 50);
         }
@@ -241,16 +229,20 @@ export default function VerifyOtp() {
                   : <MessageCircle className="w-8 h-8 text-accent" />}
             </div>
             <div>
-              {deliveryMethod === 'onscreen' && fallbackCode ? (
+              {deliveryMethod === 'initiate_required' ? (
                 <>
-                  <p className="text-sm text-muted-foreground">WhatsApp delivery failed. Your verification code is:</p>
-                  <p className="font-bold text-foreground mt-1 text-2xl tracking-widest font-mono">{fallbackCode}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Enter this code above to continue. Expires in 5 minutes.</p>
-                </>
-              ) : deliveryMethod === 'sms' ? (
-                <>
-                  <p className="text-sm text-muted-foreground">A 6-digit code was sent to</p>
-                  <p className="font-bold text-foreground mt-0.5">+{phone}</p>
+                  <p className="text-sm text-muted-foreground">We couldn't deliver your code automatically.</p>
+                  <p className="text-sm text-muted-foreground mt-2">Please send any message to our WhatsApp number first, then tap resend:</p>
+                  <a
+                    href={`https://wa.me/${phone ? '265' + phone.replace(/^\+?265/, '') : ''}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Message us on WhatsApp
+                  </a>
+                  <p className="text-xs text-muted-foreground mt-3">After sending a message, tap resend below to receive your code.</p>
                 </>
               ) : (
                 <>

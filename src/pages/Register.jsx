@@ -68,7 +68,6 @@ export default function Register() {
           name: fullName.trim(),
           refCode: refCode || null,
           isNew: true,
-          fallbackCode: data.fallback_code || null,
           deliveryMethod: data.delivery_method || null,
         },
       });
