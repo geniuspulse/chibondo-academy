@@ -166,12 +166,7 @@ export default function Login() {
           </div>
         )}
 
-        {sent && (
-          <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-sm text-center">
-            <Loader2 className="w-4 h-4 inline mr-1 animate-spin" />
-            Sending verification…
-          </div>
-        )}
+
 
         {/* WhatsApp login */}
         {loginMethod === "whatsapp" && (
@@ -273,6 +268,10 @@ export default function Login() {
                 <><Mail className="w-4 h-4 mr-2" />Sign In</>
               )}
             </Button>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Registered with WhatsApp? Set a password in Settings → Security to log in here on any device.
+            </p>
           </form>
         )}
 

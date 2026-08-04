@@ -529,23 +529,31 @@ function NotificationsPanel({ user }) {
   );
 }
 
-function SecurityPanel() {
+function SecurityPanel({ user }) {
   const [currentPw, setCurrentPw] = useState('');
   const [newPw,     setNewPw]     = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [showPw,    setShowPw]    = useState(false);
   const [saving,    setSaving]    = useState(false);
+  const [passwordSet, setPasswordSet] = useState(false);
+
+  // WhatsApp-registered users have auto-generated emails and no password.
+  // They can set one directly (no current password needed) to enable email
+  // login on other devices.
+  const isWaUser = isPlaceholderEmail(user?.email);
 
   const save = async (e) => {
     e.preventDefault();
-    if (!currentPw)          return toast.error('Enter your current password');
+    if (!isWaUser && !passwordSet && !currentPw)
+      return toast.error('Enter your current password');
     if (newPw.length < 6)    return toast.error('New password must be at least 6 characters');
     if (newPw !== confirmPw) return toast.error('Passwords do not match');
     setSaving(true);
     try {
-      await db.auth.changePassword({ currentPassword: currentPw, newPassword: newPw });
-      toast.success('Password updated successfully');
+      await db.auth.changePassword(newPw);
+      toast.success(isWaUser ? 'Password set! You can now log in with email on any device.' : 'Password updated successfully');
       setCurrentPw(''); setNewPw(''); setConfirmPw('');
+      setPasswordSet(true);
     } catch (err) {
       toast.error(err?.message || 'Could not update password');
     } finally { setSaving(false); }
@@ -555,21 +563,35 @@ function SecurityPanel() {
 
   return (
     <form onSubmit={save} className="space-y-4">
-      <Field label="Current Password">
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type={pwType}
-            value={currentPw}
-            onChange={e => setCurrentPw(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            className="w-full h-11 rounded-xl border bg-background pl-9 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
-      </Field>
+      {/* Show the user's login email so they know what to use */}
+      <div className="rounded-xl border bg-muted/30 p-4">
+        <p className="text-xs text-muted-foreground mb-1">Your login email</p>
+        <p className="text-sm font-medium text-foreground break-all">{user?.email || '—'}</p>
+        {isWaUser && (
+          <p className="text-xs text-muted-foreground mt-2">
+            This is your auto-generated email. Set a password below to log in on other devices.
+          </p>
+        )}
+      </div>
 
-      <Field label="New Password">
+      {/* Only show current password field for users who already have a password */}
+      {!isWaUser && (
+        <Field label="Current Password">
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type={pwType}
+              value={currentPw}
+              onChange={e => setCurrentPw(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="w-full h-11 rounded-xl border bg-background pl-9 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+        </Field>
+      )}
+
+      <Field label={isWaUser && !passwordSet ? 'Set Password' : 'New Password'}>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -590,14 +612,14 @@ function SecurityPanel() {
         </div>
       </Field>
 
-      <Field label="Confirm New Password">
+      <Field label="Confirm Password">
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type={pwType}
             value={confirmPw}
             onChange={e => setConfirmPw(e.target.value)}
-            placeholder="Re-enter new password"
+            placeholder="Re-enter password"
             autoComplete="new-password"
             className="w-full h-11 rounded-xl border bg-background pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
@@ -620,7 +642,16 @@ function SecurityPanel() {
         </div>
       )}
 
-      <SaveBtn loading={saving} label="Change Password" icon={Lock} />
+      {isWaUser && !passwordSet && (
+        <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border border-blue-300/70 bg-blue-50/60 dark:bg-blue-900/10">
+          <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-700 dark:text-blue-400">
+            Set a password to log in on other devices using your email above. Your WhatsApp login still works too.
+          </p>
+        </div>
+      )}
+
+      <SaveBtn loading={saving} label={isWaUser && !passwordSet ? 'Set Password' : 'Change Password'} icon={Lock} />
     </form>
   );
 }
@@ -642,7 +673,7 @@ export default function StudentSettings() {
     profile:       <ProfilePanel       user={user} checkUserAuth={checkUserAuth} />,
     academic:      <AcademicPanel      user={user} />,
     notifications: <NotificationsPanel user={user} />,
-    security:      <SecurityPanel />,
+    security:      <SecurityPanel user={user} />,
   }[tab];
 
   return (
