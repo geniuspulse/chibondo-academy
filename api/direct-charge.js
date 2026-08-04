@@ -163,7 +163,7 @@ async function activateSubscription(uid, plan, amount, chargeRef) {
       const expiryStr = new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json` },
+        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messaging_product: 'whatsapp', recipient_type: 'individual', to: phone,
           type: 'template',
@@ -178,7 +178,6 @@ async function activateSubscription(uid, plan, amount, chargeRef) {
           },
         }),
       }).catch(() => {});
-    }
     }
   } catch (_) {}
 

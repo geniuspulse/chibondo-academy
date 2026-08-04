@@ -16,10 +16,6 @@ const SUPABASE_SRK      = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const FROM_EMAIL         = 'noreply@chibondoacademy.com';
 const MAX_BATCH         = 50;
 
-const AT_API_KEY      = process.env.AT_API_KEY;
-const AT_USERNAME     = process.env.AT_USERNAME || 'sandbox';
-const AT_SENDER_ID    = process.env.AT_SENDER_ID;
-
 // VAPID for push
 webpush.setVapidDetails(
   'mailto:admin@chibondoacademy.com',
@@ -145,36 +141,6 @@ export default async function handler(req, res) {
       }
     });
     return res.status(200).json({ message: `Sent to ${succeeded}/${subscriptions.length}`, succeeded, failed, expiredSubs });
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CHANNEL: SMS (Africa's Talking)
-  // ═══════════════════════════════════════════════════════════════════════════
-  if (channel === 'sms') {
-    const { phone, student_name, amount, payment_link } = body;
-    if (!phone) return res.status(400).json({ error: 'Missing phone number' });
-    const link = payment_link || 'https://chibondoacademy.com/subscription';
-    const message = `Hi ${student_name || 'Student'}, complete your payment of MWK ${amount || ''} to unlock your lessons: ${link}`;
-    try {
-      const smsRes = await fetch(`https://api.africastalking.com/version1/messaging`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'apiKey': AT_API_KEY,
-        },
-        body: new URLSearchParams({
-          username: AT_USERNAME,
-          to: phone.startsWith('+') ? phone : '+' + phone,
-          message,
-          ...(AT_SENDER_ID ? { from: AT_SENDER_ID } : {}),
-        }),
-      });
-      const smsData = await smsRes.json().catch(() => ({}));
-      return res.status(smsRes.ok ? 200 : 500).json(smsRes.ok ? { success: true, data: smsData } : { error: 'SMS send failed' });
-    } catch (err) {
-      console.error('notify/sms error:', err);
-      return res.status(500).json({ error: 'Failed to send SMS' });
-    }
   }
 
   return res.status(400).json({ error: `Unknown channel: ${channel}` });

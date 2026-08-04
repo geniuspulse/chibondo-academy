@@ -143,7 +143,6 @@ export default function AdminSubscriptions() {
   const [grantOpen, setGrantOpen]       = useState(false);
   const [markPaidOpen, setMarkPaidOpen] = useState(false);
   const [sendingRecovery, setSendingRecovery] = useState(null);
-  const [sendingSms, setSendingSms]     = useState(null);
   const [nudgingAll, setNudgingAll]     = useState(false);
   const [historyStudent, setHistoryStudent] = useState(null); // { id, name }
   const [grantStudentEmail, setGrantStudentEmail] = useState('');
@@ -348,30 +347,6 @@ export default function AdminSubscriptions() {
       toast.success(`Recovery email sent to ${email}`);
     } catch (e) { toast.error(e.message || 'Failed to send recovery email'); }
     finally { setSendingRecovery(null); }
-  };
-
-  // ── Send SMS nudge ────────────────────────────────────────────────────────
-  const handleSendSms = async (payment) => {
-    const phone = payment.student_phone || profileMap[payment.student_id]?.phone_number || '';
-    if (!phone) { toast.error('No phone number for this student'); return; }
-    setSendingSms(payment.id);
-    try {
-      const smsRes = await fetch('/api/notify?channel=sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone,
-          student_name: payment.student_name || userMap[payment.student_id]?.full_name || '',
-          amount: payment.amount,
-          payment_link: 'https://chibondoacademy.com/fees',
-        }),
-      });
-      const res = await smsRes.json();
-      if (!smsRes.ok || res?.error) throw new Error(res?.error || 'SMS failed');
-      updatePaymentMutation.mutate({ id: payment.id, data: { last_nudge_at: new Date().toISOString(), nudge_count: (payment.nudge_count || 0) + 1 } });
-      toast.success(`SMS sent to ${phone}`);
-    } catch (e) { toast.error(e.message || 'Failed to send SMS'); }
-    finally { setSendingSms(null); }
   };
 
   // ── Nudge All ─────────────────────────────────────────────────────────────
