@@ -98,18 +98,32 @@ async function getPricing() {
 
 // ── Subscription activation (shared with verify-payment.js logic) ─────────────
 async function activateSubscription(uid, plan, amount, chargeRef) {
+  const subId = `sub-${chargeRef}`;
+
+  // Idempotency guard — the frontend polls every 5s and can fire overlapping
+  // verify() requests on slow mobile networks. Without this check, a second
+  // concurrent call would re-run "deactivate all active subs for this
+  // student" AFTER the first call already created+activated this exact
+  // subscription, immediately expiring it (its own duplicate insert then
+  // gets silently ignored, leaving the student with no active subscription).
+  const existing = await sbGet(`/subscriptions?id=eq.${encodeURIComponent(subId)}&limit=1`);
+  if (Array.isArray(existing) && existing.length > 0) {
+    return { expiresAt: existing[0].expires_at };
+  }
+
   const months = PLAN_MONTHS[plan] || 1;
   const now = new Date();
   const startsAt = now.toISOString();
   const expiresAt = new Date(new Date().setMonth(now.getMonth() + months)).toISOString();
 
-  // Deactivate existing active subscriptions
-  await sbPatch(`/subscriptions?student_id=eq.${encodeURIComponent(uid)}&status=eq.active`,
+  // Deactivate existing active subscriptions (excluding the one we're about
+  // to create, which can't exist yet — kept for clarity/safety)
+  await sbPatch(`/subscriptions?student_id=eq.${encodeURIComponent(uid)}&status=eq.active&id=neq.${encodeURIComponent(subId)}`,
     { status: 'expired', updated_date: now.toISOString() });
 
   // Create new subscription
   await sbPost('/subscriptions', {
-    id: `sub-${chargeRef}`,
+    id: subId,
     student_id: uid, plan, status: 'active', amount, currency: 'MWK',
     starts_at: startsAt, expires_at: expiresAt,
     created_date: now.toISOString(), updated_date: now.toISOString(),

@@ -43,6 +43,7 @@ export default function PayFees() {
   const [error, setError] = useState('');
   const [pollCount, setPollCount] = useState(0);
   const pollRef = useRef(null);
+  const isVerifyingRef = useRef(false);
 
   // ── Fetch pricing ─────────────────────────────────────────────────────────
   const { data: pricing } = useQuery({
@@ -145,6 +146,12 @@ export default function PayFees() {
     const maxAttempts = 24;
 
     pollRef.current = setInterval(async () => {
+      // Skip this tick if the previous verify() request hasn't resolved yet —
+      // slow mobile connections can make a single request take longer than
+      // the 5s interval, and firing overlapping requests can double-activate
+      // (and then immediately expire) the subscription on the server.
+      if (isVerifyingRef.current) return;
+
       attempts++;
       setPollCount(attempts);
 
@@ -155,6 +162,7 @@ export default function PayFees() {
         return;
       }
 
+      isVerifyingRef.current = true;
       try {
         const res = await fetch('/api/direct-charge?action=verify', {
           method: 'POST',
@@ -178,7 +186,10 @@ export default function PayFees() {
           setError('Payment was not completed. Please try again.');
           setStep('error');
         }
-      } catch (_) {}
+      } catch (_) {
+      } finally {
+        isVerifyingRef.current = false;
+      }
     }, 5000);
   };
 
@@ -220,7 +231,7 @@ export default function PayFees() {
             <div className="p-5 space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                  Airtel Money or Mpamba number
+                  Enter your phone number
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -284,7 +295,7 @@ export default function PayFees() {
                   <span className="font-semibold text-foreground">{phone}</span>.
                 </p>
                 <p className="text-sm font-medium text-primary mt-2">
-                  Enter your MoMo PIN to confirm.
+                  Enter your {network?.short_code === 'tnm' ? 'Mpamba' : 'Airtel Money'} PIN to confirm.
                 </p>
               </div>
 
