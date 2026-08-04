@@ -46,35 +46,12 @@ export default function Register() {
     }
 
     setLoading(true);
-    try {
-      const res = await fetch("/api/wa-otp?action=send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: digits }),
-      });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to send. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      navigate("/verify-otp", {
-        replace: true,
-        state: {
-          phone: data.phone || digits,
-          name: fullName.trim(),
-          refCode: refCode || null,
-          isNew: true,
-          deliveryMethod: data.delivery_method || null,
-        },
-      });
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
-    }
+    // Redirect to WhatsApp with a pre-filled message to the business number.
+    // The webhook will catch it and reply with a verification magic link.
+    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567';
+    const prefilled = encodeURIComponent(`Register ${digits} ${fullName.trim()}`);
+    window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
   };
 
   return (
@@ -148,14 +125,14 @@ export default function Register() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              We'll send a verification code via WhatsApp. If delivery fails, we'll show it on screen.
+              Tap below to open WhatsApp with a pre-filled message. Send it and we'll reply with a verification link.
             </p>
           </div>
 
           <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
             {loading
               ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending…</>
-              : <><MessageCircle className="w-4 h-4 mr-2" />Create Account</>}
+              : <><MessageCircle className="w-4 h-4 mr-2" />Continue with WhatsApp</>}
           </Button>
 
           <p className="text-center text-xs text-gray-500">

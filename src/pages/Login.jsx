@@ -64,49 +64,15 @@ export default function Login() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch("/api/wa-otp?action=send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: digits, mode: "login" }),
-      });
+    resetFailures();
+    setSent(true);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.needsRegistration) {
-          const count = recordFailure();
-          const remaining = 3 - count;
-          setError(
-            `No account found with this WhatsApp number. ` +
-            `Register a new account or try email login below. ` +
-            (remaining > 0 ? `(${remaining} attempt${remaining !== 1 ? "s" : ""} left before redirect)` : "Redirecting to registration…")
-          );
-        } else {
-          setError(data.error || "Failed to send. Please try again.");
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Success — reset fail counter
-      resetFailures();
-      setSent(true);
-      setTimeout(() => {
-        navigate("/verify-otp", {
-          state: {
-            phone: data.phone || digits,
-            refCode: refCode || null,
-            mode: "login",
-            deliveryMethod: data.delivery_method || null,
-          },
-        });
-      }, 600);
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
-    }
+    // Redirect to WhatsApp with a pre-filled message to the business number.
+    // This opens the 24-hour customer service window so we can reply with a
+    // magic login link as free-form text — no template approval needed.
+    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567';
+    const prefilled = encodeURIComponent(`Login`);
+    window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
   };
 
   // ── Email login ──
@@ -209,7 +175,7 @@ export default function Login() {
 
         {/* WhatsApp login */}
         {loginMethod === "whatsapp" && (
-          <form onSubmit={handleWhatsAppSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="phone">WhatsApp Number</Label>
               <div className="relative">
@@ -223,34 +189,37 @@ export default function Login() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="pl-10 h-12"
-                  required
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                We'll send a verification code to your WhatsApp. If delivery fails, we'll show it here on screen.
+                Tap below to open WhatsApp with a pre-filled message. Send it and we'll reply with a login link.
               </p>
             </div>
 
-            <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
-              {loading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending…</>
-              ) : (
-                <><MessageCircle className="w-4 h-4 mr-2" />Send Verification Code</>
-              )}
-            </Button>
-
-            <div className="text-center text-xs text-muted-foreground space-y-1">
-              <p>Not receiving the code? Send "HI" to our WhatsApp first, then try again.</p>
-              <a
-                href={`https://wa.me/${import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567'}?text=${encodeURIComponent("HI Chibondo Academy! I'd like to verify my account.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-green-600 hover:underline font-medium"
-              >
-                <MessageCircle className="w-3 h-3" /> Message us on WhatsApp
-              </a>
-            </div>
-          </form>
+            {!sent ? (
+              <Button onClick={handleWhatsAppSubmit} className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700">
+                <MessageCircle className="w-4 h-4 mr-2" />Get Login Link
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                    WhatsApp is opening…
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Send the pre-filled message to receive your login link, then tap it to log in.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setSent(false)}
+                  variant="outline"
+                  className="w-full h-10 text-sm"
+                >
+                  Back
+                </Button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Email login */}

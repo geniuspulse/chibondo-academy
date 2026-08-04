@@ -1,8 +1,14 @@
 /**
- * WhatsApp OTP — Combined Send + Verify (Vercel Serverless Function)
+ * WhatsApp OTP & Webhook — Combined Serverless Function
  *
- * POST /api/wa-otp  with  { action: "send", phone: "265991234567" }
- * POST /api/wa-otp  with  { action: "verify", phone, code?, token?, name? }
+ * GET  /api/wa-otp?action=check-uniqueness   — phone/email uniqueness check
+ * POST /api/wa-otp  { action: "send", phone } — generate & send OTP (templates)
+ * POST /api/wa-otp  { action: "verify", ... }  — verify code/token, issue session
+ * GET  /api/wa-otp?hub.mode=subscribe&...     — Meta webhook verification
+ * POST /api/wa-otp  { entry: [...] }          — Meta incoming message webhook
+ *
+ * Incoming messages with body "login" trigger a magic-link reply (free-form
+ * text within the 24h customer service window — no template approval needed).
  *
  * Merged to stay under the Vercel Hobby plan's 12-function limit.
  */
@@ -615,19 +621,205 @@ async function checkUniqueness(req, res) {
   }
 }
 
+// ─── WEBHOOK: Incoming WhatsApp Messages ───────────────────────────────────
+// Meta sends a GET for webhook subscription verification, then POST events
+// when users message the business number.  When a user sends "login" (or
+// similar), we reply with a one-tap magic link — free-form text within the
+// 24-hour customer service window, so no template approval is needed.
+
+async function handleWebhookVerification(req, res) {
+  const mode      = req.query['hub.mode'];
+  const token     = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  const VERIFY_TOKEN = process.env.WA_WEBHOOK_VERIFY_TOKEN || 'chibondo_webhook_2026';
+
+  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+    console.log('[wa-otp/webhook] verification OK');
+    return res.status(200).send(challenge);
+  }
+  console.error('[wa-otp/webhook] verification failed', { mode, hasToken: !!token });
+  return res.status(403).json({ error: 'Webhook verification failed' });
+}
+
+async function handleIncomingMessage(req, res) {
+  // Always 200 OK to Meta quickly so they don't retry
+  res.status(200).json({ received: true });
+
+  const body = req.body;
+  if (!body?.entry) return;
+
+  const WA_TOKEN   = process.env.WA_ACCESS_TOKEN;
+  const WA_PHONE_ID = process.env.WA_PHONE_NUMBER_ID;
+  const APP_URL    = process.env.APP_URL || 'https://chibondoacademy.com';
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!WA_TOKEN || !WA_PHONE_ID || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    console.error('[wa-otp/webhook] missing env vars');
+    return;
+  }
+
+  try {
+    for (const entry of body.entry) {
+      const changes = entry.changes || [];
+      for (const change of changes) {
+        const messages = change?.value?.messages;
+        if (!messages?.length) continue;
+
+        for (const msg of messages) {
+          const fromPhone = msg.from;           // e.g. "265991234567"
+          const text     = msg.text?.body?.trim() || '';
+          const lower     = text.toLowerCase();
+
+          // Respond to login and registration requests
+          const isRegister = lower.startsWith('register');
+          const isLogin = lower.includes('login') || lower.includes('verify') || lower.includes('hi') || lower.includes('hello') || lower.includes('start');
+          if (!isLogin && !isRegister) {
+            console.log('[wa-otp/webhook] ignoring message:', text.slice(0, 50));
+            continue;
+          }
+
+          console.log('[wa-otp/webhook] login request from', fromPhone, ':', text.slice(0, 80));
+
+          // Look up the user by phone number
+          const autoEmail      = `${fromPhone}@chibondoacademy.com`;
+          const waPrefixEmail   = `wa_${fromPhone}@chibondoacademy.com`;
+          const headers = {
+            apikey: SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          };
+
+          const phoneQuery = `or=(phone_number.eq.+${fromPhone},phone_number.eq.${fromPhone},email.eq.${autoEmail},email.eq.${waPrefixEmail})`;
+          const userRes = await fetch(`${SUPABASE_URL}/rest/v1/users?${phoneQuery}&limit=1`, { headers });
+          const userRows = userRes.ok ? await userRes.json() : [];
+
+          // Rate limit: check last OTP for this phone
+          const recentRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/otp_codes?phone=eq.${fromPhone}&order=created_at.desc&limit=1`,
+            { headers }
+          );
+          if (recentRes.ok) {
+            const recent = await recentRes.json();
+            if (recent.length > 0) {
+              const ageSeconds = (Date.now() - new Date(recent[0].created_at).getTime()) / 1000;
+              if (ageSeconds < 60) {
+                await sendTextReply(fromPhone, `Please wait ${Math.ceil(60 - ageSeconds)}s before requesting another link.`);
+                continue;
+              }
+            }
+          }
+
+          // Generate magic link token
+          const token = generateToken();
+          const verifyLink = `${APP_URL}/verify-link?t=${token}`;
+
+          // Store in otp_codes (5-min expiry)
+          await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+            body: JSON.stringify({
+              phone: fromPhone, token,
+              expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+              used: false,
+            }),
+          });
+
+          // Reply with magic link (free-form text — within 24h window)
+          if (isRegister) {
+            // Registration flow — create the account via wa-register endpoint
+            const parts = text.split(/\s+/);
+            const regPhone = parts[1] || fromPhone;
+            const regName  = parts.slice(2).join(' ') || 'Student';
+            try {
+              const regRes = await fetch(`${APP_URL}/api/wa-register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: regPhone, full_name: regName }),
+              });
+              const regData = await regRes.json().catch(() => ({}));
+              if (regRes.ok && regData.ok) {
+                await sendTextReply(fromPhone,
+                  `Welcome to Chibondo Academy, ${regName}! 🎉\n\n` +
+                  `Tap here to verify and log in:\n${verifyLink}\n\n` +
+                  `Link expires in 5 minutes.`
+                );
+              } else {
+                await sendTextReply(fromPhone,
+                  `Hi ${regName}! 👋\n\n` +
+                  `Tap here to verify your number:\n${verifyLink}\n\n` +
+                  `Link expires in 5 minutes.`
+                );
+              }
+            } catch (regErr) {
+              console.error('[wa-otp/webhook] register call failed:', regErr.message);
+              await sendTextReply(fromPhone,
+                `Welcome! 🎓\n\nTap here to verify:\n${verifyLink}\n\n` +
+                `Expires in 5 minutes.`
+              );
+            }
+          } else if (userRows.length > 0) {
+            const name = userRows[0].full_name || 'there';
+            await sendTextReply(fromPhone,
+              `Hi ${name}! 👋\n\n` +
+              `Tap here to log in to Chibondo Academy:\n${verifyLink}\n\n` +
+              `Link expires in 5 minutes. Do not share it with anyone.`
+            );
+          } else {
+            await sendTextReply(fromPhone,
+              `Welcome to Chibondo Academy! 🎓\n\n` +
+              `We don't have an account for this number yet.\n` +
+              `Register here: ${APP_URL}/register\n\n` +
+              `Or tap: ${verifyLink} to verify your number first.`
+            );
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[wa-otp/webhook] error:', err.message);
+  }
+}
+
+async function sendTextReply(to, message) {
+  const WA_TOKEN    = process.env.WA_ACCESS_TOKEN;
+  const WA_PHONE_ID = process.env.WA_PHONE_NUMBER_ID;
+  try {
+    await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', recipient_type: 'individual',
+        to, type: 'text', text: { body: message },
+      }),
+    });
+  } catch (err) {
+    console.error('[wa-otp/webhook] reply failed:', err.message);
+  }
+}
+
 // ─── ROUTER ──────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  const action = req.query.action || req.body?.action;
+  // Meta webhook verification (GET)
+  if (req.method === 'GET') {
+    const action = req.query.action;
+    if (action === 'check-uniqueness') return checkUniqueness(req, res);
+    // If hub.mode is present, it's Meta webhook verification
+    if (req.query['hub.mode']) return handleWebhookVerification(req, res);
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  // check-uniqueness is a GET endpoint
-  if (action === 'check-uniqueness') return checkUniqueness(req, res);
+  // POST requests
+  if (req.method === 'POST') {
+    // Meta incoming message webhook (has entry array, no action field)
+    if (req.body?.entry && !req.body?.action && !req.query.action) {
+      return handleIncomingMessage(req, res);
+    }
+    const action = req.query.action || req.body?.action;
+    if (action === 'send')    return sendOTP(req, res);
+    if (action === 'verify') return verifyOTP(req, res);
+    return res.status(400).json({ error: 'Invalid action' });
+  }
 
-  // All other actions require POST
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  if (action === 'send') return sendOTP(req, res);
-  if (action === 'verify') return verifyOTP(req, res);
-
-  return res.status(400).json({ error: 'Invalid action. Use ?action=send, ?action=verify, or ?action=check-uniqueness' });
+  return res.status(405).json({ error: 'Method not allowed' });
 }
