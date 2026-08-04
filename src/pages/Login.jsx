@@ -88,7 +88,13 @@ export default function Login() {
       setSent(true);
       setTimeout(() => {
         navigate("/verify-otp", {
-          state: { phone: data.phone || digits, refCode: refCode || null, mode: "login" },
+          state: {
+            phone: data.phone || digits,
+            refCode: refCode || null,
+            mode: "login",
+            fallbackCode: data.fallback_code || null,
+            deliveryMethod: data.delivery_method || null,
+          },
         });
       }, 600);
     } catch (err) {
@@ -191,7 +197,7 @@ export default function Login() {
         {sent && (
           <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-sm text-center">
             <Loader2 className="w-4 h-4 inline mr-1 animate-spin" />
-            Sending verification via WhatsApp…
+            Sending verification…
           </div>
         )}
 
@@ -215,7 +221,7 @@ export default function Login() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                We'll send a verification link and code to your WhatsApp. Tap the link for instant login, or enter the code.
+                We'll send a verification code to your WhatsApp. If delivery fails, we'll fall back to SMS or show it here.
               </p>
             </div>
 
@@ -223,9 +229,22 @@ export default function Login() {
               {loading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending…</>
               ) : (
-                <><MessageCircle className="w-4 h-4 mr-2" />Send via WhatsApp</>
+                <><MessageCircle className="w-4 h-4 mr-2" />Send Verification Code</>
               )}
             </Button>
+
+            {/* Hint: if WhatsApp delivery fails, we fall back to SMS or on-screen */}
+            <div className="text-center text-xs text-muted-foreground space-y-1">
+              <p>Not receiving the code? Send "HI" to our WhatsApp first, then try again.</p>
+              <a
+                href={`https://wa.me/${import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567'}?text=${encodeURIComponent("HI Chibondo Academy! I'd like to verify my account.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-green-600 hover:underline font-medium"
+              >
+                <MessageCircle className="w-3 h-3" /> Message us on WhatsApp
+              </a>
+            </div>
           </form>
         )}
 

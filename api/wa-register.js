@@ -100,17 +100,47 @@ async function sendWhatsAppOTP(phone, name) {
 
       if (!textRes.ok) {
         console.error('[wa-register] WhatsApp text send failed:', JSON.stringify(await textRes.json().catch(() => ({}))));
-        return { ok: false, error: 'Failed to send WhatsApp message' };
+        // Try SMS fallback
+    const smsResult = await sendSMSOTP(phone, code);
+    if (smsResult.ok) return { ok: true, verifyLink, code, delivery_method: 'sms' };
+    return { ok: true, verifyLink, code, delivery_method: 'fallback' };
       }
     }
   } catch (err) {
     console.error('[wa-register] WhatsApp send error:', err.message);
-    return { ok: false, error: 'Failed to send WhatsApp message' };
+    // Try SMS fallback
+    const smsResult = await sendSMSOTP(phone, code);
+    if (smsResult.ok) return { ok: true, verifyLink, code, delivery_method: 'sms' };
+    return { ok: true, verifyLink, code, delivery_method: 'fallback' };
   }
 
   return { ok: true, verifyLink };
 }
 
+
+
+// ─── SMS Fallback via Africa's Talking ─────────────────────────────────────────
+async function sendSMSOTP(phone, code) {
+  const AT_KEY      = process.env.AT_API_KEY;
+  const AT_USERNAME = process.env.AT_USERNAME;
+  const AT_SENDER   = process.env.AT_SENDER_ID || 'CHIBONDO';
+  if (!AT_KEY || !AT_USERNAME) return { ok: false };
+
+  try {
+    const body = new URLSearchParams({
+      username: AT_USERNAME,
+      to: `+${phone}`,
+      message: `Chibondo Academy: Your verification code is ${code}. It expires in 5 minutes.`,
+      from: AT_SENDER,
+    });
+    const smsRes = await fetch('https://api.africastalking.com/version1/messaging', {
+      method: 'POST',
+      headers: { apiKey: AT_KEY, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    return { ok: smsRes.ok };
+  } catch { return { ok: false }; }
+}
 
 // ─── Free Trial Auto-Activation ──────────────────────────────────────────────
 async function maybeCreateTrialSubscription(sb, userId, fullName) {
@@ -290,17 +320,22 @@ export default async function handler(req, res) {
       // Existing account — send WhatsApp verification link
       const waResult = await sendWhatsAppOTP(normPhone, existingRow.full_name || full_name);
       if (waResult.ok) {
+        const deliveryMsg = waResult.delivery_method === 'sms'
+          ? `Welcome back, ${existingRow.full_name || full_name}! I've sent a verification code to your phone via SMS. Use it to log in here: ${APP_URL}/login?ref=AGENT`
+          : waResult.delivery_method === 'fallback'
+            ? `Welcome back, ${existingRow.full_name || full_name}! Your verification code is *${waResult.code}*. Enter it here to log in: ${APP_URL}/verify-otp?ref=AGENT`
+            : `Welcome back, ${existingRow.full_name || full_name}! I've sent a login link to your WhatsApp. Check your messages and tap the link to log in. 📲`;
         return res.status(200).json({
           ok: true,
           already_registered: true,
-          message: `Welcome back, ${existingRow.full_name || full_name}! I've sent a login link to your WhatsApp. Check your messages and tap the link to log in. 📲`,
+          message: deliveryMsg,
         });
       }
       // Fallback: direct them to login page
       return res.status(200).json({
         ok: true,
         already_registered: true,
-        message: `Welcome back, ${existingRow.full_name || full_name}! You already have an account. Log in here: ${APP_URL}/login?ref=AGENT — just enter your phone number and we'll send you a WhatsApp link.`,
+        message: `Welcome back, ${existingRow.full_name || full_name}! You already have an account. Log in here: ${APP_URL}/login?ref=AGENT — just enter your phone number.`,
       });
     }
 
@@ -365,10 +400,15 @@ export default async function handler(req, res) {
     const waResult = await sendWhatsAppOTP(normPhone, full_name);
 
     if (waResult.ok) {
+      const deliveryMsg = waResult.delivery_method === 'sms'
+        ? `You're now a student at *The Chibondo Academy*! 🎉\n\nI've sent a verification code to your phone via SMS. Enter it here to log in: ${APP_URL}/verify-otp?ref=AGENT\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`
+        : waResult.delivery_method === 'fallback'
+          ? `You're now a student at *The Chibondo Academy*! 🎉\n\nYour verification code is *${waResult.code}*. Enter it here to log in: ${APP_URL}/verify-otp?ref=AGENT\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`
+          : `You're now a student at *The Chibondo Academy*! 🎉\n\nI've sent a verification link to your WhatsApp. Tap it to log in — no password needed!\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`;
       return res.status(200).json({
         ok: true,
         already_registered: false,
-        message: `You're now a student at *The Chibondo Academy*! 🎉\n\nI've sent a verification link to your WhatsApp. Tap it to log in — no password needed!\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`,
+        message: deliveryMsg,
       });
     }
 
@@ -376,7 +416,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       already_registered: false,
-      message: `You're now a student at *The Chibondo Academy*! 🎉\n\nLog in here: ${APP_URL}/login?ref=AGENT — enter your phone number and we'll send you a WhatsApp link.\n\nAfter logging in, choose a plan to unlock your lessons. Welcome aboard!`,
+      message: `You're now a student at *The Chibondo Academy*! 🎉\n\nLog in here: ${APP_URL}/login?ref=AGENT — enter your phone number.\n\nAfter logging in, choose a plan to unlock your lessons. Welcome aboard!`,
     });
 
   } catch (err) {

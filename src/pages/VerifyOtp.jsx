@@ -16,6 +16,8 @@ export default function VerifyOtp() {
   const isNew = location.state?.isNew || false;
   const isReset = location.state?.isReset || false;
   const mode = location.state?.mode || null;
+  const fallbackCode = location.state?.fallbackCode || null;
+  const deliveryMethod = location.state?.deliveryMethod || null;
   const [failCount, setFailCount] = useState(parseInt(localStorage.getItem("otp_fail_count") || "0", 10));
 
   const [code, setCode] = useState("");
@@ -34,9 +36,15 @@ export default function VerifyOtp() {
     if (!phone) navigate("/login", { replace: true });
   }, [phone]);
 
-  // Auto-focus input
+  // Auto-focus input (skip if fallback code is pre-filled)
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 150);
+    if (fallbackCode) {
+      setCode(fallbackCode);
+      // Auto-verify immediately
+      setTimeout(() => handleVerify(fallbackCode), 300);
+    } else {
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
   }, []);
 
   // Initial cooldown countdown
@@ -208,8 +216,23 @@ export default function VerifyOtp() {
                   : <MessageCircle className="w-8 h-8 text-accent" />}
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">A 6-digit code was sent via WhatsApp to</p>
-              <p className="font-bold text-foreground mt-0.5">+{phone}</p>
+              {deliveryMethod === 'onscreen' && fallbackCode ? (
+                <>
+                  <p className="text-sm text-muted-foreground">WhatsApp delivery failed. Your verification code is:</p>
+                  <p className="font-bold text-foreground mt-1 text-2xl tracking-widest font-mono">{fallbackCode}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Enter this code above to continue. Expires in 5 minutes.</p>
+                </>
+              ) : deliveryMethod === 'sms' ? (
+                <>
+                  <p className="text-sm text-muted-foreground">A 6-digit code was sent via SMS to</p>
+                  <p className="font-bold text-foreground mt-0.5">+{phone}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">A 6-digit code was sent via WhatsApp to</p>
+                  <p className="font-bold text-foreground mt-0.5">+{phone}</p>
+                </>
+              )}
             </div>
           </div>
 

@@ -63,7 +63,14 @@ export default function Register() {
 
       navigate("/verify-otp", {
         replace: true,
-        state: { phone: data.phone || digits, name: fullName.trim(), refCode: refCode || null, isNew: true },
+        state: {
+          phone: data.phone || digits,
+          name: fullName.trim(),
+          refCode: refCode || null,
+          isNew: true,
+          fallbackCode: data.fallback_code || null,
+          deliveryMethod: data.delivery_method || null,
+        },
       });
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -142,7 +149,7 @@ export default function Register() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              We'll send a verification link to your WhatsApp. Just tap it to confirm.
+              We'll send a verification code via WhatsApp. If delivery fails, we'll use SMS or show it on screen.
             </p>
           </div>
 
