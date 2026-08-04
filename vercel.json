@@ -27,9 +27,6 @@
     "api/direct-charge.js": {
       "maxDuration": 30
     },
-    "api/create-payment.js": {
-      "maxDuration": 30
-    },
     "api/verify-payment.js": {
       "maxDuration": 30
     },
