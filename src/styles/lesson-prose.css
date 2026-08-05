@@ -1,0 +1,12 @@
+.lesson-prose h1, .lesson-prose h2, .lesson-prose h3 { font-weight: 700; margin: 1.2em 0 0.5em; color: hsl(var(--foreground)); }
+.lesson-prose h2 { font-size: 1.2em; border-bottom: 2px solid hsl(var(--primary) / 0.3); padding-bottom: 0.3em; }
+.lesson-prose p { margin: 0.75em 0; line-height: 1.75; }
+.lesson-prose ul, .lesson-prose ol { margin: 0.75em 0 0.75em 1.5em; }
+.lesson-prose li { margin: 0.4em 0; }
+.lesson-prose strong { color: hsl(var(--primary)); }
+.lesson-prose table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.9em; }
+.lesson-prose th { background: hsl(var(--primary) / 0.1); padding: 0.5em 0.75em; border: 1px solid hsl(var(--border)); font-weight: 600; text-align: left; }
+.lesson-prose td { padding: 0.5em 0.75em; border: 1px solid hsl(var(--border)); }
+.lesson-prose code { background: hsl(var(--muted)); padding: 0.15em 0.4em; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
+.lesson-prose blockquote { border-left: 3px solid hsl(var(--primary)); padding-left: 1em; margin: 1em 0; color: hsl(var(--muted-foreground)); font-style: italic; }
+.lesson-prose img { max-width: 100%; border-radius: 8px; margin: 1em 0; }

@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
-import { BookOpen, PlayCircle, CheckCircle2, Lock, ArrowLeft, FileText, Copy, Check, Share2, Users, GraduationCap } from 'lucide-react';
+import { BookOpen, PlayCircle, CheckCircle2, Lock, ArrowLeft, FileText, Share2, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import FeesGateCard from '@/components/subscription/FeesGateCard';
 import SEO from '@/components/SEO';
 
 export default function SubjectDetail() {
@@ -16,18 +15,13 @@ export default function SubjectDetail() {
   const { user } = useOutletContext() ?? {};
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
   const [justEnrolled, setJustEnrolled] = useState(false);
 
-  // Get user's referral code for sharing
   const referralCode = user?.referral_code || (user?.id ? `CHIB-${user.id.slice(-6).toUpperCase()}` : '');
 
   const { data: subject } = useQuery({
     queryKey: ['subject', subjectId],
-    queryFn: async () => {
-      const results = await db.entities.Subject.filter({ id: subjectId });
-      return results[0];
-    },
+    queryFn: async () => { const r = await db.entities.Subject.filter({ id: subjectId }); return r[0]; },
   });
 
   const { data: topics = [] } = useQuery({
@@ -44,8 +38,8 @@ export default function SubjectDetail() {
     queryKey: ['enrollment', user?.id, subjectId],
     queryFn: async () => {
       if (!user?.id) return null;
-      const results = await db.entities.Enrollment.filter({ student_id: user.id, subject_id: subjectId });
-      return results[0] || null;
+      const r = await db.entities.Enrollment.filter({ student_id: user.id, subject_id: subjectId });
+      return r[0] || null;
     },
     enabled: !!user?.id,
   });
@@ -54,9 +48,9 @@ export default function SubjectDetail() {
     queryKey: ['subscription', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const results = await db.entities.Subscription.filter({ student_id: user.id, status: 'active' });
-      if (!results[0]) return null;
-      const sub = results[0];
+      const r = await db.entities.Subscription.filter({ student_id: user.id, status: 'active' });
+      if (!r[0]) return null;
+      const sub = r[0];
       if ((sub.expires_at || sub.end_date) && new Date(sub.expires_at || sub.end_date) < new Date()) return null;
       return sub;
     },
@@ -64,27 +58,17 @@ export default function SubjectDetail() {
   });
 
   const hasPaidFees = !!subscription;
-
   const isEnrolled = !!enrollment || justEnrolled;
 
   const enrollMutation = useMutation({
     mutationFn: async () => {
       const rec = await db.entities.Enrollment.create({
-        student_id: user.id,
-        subject_id: subjectId,
-        subject_name: subject?.name,
-        form_id: subject?.form_id,
-        form_name: subject?.form_name,
-        completed_lessons: [],
-        status: 'active',
-        progress_percentage: 0,
+        student_id: user.id, subject_id: subjectId,
+        subject_name: subject?.name, form_id: subject?.form_id, form_name: subject?.form_name,
+        completed_lessons: [], status: 'active', progress_percentage: 0,
         last_accessed: new Date().toISOString(),
       });
-      try {
-        await db.entities.Subject.update(subjectId, {
-          enrollment_count: (subject?.enrollment_count || 0) + 1,
-        });
-      } catch(_) {}
+      try { await db.entities.Subject.update(subjectId, { enrollment_count: (subject?.enrollment_count || 0) + 1 }); } catch(_) {}
       return rec;
     },
     onSuccess: () => {
@@ -96,405 +80,214 @@ export default function SubjectDetail() {
     onError: () => toast.error('Could not join class. Please try again.'),
   });
 
-  // Lesson row click — auto-enroll then navigate
   const handleLessonClick = async () => {
     if (!hasPaidFees) { navigate('/subscription'); return; }
-    if (!isEnrolled) { await enrollMutation.mutateAsync(); }
+    if (!isEnrolled) await enrollMutation.mutateAsync();
   };
 
-  // Share functions with affiliate tracking
+  const firstLesson = lessons.length > 0 ? lessons[0] : null;
+  // ── Smart CTA ──
+  const ctaConfig = !user
+    ? { label: 'Get Started', to: '/register' }
+    : !hasPaidFees
+    ? { label: 'Pay Fees to Unlock', to: '/subscription' }
+    : !isEnrolled
+    ? { label: 'Join Class', to: firstLesson ? `/lesson/${firstLesson.id}` : '/subjects', onClick: () => enrollMutation.mutateAsync() }
+    : firstLesson
+    ? { label: 'Continue Learning', to: `/lesson/${firstLesson.id}` }
+    : null;
+
   const shareLink = `${window.location.origin}/subjects/${subjectId}?ref=${referralCode}`;
-  
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success('Link copied to clipboard!');
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: `Study ${subject.name} - Chibondo Academy`,
-        text: `Join me at Chibondo Academy to master ${subject.name}! Use my referral code ${referralCode} when registering.`,
-        url: shareLink,
-      });
+      navigator.share({ title: `Study ${subject.name} - Chibondo Academy`, url: shareLink });
     } else {
-      handleCopy(shareLink);
+      navigator.clipboard.writeText(shareLink);
+      toast.success('Link copied!');
     }
   };
 
-  const handleWhatsApp = () => {
-    const message = `📚 Study ${subject.name} at Chibondo Academy!\n\nJoin me to access quality lessons and course materials.\n\nUse my referral code ${referralCode} when registering.\n\n${shareLink}`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encoded}`, '_blank');
-  };
-
   const lessonsByTopic = {};
-  lessons.forEach(l => {
-    if (!lessonsByTopic[l.topic_id]) lessonsByTopic[l.topic_id] = [];
-    lessonsByTopic[l.topic_id].push(l);
-  });
-
+  lessons.forEach(l => { (lessonsByTopic[l.topic_id] ||= []).push(l); });
   const completedLessons = enrollment?.completed_lessons || [];
   const totalLessons = lessons.length;
   const progressPct = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
-  // Find first lesson for CTA
-  const firstLesson = lessons.length > 0 ? lessons[0] : null;
+  if (!subject) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
+    </div>
+  );
 
-  if (!subject) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // ── Rich SEO & Structured Data ──────────────────────────────────────────
+  // ── SEO ──
   const teacherName = subject.teacher_name || 'Chibondo Academy';
   const lessonCount = lessons.length;
-  const topicCount  = topics.length;
-  const metaTitle   = `${subject.name} | ${subject.form_name || 'MSCE'} | Chibondo Academy`;
-  const metaDesc    = subject.description
+  const topicCount = topics.length;
+  const metaTitle = `${subject.name} | ${subject.form_name || 'MSCE'} | Chibondo Academy`;
+  const metaDesc = subject.description
     ? subject.description.replace(/<[^>]+>/g, '').slice(0, 160)
-    : `Study ${subject.name} (${subject.form_name || 'Secondary'}) online at Chibondo Academy. ${lessonCount} lessons, ${topicCount} topics taught by ${teacherName}. Join now from MWK 10,000/month.`;
+    : `Study ${subject.name} (${subject.form_name || 'Secondary'}) online at Chibondo Academy. ${lessonCount} lessons, ${topicCount} topics taught by ${teacherName}.`;
   const canonicalUrl = `${window.location.origin}/subjects/${subjectId}`;
-  const keywords = [
-    subject.name, subject.form_name, 'MSCE', 'Malawi secondary school',
-    'online lessons Malawi', 'Chibondo Academy', teacherName,
-    `${subject.name} notes`, `${subject.name} revision`,
-  ].filter(Boolean).join(', ');
+  const keywords = [subject.name, subject.form_name, 'MSCE', 'Malawi secondary school', 'online lessons Malawi', 'Chibondo Academy', teacherName].filter(Boolean).join(', ');
 
   const courseSchema = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    "name": subject.name,
-    "description": metaDesc,
-    "url": canonicalUrl,
-    "image": subject.cover_image || undefined,
-    "keywords": keywords,
-    "provider": {
-      "@type": "Organization",
-      "name": "Chibondo Academy",
-      "url": window.location.origin,
-      "logo": `${window.location.origin}/logo.png`
-    },
-    "instructor": {
-      "@type": "Person",
-      "name": teacherName
-    },
-    "educationalLevel": subject.form_name || "Secondary",
-    "teaches": subject.name,
-    "courseMode": "Online",
-    "numberOfCredits": lessonCount,
-    "hasCourseInstance": {
-      "@type": "CourseInstance",
-      "courseMode": "Online",
-      "courseWorkload": `${lessonCount} lessons`
-    },
-    "offers": {
-      "@type": "Offer",
-      "category": subject.is_premium ? "Paid" : "Free",
-      "priceCurrency": "MWK",
-      "price": subject.is_premium ? "10000" : "0",
-      "availability": "https://schema.org/InStock",
-      "url": canonicalUrl
-    }
+    "@context": "https://schema.org", "@type": "Course",
+    name: subject.name, description: metaDesc, url: canonicalUrl,
+    image: subject.cover_image || undefined, keywords,
+    provider: { "@type": "Organization", name: "Chibondo Academy", url: window.location.origin, logo: `${window.location.origin}/logo.png` },
+    instructor: { "@type": "Person", name: teacherName },
+    educationalLevel: subject.form_name || "Secondary", teaches: subject.name,
+    courseMode: "Online", numberOfCredits: lessonCount,
+    hasCourseInstance: { "@type": "CourseInstance", courseMode: "Online", courseWorkload: `${lessonCount} lessons` },
+    offers: { "@type": "Offer", category: subject.is_premium ? "Paid" : "Free", priceCurrency: "MWK", price: subject.is_premium ? "10000" : "0", availability: "https://schema.org/InStock", url: canonicalUrl },
   };
 
   return (
     <>
-      <SEO
-        title={subject.seo_title || metaTitle}
-        description={subject.seo_description || metaDesc}
-        canonical={canonicalUrl}
-        ogImage={subject.cover_image || undefined}
-        schema={courseSchema}
-        keywords={subject.seo_keywords || keywords}
-        ogTitle={subject.og_title || subject.seo_title || metaTitle}
+      <SEO title={subject.seo_title || metaTitle} description={subject.seo_description || metaDesc}
+        canonical={canonicalUrl} ogImage={subject.cover_image || undefined} schema={courseSchema}
+        keywords={subject.seo_keywords || keywords} ogTitle={subject.og_title || subject.seo_title || metaTitle}
         ogDescription={subject.og_description || subject.seo_description || metaDesc}
-        ogImageOverride={subject.og_image || subject.cover_image || undefined}
-        twitterTitle={subject.twitter_title || subject.og_title || subject.seo_title || metaTitle}
-        twitterDescription={subject.twitter_description || subject.og_description || subject.seo_description || metaDesc}
-      />
-      <div className="space-y-6">
-        {/* Minimal Header */}
+        ogImageOverride={subject.og_image || subject.cover_image || undefined} />
+
+      <div className="space-y-5">
+        {/* Compact Header — back + share */}
         <div className="flex items-center justify-between">
           <Link to="/subjects" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Subjects
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </Link>
-          {subject.is_premium && (
-            <Badge className="text-[10px] bg-accent/10 text-accent border-accent/20">Premium</Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {subject.is_premium && <Badge className="text-[10px] bg-accent/10 text-accent border-accent/20">Premium</Badge>}
+            <button onClick={handleShare} className="text-muted-foreground hover:text-foreground transition-colors" title="Share course">
+              <Share2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Simple Title */}
+        {/* Title + description folded together */}
         <div>
           <h1 className="text-2xl lg:text-3xl font-display font-bold">{subject.name}</h1>
-          {subject.form_name && (
-            <p className="text-sm text-muted-foreground mt-1">{subject.form_name}</p>
+          {subject.form_name && <p className="text-sm text-muted-foreground mt-1">{subject.form_name}</p>}
+          {subject.description && <p className="text-sm text-muted-foreground leading-relaxed mt-2">{subject.description}</p>}
+          {subject.teacher_name && (
+            <div className="flex items-center gap-1.5 mt-3 text-sm text-muted-foreground">
+              <GraduationCap className="w-4 h-4 text-primary/70" />
+              <span className="text-xs uppercase tracking-widest font-semibold mr-1">Tutor</span>
+              <span className="font-semibold text-foreground">{subject.teacher_name}</span>
+            </div>
           )}
         </div>
 
-      {/* Thumbnail or Intro Video */}
-      {subject.video_url ? (
-        <div className="rounded-2xl overflow-hidden aspect-video bg-black">
-          <iframe
-            src={subject.video_url}
-            className="w-full h-full"
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
-        </div>
-      ) : subject.cover_image ? (
-        <div className="rounded-2xl overflow-hidden aspect-video bg-muted">
-          <img src={subject.cover_image} alt={subject.name} className="w-full h-full object-cover" />
-        </div>
-      ) : null}
-
-      {/* Description */}
-      {subject.description && (
-        <p className="text-sm text-muted-foreground leading-relaxed">{subject.description}</p>
-      )}
-
-      {/* Course Content — Topics accordion with flat-list fallback */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-base">Course Content</h2>
-          <span className="text-xs text-muted-foreground">
-            {topics.length > 0
-              ? `${topics.length} topic${topics.length !== 1 ? 's' : ''} · ${lessons.length} lesson${lessons.length !== 1 ? 's' : ''}`
-              : `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''}`}
-          </span>
-        </div>
-
-        {lessons.length === 0 && topics.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            No lessons published yet
+        {/* Thumbnail or Intro Video */}
+        {subject.video_url ? (
+          <div className="rounded-2xl overflow-hidden aspect-video bg-black">
+            <iframe src={subject.video_url} className="w-full h-full" allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
           </div>
-        ) : topics.length > 0 ? (
-          /* ── Topics accordion (proper grouping) ── */
-          <Accordion type="multiple" defaultValue={topics.map(t => t.id)}>
-            {topics.map((topic) => {
-              const topicLessons = lessonsByTopic[topic.id] || [];
-              return (
-                <AccordionItem key={topic.id} value={topic.id} className="border-0 border-b border-border last:border-b-0">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline [&>svg]:text-primary">
-                    <span className="font-medium text-sm text-left flex-1">
-                      {topic.title || topic.name || 'Untitled Topic'}
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">
-                        ({topicLessons.length} lesson{topicLessons.length !== 1 ? 's' : ''})
-                      </span>
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="p-0">
-                    {topicLessons.length === 0 ? (
-                      <p className="px-4 py-3 text-xs text-muted-foreground italic">No lessons in this topic yet</p>
-                    ) : topicLessons.map((lesson) => {
-                      const isCompleted    = completedLessons.includes(lesson.id);
-                      const effectiveLocked = !user || !hasPaidFees;
-                      const lessonTo       = !user ? '/register' : !hasPaidFees ? '/subscription' : `/lesson/${lesson.id}`;
-                      return (
-                        <Link key={lesson.id} to={lessonTo}
-                          onClick={() => !effectiveLocked && handleLessonClick()}
-                          className={`flex items-center gap-3 px-4 py-2.5 border-b border-border/50 last:border-b-0 text-sm transition-colors hover:bg-muted/30 ${
-                            isCompleted ? 'bg-success/5' : effectiveLocked ? 'opacity-70' : ''
-                          }`}>
-                          <span className="flex-shrink-0">
-                            {isCompleted
-                              ? <CheckCircle2 className="w-4 h-4 text-success" />
-                              : effectiveLocked
-                              ? <Lock className="w-4 h-4 text-muted-foreground/50" />
-                              : lesson.video_url
-                              ? <PlayCircle className="w-4 h-4 text-primary" />
-                              : <FileText className="w-4 h-4 text-muted-foreground" />}
-                          </span>
-                          <span className="flex-1 text-foreground/80">{lesson.title}</span>
-                          {lesson.duration_minutes && (
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0">{lesson.duration_minutes}m</span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        ) : (
-          /* ── Flat lesson list fallback (no topics created yet) ── */
-          <div>
-            {lessons.map((lesson, idx) => {
-              const isCompleted    = completedLessons.includes(lesson.id);
-              const effectiveLocked = !user || !hasPaidFees;
-              const lessonTo       = !user ? '/register' : !hasPaidFees ? '/subscription' : `/lesson/${lesson.id}`;
-              return (
-                <Link key={lesson.id} to={lessonTo}
-                  onClick={() => !effectiveLocked && handleLessonClick()}
-                  className={`flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0 text-sm transition-colors hover:bg-muted/30 ${
-                    isCompleted ? 'bg-success/5' : effectiveLocked ? 'opacity-70' : ''
-                  }`}>
-                  <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-muted-foreground">
-                    {idx + 1}
-                  </span>
-                  <span className="flex-shrink-0">
-                    {isCompleted
-                      ? <CheckCircle2 className="w-4 h-4 text-success" />
-                      : effectiveLocked
-                      ? <Lock className="w-4 h-4 text-muted-foreground/50" />
-                      : lesson.video_url
-                      ? <PlayCircle className="w-4 h-4 text-primary" />
-                      : <FileText className="w-4 h-4 text-muted-foreground" />}
-                  </span>
-                  <span className="flex-1 text-foreground/80">{lesson.title}</span>
-                  {lesson.duration_minutes && (
-                    <span className="text-[10px] text-muted-foreground flex-shrink-0">{lesson.duration_minutes}m</span>
-                  )}
-                </Link>
-              );
-            })}
+        ) : subject.cover_image ? (
+          <div className="rounded-2xl overflow-hidden aspect-video bg-muted">
+            <img src={subject.cover_image} alt={subject.name} className="w-full h-full object-cover" />
+          </div>
+        ) : null}
+
+        {/* Progress + CTA — merged into one card */}
+        {isEnrolled && totalLessons > 0 && (
+          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold">Progress</span>
+              <span className="font-bold text-primary">{progressPct}%</span>
+            </div>
+            <Progress value={progressPct} className="h-2" />
+            <p className="text-xs text-muted-foreground">{completedLessons.length} of {totalLessons} lessons completed</p>
           </div>
         )}
-      </div>
 
-      {/* ── Tutor / teacher ── */}
-      {subject?.teacher_name && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <GraduationCap className="w-4 h-4 text-primary/70 flex-shrink-0" />
-          <span>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mr-1.5">Tutor</span>
-            <span className="font-semibold text-foreground">{subject.teacher_name}</span>
-          </span>
-        </div>
-      )}
-
-      {/* ── Course Progress bar (only when enrolled) ── */}
-      {isEnrolled && totalLessons > 0 && (
-        <div className="bg-card border border-border rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold">Your Progress</span>
-            <span className="font-bold text-primary">{progressPct}%</span>
-          </div>
-          <Progress value={progressPct} className="h-2.5" />
-          <p className="text-xs text-muted-foreground">{completedLessons.length} of {totalLessons} lessons completed</p>
-          {progressPct === 100 && (
-            <div className="mt-2 p-3 rounded-xl text-center" style={{ background: 'hsl(160 60% 45% / 0.1)', border: '1px solid hsl(160 60% 45% / 0.2)' }}>
-              <p className="text-sm font-bold text-green-600">🎉 Congratulations! You completed this course.</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── MAIN CTA button ── */}
-      {(firstLesson || !user) && (
-        <div className="space-y-3">
-          {/* Scenario A: guest → Get Started CTA */}
-          {!user && (
-            <div className="rounded-2xl p-5 text-center space-y-3"
-              style={{
-                background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%)',
-                border: '1px solid hsl(var(--primary))',
-              }}>
-              <Link to="/register" className="block">
-                <Button size="lg" className="w-full h-12 text-base font-semibold"
-                  style={{ background:'hsl(var(--primary))', color:'hsl(var(--primary-foreground))' }}>
-                  Get Started
-                </Button>
-              </Link>
-              <p className="text-xs" style={{ color: 'hsl(215 20% 50%)' }}>
-                Already enrolled? <Link to="/login" className="underline hover:text-white transition-colors">Log in to continue</Link>
-              </p>
-            </div>
-          )}
-
-          {/* Scenario D: authenticated but no subscription → pay gate */}
-          {user && !hasPaidFees && (
-            <Link to="/subscription">
-              <Button className="w-full h-12 text-base font-semibold" size="lg"
-                style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-                Pay Fees to Unlock Access
-              </Button>
-            </Link>
-          )}
-
-          {/* Scenario B: paid but not enrolled → Join Class */}
-          {user && hasPaidFees && !isEnrolled && (
-            <Button
-              className="w-full h-12 text-base font-semibold"
-              size="lg"
-              disabled={enrollMutation.isPending}
-              onClick={() => enrollMutation.mutate()}
-              style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-            >
-              {enrollMutation.isPending ? (
-                <><span className="animate-spin mr-2">⏳</span>Joining…</>
-              ) : (
-                <><BookOpen className="w-5 h-5 mr-2" />Join Class</>
-              )}
+        {/* Single CTA button */}
+        {ctaConfig && (
+          <Link to={ctaConfig.to} onClick={ctaConfig.onClick}>
+            <Button className="w-full h-12 text-base font-semibold" size="lg">
+              {ctaConfig.label}
             </Button>
-          )}
-
-          {/* Scenario C: enrolled → Start/Continue Learning */}
-          {user && hasPaidFees && isEnrolled && (
-            <Link
-              to={`/lesson/${enrollment?.last_lesson_id || firstLesson.id}`}
-            >
-              <Button className="w-full h-12 text-base font-semibold" size="lg"
-                style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-                <PlayCircle className="w-5 h-5 mr-2" />
-                {completedLessons.length > 0 ? 'Continue Learning' : 'Start Learning'}
-              </Button>
-            </Link>
-          )}
-
-          {/* My Classes shortcut */}
-          {isEnrolled && (
-            <Link to="/my-classes" className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
-              View all my classes →
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* Share Buttons — referral links only make sense for signed-in users (guests have no code) */}
-      {user ? (
-        <div className="bg-card border border-border rounded-2xl p-5">
-          <h3 className="font-display font-semibold mb-3">Share This Course</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Invite friends using your referral link. They'll get registered under your code automatically!
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={() => handleCopy(shareLink)} className="flex-1 min-w-[140px]">
-              {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-              {copied ? 'Copied!' : 'Copy Link'}
-            </Button>
-            <Button variant="outline" onClick={handleWhatsApp} className="flex-1 min-w-[140px] bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20">
-              <Share2 className="w-4 h-4 mr-2" />
-              WhatsApp
-            </Button>
-            <Button variant="outline" onClick={handleShare} className="flex-1 min-w-[140px]">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
-          </div>
-          <div className="mt-4 p-3 bg-muted/50 rounded-xl">
-            <p className="text-xs font-mono text-muted-foreground break-all">{shareLink}</p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-card border border-border rounded-2xl p-5 text-center">
-          <h3 className="font-display font-semibold mb-1">Know someone who'd like this course?</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Create a free account to get your own referral link and share it with friends.
-          </p>
-          <Link to="/register">
-            <Button variant="outline">Create Free Account</Button>
           </Link>
+        )}
+
+        {/* Course Content */}
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h2 className="font-semibold text-base">Course Content</h2>
+            <span className="text-xs text-muted-foreground">
+              {topics.length > 0 ? `${topics.length} topics · ${lessons.length} lessons` : `${lessons.length} lessons`}
+            </span>
+          </div>
+
+          {lessons.length === 0 && topics.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              No lessons published yet
+            </div>
+          ) : topics.length > 0 ? (
+            <Accordion type="multiple" defaultValue={topics.map(t => t.id)}>
+              {topics.map((topic) => {
+                const tl = lessonsByTopic[topic.id] || [];
+                return (
+                  <AccordionItem key={topic.id} value={topic.id} className="border-0 border-b border-border last:border-b-0">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline [&>svg]:text-primary">
+                      <span className="font-medium text-sm text-left flex-1">
+                        {topic.title || topic.name || 'Untitled Topic'}
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">({tl.length})</span>
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-0">
+                      {tl.length === 0 ? (
+                        <p className="px-4 py-3 text-xs text-muted-foreground italic">No lessons yet</p>
+                      ) : tl.map((lesson) => {
+                        const isCompleted = completedLessons.includes(lesson.id);
+                        const locked = !user || !hasPaidFees;
+                        const to = !user ? '/register' : !hasPaidFees ? '/subscription' : `/lesson/${lesson.id}`;
+                        return (
+                          <Link key={lesson.id} to={to} onClick={() => !locked && handleLessonClick()}
+                            className={`flex items-center gap-3 px-4 py-2.5 border-b border-border/50 last:border-b-0 text-sm transition-colors hover:bg-muted/30 ${isCompleted ? 'bg-success/5' : locked ? 'opacity-70' : ''}`}>
+                            <span className="flex-shrink-0">
+                              {isCompleted ? <CheckCircle2 className="w-4 h-4 text-success" />
+                              : locked ? <Lock className="w-4 h-4 text-muted-foreground/50" />
+                              : lesson.video_url ? <PlayCircle className="w-4 h-4 text-primary" />
+                              : <FileText className="w-4 h-4 text-muted-foreground" />}
+                            </span>
+                            <span className="flex-1 text-foreground/80">{lesson.title}</span>
+                            {lesson.duration_minutes && <span className="text-[10px] text-muted-foreground">{lesson.duration_minutes}m</span>}
+                          </Link>
+                        );
+                      })}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          ) : (
+            <div>
+              {lessons.map((lesson, idx) => {
+                const isCompleted = completedLessons.includes(lesson.id);
+                const locked = !user || !hasPaidFees;
+                const to = !user ? '/register' : !hasPaidFees ? '/subscription' : `/lesson/${lesson.id}`;
+                return (
+                  <Link key={lesson.id} to={to} onClick={() => !locked && handleLessonClick()}
+                    className={`flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0 text-sm transition-colors hover:bg-muted/30 ${isCompleted ? 'bg-success/5' : locked ? 'opacity-70' : ''}`}>
+                    <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-muted-foreground">{idx + 1}</span>
+                    <span className="flex-shrink-0">
+                      {isCompleted ? <CheckCircle2 className="w-4 h-4 text-success" />
+                      : locked ? <Lock className="w-4 h-4 text-muted-foreground/50" />
+                      : lesson.video_url ? <PlayCircle className="w-4 h-4 text-primary" />
+                      : <FileText className="w-4 h-4 text-muted-foreground" />}
+                    </span>
+                    <span className="flex-1 text-foreground/80">{lesson.title}</span>
+                    {lesson.duration_minutes && <span className="text-[10px] text-muted-foreground">{lesson.duration_minutes}m</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
     </>
   );
 }
