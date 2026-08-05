@@ -698,7 +698,14 @@ async function handleIncomingMessage(req, res) {
             Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
           };
 
-          const phoneQuery = `or=(phone_number.eq.+${fromPhone},phone_number.eq.${fromPhone},email.eq.${autoEmail},email.eq.${waPrefixEmail})`;
+          // Use the shared helper (same as sendOTP) — it properly
+          // percent-encodes the "+" as %2B. Building this string by hand
+          // with a raw "+" was silently broken: in a URL query string an
+          // unencoded "+" means "space", so phone_number.eq.+265... was
+          // actually querying for phone_number.eq.<space>265... and never
+          // matched numbers stored with a "+" prefix (e.g. "+265893454156"),
+          // making registered admin/student numbers look unregistered.
+          const phoneQuery = buildPhoneOrQuery(fromPhone, [`email.eq.${autoEmail}`, `email.eq.${waPrefixEmail}`]);
           const userRes = await fetch(`${SUPABASE_URL}/rest/v1/users?${phoneQuery}&limit=1`, { headers });
           const userRows = userRes.ok ? await userRes.json() : [];
 
