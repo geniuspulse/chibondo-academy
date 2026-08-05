@@ -1,4 +1,5 @@
 /**
+ * redeploy trigger: 2026-08-05
  * WhatsApp OTP & Webhook — Combined Serverless Function
  *
  * GET  /api/wa-otp?action=check-uniqueness   — phone/email uniqueness check
