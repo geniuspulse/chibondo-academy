@@ -287,11 +287,8 @@ export default function PayFees() {
         {step === 'waiting' && (
           <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
             <div className="p-6 space-y-5 text-center">
-              <div className="relative mx-auto w-20 h-20">
-                <div className="absolute inset-0 rounded-2xl bg-primary/10 animate-ping opacity-75" style={{ animationDuration: '2s' }} />
-                <div className="relative w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Smartphone className="w-9 h-9 text-primary" />
-                </div>
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Smartphone className="w-8 h-8 text-primary" />
               </div>
 
               <div>
@@ -327,11 +324,6 @@ export default function PayFees() {
                 Cancel payment
               </Button>
 
-              <div className="bg-muted/50 rounded-xl p-3 text-left space-y-1 max-w-sm mx-auto">
-                <p className="text-xs text-muted-foreground">• Make sure you have enough balance</p>
-                <p className="text-xs text-muted-foreground">• The prompt may take a few seconds to appear</p>
-                <p className="text-xs text-muted-foreground">• Dial {network?.ussd || '*150*00#'} if you don't see it</p>
-              </div>
             </div>
           </div>
         )}
@@ -339,32 +331,10 @@ export default function PayFees() {
         {/* ═══ Success ═══ */}
         {step === 'success' && (
           <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden">
-            <div className="p-8 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-foreground">Payment confirmed!</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Your {plan.name} subscription is active. Redirecting to dashboard...
-                </p>
-              </div>
-              <div className="bg-muted/50 rounded-xl p-4 max-w-xs mx-auto text-left space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Plan</span>
-                  <span className="font-medium">{plan.name}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Amount</span>
-                  <span className="font-medium">MWK {formatPrice(amount)}</span>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-border">
-                  <span className="text-muted-foreground">Status</span>
-                  <span className="font-medium text-emerald-600 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Active
-                  </span>
-                </div>
-              </div>
+            <div className="p-8 text-center space-y-3">
+              <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+              <p className="text-lg font-semibold">Payment confirmed!</p>
+              <p className="text-sm text-muted-foreground">Redirecting to dashboard…</p>
               <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
             </div>
           </div>
