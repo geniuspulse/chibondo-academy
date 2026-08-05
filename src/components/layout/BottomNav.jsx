@@ -1,12 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Gift, Library, CreditCard, MessageSquare, Home, Newspaper } from 'lucide-react';
+import { BookOpen, Library, CreditCard, MessageSquare, Home, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Nav items shown to authenticated students
 const authNavItems = [
   { label: 'Classes',   icon: BookOpen,      path: '/subjects' },
-  { label: 'Referrals', icon: Gift,          path: '/affiliate' },
   { label: 'Library',   icon: Library,       path: '/library' },
   { label: 'Chats',    icon: MessageSquare, path: '/forums' },
   { label: 'Fees',      icon: CreditCard,    path: '/fees' },
@@ -16,7 +15,6 @@ const authNavItems = [
 const guestNavItems = [
   { label: 'Blog',     icon: Newspaper,     path: '/blog' },
   { label: 'Subjects', icon: BookOpen,      path: '/subjects' },
-  { label: 'Subjects',   icon: BookOpen,    path: '/subjects' },
   { label: 'Library',  icon: Library,       path: '/library' },
   { label: 'Chats',   icon: MessageSquare, path: '/forums' },
 ];
