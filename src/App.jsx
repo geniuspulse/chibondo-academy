@@ -209,9 +209,9 @@ const AppRoutes = () => {
           <Route path="/my-assignments" element={<MyAssignments />} />
           <Route path="/discussions" element={<DiscussionsPage />} />
           <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/progress/analytics" element={<ProgressAnalytics />} />
+          <Route path="/progress/analytics" element={<Navigate to="/progress" replace />} />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/my-classes" element={<MyClassesPage />} />
+          <Route path="/my-classes" element={<Navigate to="/subjects" replace />} />
           <Route path="/enroll-subjects" element={<EnrollSubjectsPage />} />
 
           {/* ── Affiliate Program ── */}

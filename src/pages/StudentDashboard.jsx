@@ -280,7 +280,7 @@ export default function StudentDashboard() {
             <h3 className="font-display font-semibold text-base flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-accent" /> My Classes
             </h3>
-            <Link to="/my-classes" className="text-xs font-medium text-primary flex items-center gap-1 hover:underline">
+            <Link to="/subjects" className="text-xs font-medium text-primary flex items-center gap-1 hover:underline">
               View All <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -288,7 +288,7 @@ export default function StudentDashboard() {
             {displayEnrollments.map(e => <MiniClassCard key={e.id} enrollment={e} />)}
           </div>
           {enrollments.length > 3 && (
-            <Link to="/my-classes"
+            <Link to="/subjects"
               className="block mt-3 text-center text-xs text-muted-foreground hover:text-primary transition-colors">
               +{enrollments.length - 3} more classes →
             </Link>

@@ -11,7 +11,6 @@ import { db } from '@/api/supabaseClient';
 const studentNav = [
   { label: 'Dashboard',    icon: Home,          path: '/dashboard' },
   { label: 'My Subjects',  icon: BookOpen,      path: '/subjects' },
-  { label: 'My Classes',   icon: BookOpen,      path: '/my-classes' },
   { label: 'Our Tutors',   icon: GraduationCap, path: '/tutors' },
   { label: 'Revision Hub', icon: Library,       path: '/revision' },
   { label: 'My Quizzes',   icon: ClipboardList, path: '/my-quizzes' },
