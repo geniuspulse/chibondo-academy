@@ -643,11 +643,18 @@ async function handleWebhookVerification(req, res) {
 }
 
 async function handleIncomingMessage(req, res) {
-  // Always 200 OK to Meta quickly so they don't retry
-  res.status(200).json({ received: true });
+  // IMPORTANT: do NOT send the response before processing finishes.
+  // Vercel serverless functions can freeze/tear down the execution
+  // context as soon as the HTTP response is flushed — any awaited work
+  // still in flight after that point gets silently killed. That was
+  // causing magic-link generation + WhatsApp replies to never actually
+  // fire, even though Meta got a 200 immediately. We now do all the work
+  // FIRST and respond 200 at the very end (see bottom of this function).
+  // Meta tolerates this fine — it only retries on non-2xx or real timeout
+  // (well under its ~20s window for our few Supabase/Graph API calls).
 
   const body = req.body;
-  if (!body?.entry) return;
+  if (!body?.entry) return res.status(200).json({ received: true });
 
   const WA_TOKEN   = process.env.WA_ACCESS_TOKEN;
   const WA_PHONE_ID = process.env.WA_PHONE_NUMBER_ID;
@@ -657,7 +664,7 @@ async function handleIncomingMessage(req, res) {
 
   if (!WA_TOKEN || !WA_PHONE_ID || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     console.error('[wa-otp/webhook] missing env vars');
-    return;
+    return res.status(200).json({ received: true });
   }
 
   try {
@@ -791,13 +798,17 @@ async function handleIncomingMessage(req, res) {
   } catch (err) {
     console.error('[wa-otp/webhook] error:', err.message);
   }
+
+  // Respond to Meta only now that all processing (and the WhatsApp reply
+  // send) has actually completed — see note at top of this function.
+  return res.status(200).json({ received: true });
 }
 
 async function sendTextReply(to, message) {
   const WA_TOKEN    = process.env.WA_ACCESS_TOKEN;
   const WA_PHONE_ID = process.env.WA_PHONE_NUMBER_ID;
   try {
-    await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+    const r = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -805,6 +816,10 @@ async function sendTextReply(to, message) {
         to, type: 'text', text: { body: message },
       }),
     });
+    if (!r.ok) {
+      const errBody = await r.text().catch(() => '');
+      console.error('[wa-otp/webhook] Graph API send failed:', r.status, errBody.slice(0, 300));
+    }
   } catch (err) {
     console.error('[wa-otp/webhook] reply failed:', err.message);
   }
