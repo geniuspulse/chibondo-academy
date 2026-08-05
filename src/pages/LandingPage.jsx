@@ -1,202 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
 import SEO from '@/components/SEO';
 import { format } from 'date-fns';
-import { useLiveAgo, formatAgo } from '@/hooks/useLiveAgo';
-
-/* ── ForumCard: self-contained component with live timestamp ticker ──────── */
-function ForumCard({ subject, stats, navigate }) {
-  const slug     = subject.slug || subject.name.toLowerCase().replace(/\s+/g, '-');
-  const lastAgo  = useLiveAgo(stats.lastActivity);   // ← hook runs per card
-
-  return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-accent/40 transition-colors group">
-      <a
-        href={`/forums/${slug}`}
-        onClick={e => { e.preventDefault(); navigate(`/forums/${slug}`); }}
-        className="flex items-start gap-4 p-4 block no-underline"
-      >
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-muted mt-0.5">
-          {subject.icon || '📚'}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-foreground group-hover:text-accent transition-colors">
-            {subject.forum_name || subject.name}
-          </p>
-          {subject.description && (
-            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{subject.description}</p>
-          )}
-          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-1">
-              <MessageSquare className="w-3 h-3" />
-              {stats.threadCount} {stats.threadCount === 1 ? 'thread' : 'threads'}
-            </span>
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {stats.postCount} posts
-            </span>
-            {lastAgo && (
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {lastAgo}
-              </span>
-            )}
-          </div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-accent transition-colors flex-shrink-0 mt-1" />
-      </a>
-      {stats.latestThreadTitle && (
-        <a
-          href={`/forums/${slug}/${stats.latestThreadSlug}`}
-          onClick={e => { e.preventDefault(); navigate(`/forums/${slug}/${stats.latestThreadSlug}`); }}
-          className="flex items-center gap-2 px-4 py-2 border-t border-border/60 hover:bg-muted/40 transition-colors no-underline"
-        >
-          <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">Latest:</span>
-          <span className="text-[11px] text-muted-foreground truncate hover:text-accent transition-colors">
-            {stats.latestThreadTitle}
-          </span>
-        </a>
-      )}
-    </div>
-  );
-}
 import {
-  BookOpen, Play, MessageSquare, ChevronRight, ArrowRight,
-  CheckCircle, Zap, Crown, Award, GraduationCap,
-  Users, Lock, Newspaper, Clock
+  BookOpen, Play, ChevronRight, ArrowRight,
+  CheckCircle, Zap, GraduationCap, Lock, Newspaper, Clock, MessageSquare
 } from 'lucide-react';
 
-/* ── subject icon map (mirrors SubjectsPage) ────────────────────────────── */
 const SUBJECT_ICONS = {
   biology: '🧬', chemistry: '⚗️', physics: '⚡', mathematics: '📐',
   'additional mathematics': '∑', english: '📖', 'english language': '📖',
   'english literature': '📚', chichewa: '🗣️', agriculture: '🌱',
   geography: '🌍', history: '📜',
 };
-function subjectIcon(name = '') {
-  return SUBJECT_ICONS[name.toLowerCase()] || '📘';
-}
-function readTime(content = '') {
-  return Math.max(1, Math.ceil(content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200));
-}
+function subjectIcon(name = '') { return SUBJECT_ICONS[name.toLowerCase()] || '📘'; }
+function readTime(content = '') { return Math.max(1, Math.ceil(content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)); }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   LANDING PAGE — feels exactly like being inside the app
-═══════════════════════════════════════════════════════════════════════════ */
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  /* Live pricing from platform (same as SubscriptionPage) */
-  const [pricing, setPricing] = useState({
-    monthly_price: 10000,
-    annual_price: 80000,
-    biannual_price: 150000,
-  });
+  const [pricing, setPricing] = useState({ monthly_price: 10000, annual_price: 80000 });
 
   useQuery({
     queryKey: ['pricing'],
     queryFn: async () => {
       const rows = await db.entities.PlatformSettings.filter({ key: 'pricing' }).catch(() => []);
       const val = rows?.[0]?.value;
-      const res = val?.monthly_price ? val : (val?.data?.pricing || val?.pricing || null);
-      return res;
+      return val?.monthly_price ? val : (val?.data?.pricing || val?.pricing || null);
     },
     onSuccess: (data) => {
-      if (data) setPricing({ monthly_price: data.monthly_price || 10000, annual_price: data.annual_price || 80000, biannual_price: data.biannual_price || 150000 });
+      if (data) setPricing({ monthly_price: data.monthly_price || 10000, annual_price: data.annual_price || 80000 });
     },
   });
 
-  /* Featured subjects — 3 published */
   const { data: subjects = [] } = useQuery({
     queryKey: ['landing-subjects'],
     queryFn: () => db.entities.Subject.filter({ status: 'published' }, 'order', 6),
     staleTime: 5 * 60_000,
   });
 
-  /* Recent blog posts */
   const { data: blogPosts = [] } = useQuery({
     queryKey: ['landing-blog'],
-    queryFn: async () => {
-      try { return await db.entities.BlogPost.filter({ status: 'published' }, '-published_at', 3); }
-      catch { return []; }
-    },
+    queryFn: async () => { try { return await db.entities.BlogPost.filter({ status: 'published' }, '-published_at', 3); } catch { return []; } },
     staleTime: 5 * 60_000,
   });
 
-  /* Forum activity — top-level threads only, sorted by last activity */
   const { data: recentThreads = [] } = useQuery({
     queryKey: ['landing-forum-activity'],
-    queryFn: async () => {
-      try { return await db.entities.GroupChatMessage.filter({}, 'created_date', 5); }
-      catch { return []; }
-    },
+    queryFn: async () => { try { return await db.entities.GroupChatMessage.filter({}, 'created_date', 5); } catch { return []; } },
     staleTime: 2 * 60_000,
   });
 
-  // Build per-forum stats
-  const forumStats = React.useMemo(() => {
+  const forumCounts = React.useMemo(() => {
     const map = {};
     recentThreads.forEach(t => {
       if (!t.subject_id) return;
-      if (!map[t.subject_id]) {
-        map[t.subject_id] = {
-          threadCount: 0,
-          postCount: 0,
-          lastActivity: null,
-          latestThreadTitle: null,
-          latestThreadSlug: null,
-          latestThreadId: null,
-        };
-      }
-      const s = map[t.subject_id];
-      // top-level threads
-      if (!t.parent_id) {
-        s.threadCount += 1;
-        const ts = t.updated_date || t.created_date;
-        if (!s.lastActivity || new Date(ts) > new Date(s.lastActivity)) {
-          s.lastActivity = ts;
-          s.latestThreadTitle = t.title;
-          s.latestThreadSlug  = t.slug || t.id;
-          s.latestThreadId    = t.id;
-        }
-      }
-      // replies count toward posts
-      s.postCount += 1 + (t.reply_count || 0);
+      map[t.subject_id] = (map[t.subject_id] || 0) + 1;
     });
     return map;
   }, [recentThreads]);
 
-  // Sort subjects by recency of last activity, top 3
-  const activeForums = React.useMemo(() => {
-    return subjects
-      .filter(s => forumStats[s.id])
-      .sort((a, b) =>
-        new Date(forumStats[b.id]?.lastActivity || 0) -
-        new Date(forumStats[a.id]?.lastActivity || 0)
-      )
-      .slice(0, 3);
-  }, [subjects, forumStats]);
-
   const fmt = (n) => Number(n).toLocaleString('en-MW');
-  const plans = [
-    {
-      id: 'monthly', name: 'Monthly', icon: Zap, price: pricing.monthly_price,
-      period: 'per month', popular: true,
-      features: ['All lessons & videos', 'Quizzes & tests', 'Past papers', 'Assignment submissions', 'Progress tracking'],
-    },
-    {
-      id: 'annual', name: 'Annual', icon: Crown, price: pricing.annual_price,
-      period: 'per year',
-      features: ['Everything in Monthly', 'Priority support', 'Exam tips & strategies', 'Revision resources', `Save MWK ${fmt(pricing.monthly_price * 12 - pricing.annual_price)}`],
-    },
-    {
-      id: 'biannual', name: 'Biannual', icon: Award, price: pricing.biannual_price,
-      period: 'for 2 years',
-      features: ['Everything in Annual', 'Certificate of completion', 'Dedicated support', `Save MWK ${fmt(pricing.monthly_price * 24 - pricing.biannual_price)}`],
-    },
-  ];
 
   return (
     <>
@@ -207,38 +73,31 @@ export default function LandingPage() {
 
       <div className="space-y-10">
 
-        {/* ── 1. HERO ───────────────────────────────────────────────────────── */}
+        {/* ── 1. HERO ── */}
         <div className="relative rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--sidebar-background))' }}>
-          {/* Subtle radial glow — same as SubscriptionPage hero */}
           <div className="absolute inset-0 pointer-events-none"
             style={{ backgroundImage: 'radial-gradient(ellipse at 10% 50%, hsl(var(--primary)) 0%, transparent 55%), radial-gradient(ellipse at 90% 10%, hsl(222 47% 55% / 0.15) 0%, transparent 50%)' }} />
-
           <div className="relative px-6 py-10 sm:px-10 sm:py-14">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full mb-5"
                 style={{ background: 'hsl(var(--primary) / 0.15)', color: 'hsl(var(--primary-foreground))' }}>
                 <Zap className="w-3 h-3" /> Malawi's Online MSCE Platform
               </span>
-
               <h1 className="font-display font-extrabold text-3xl sm:text-4xl leading-tight text-white mb-4">
                 Study smarter.<br />
                 <span style={{ color: 'hsl(var(--primary-foreground))' }}>Pass your MSCE.</span>
               </h1>
-
               <p className="text-white/65 text-sm leading-relaxed mb-8 max-w-md">
                 Video lessons, quizzes, and past papers for every Form 3 &amp; 4 subject —
                 taught by Malawian educators, available anytime on your phone.
               </p>
-
               <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => navigate('/register')}
+                <button onClick={() => navigate('/register')}
                   className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 hover:brightness-110"
-                  style={{ background:'hsl(var(--primary))', color:'hsl(var(--primary-foreground))' }}>
+                  style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
                   Create Free Account
                 </button>
-                <button
-                  onClick={() => navigate('/subjects')}
+                <button onClick={() => navigate('/subjects')}
                   className="px-5 py-2.5 rounded-xl font-semibold text-sm border border-white/20 text-white/80 hover:border-white/40 hover:text-white transition-colors">
                   Browse Subjects
                 </button>
@@ -247,253 +106,113 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* ── 2. ABOUT ─────────────────────────────────────────────────────── */}
+        {/* ── 2. FEATURED SUBJECTS (with forum activity merged in) ── */}
         <div>
-          <h2 className="font-display font-bold text-base mb-1">About Chibondo Academy</h2>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-4"
-            style={{ color: 'hsl(var(--primary))' }}>Discover ACA</p>
-
-          <div className="bg-card rounded-2xl border border-border p-5 sm:p-6 space-y-4">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              The Chibondo Academy is an online secondary school offering MSCE lessons in all subjects.
-              We believe every student in Malawi deserves quality education — regardless of where they live or which school they attend.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {[
-                { icon: GraduationCap, text: 'Qualified Malawian educators' },
-                { icon: BookOpen, text: 'All Form 3 & 4 subjects' },
-                { icon: Play, text: 'Video-first lesson delivery' },
-                { icon: CheckCircle, text: 'MSCE curriculum aligned' },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'hsl(var(--primary) / 0.12)' }}>
-                    <Icon className="w-3.5 h-3.5" style={{ color: 'hsl(var(--primary))' }} />
-                  </div>
-                  <span className="text-sm text-foreground/80">{text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── 3. FEATURED SUBJECTS ─────────────────────────────────────────── */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-display font-bold text-base">Learn Through Online Video</h2>
-            <Link to="/subjects"
-              className="flex items-center gap-1 text-xs font-semibold hover:text-accent transition-colors"
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-bold text-base">Subjects</h2>
+            <Link to="/subjects" className="flex items-center gap-1 text-xs font-semibold hover:text-accent transition-colors"
               style={{ color: 'hsl(var(--primary))' }}>
               All subjects <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">Featured courses</p>
 
           <div className="space-y-2">
-            {subjects.slice(0, 3).map(subject => (
-              <Link
-                key={subject.id}
-                to={`/subjects/${subject.id}`}
-                className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-accent/40 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-muted">
-                  {subjectIcon(subject.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm group-hover:text-accent transition-colors">{subject.name}</p>
-                  {subject.description && (
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{subject.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Lock className="w-3.5 h-3.5 text-muted-foreground/40" />
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
-                </div>
-              </Link>
-            ))}
-
-            {/* If data not loaded yet, show skeleton */}
-            {subjects.length === 0 && [1,2,3].map(i => (
+            {subjects.slice(0, 4).map(subject => {
+              const forumCount = forumCounts[subject.id] || 0;
+              return (
+                <Link key={subject.id} to={`/subjects/${subject.id}`}
+                  className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-accent/40 transition-colors group">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-muted">
+                    {subjectIcon(subject.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm group-hover:text-accent transition-colors">{subject.name}</p>
+                    {subject.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{subject.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {forumCount > 0 && (
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <MessageSquare className="w-3 h-3" />{forumCount}
+                      </span>
+                    )}
+                    <Lock className="w-3.5 h-3.5 text-muted-foreground/40" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+                  </div>
+                </Link>
+              );
+            })}
+            {subjects.length === 0 && [1,2,3,4].map(i => (
               <div key={i} className="h-16 bg-card border border-border rounded-xl animate-pulse" />
             ))}
           </div>
+
+          <button onClick={() => navigate('/register')}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:brightness-110 mt-3"
+            style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
+            Join the conversation
+          </button>
         </div>
 
-        {/* ── 4. COMMUNITY FORUMS ──────────────────────────────────────────── */}
+        {/* ── 3. BLOG (uniform rows) ── */}
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-display font-bold text-base">Interact With Fellow Students</h2>
-            <Link to="/forums"
-              className="flex items-center gap-1 text-xs font-semibold hover:text-accent transition-colors"
-              style={{ color: 'hsl(var(--primary))' }}>
-              All forums <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <p className="text-xs text-muted-foreground mb-4">Live discussions</p>
-
-          <div className="space-y-2">
-            {activeForums.length > 0 ? activeForums.map(subject => (
-              <ForumCard
-                key={subject.id}
-                subject={subject}
-                stats={forumStats[subject.id]}
-                navigate={navigate}
-              />
-            )) : (
-              [1,2,3].map(i => (
-                <div key={i} className="h-20 bg-card border border-border rounded-xl animate-pulse" />
-              ))
-            )}
-
-            <button
-              onClick={() => navigate('/register')}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:brightness-110 mt-1"
-              style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-              Join the conversation
-            </button>
-          </div>
-        </div>
-
-        {/* ── 5. BLOG ──────────────────────────────────────────────────────── */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-display font-bold text-base">Read and Learn More</h2>
-            <Link to="/blog"
-              className="flex items-center gap-1 text-xs font-semibold hover:text-accent transition-colors"
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-bold text-base">Latest Articles</h2>
+            <Link to="/blog" className="flex items-center gap-1 text-xs font-semibold hover:text-accent transition-colors"
               style={{ color: 'hsl(var(--primary))' }}>
               All posts <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">Latest articles</p>
 
-          <div className="space-y-3">
-            {blogPosts.slice(0, 3).map((post, i) => (
-              <Link
-                key={post.id}
-                to={`/blog/${post.slug || post.id}`}
-                className={`flex gap-4 p-4 bg-card border border-border rounded-xl hover:border-accent/40 transition-colors group ${i === 0 ? 'flex-col sm:flex-row' : 'flex-row items-center'}`}
-              >
-                {/* Cover */}
-                <div className={`rounded-lg overflow-hidden flex-shrink-0 bg-muted ${i === 0 ? 'w-full sm:w-40 aspect-video sm:aspect-square sm:h-24 sm:w-24' : 'w-14 h-14'}`}>
+          <div className="space-y-2">
+            {blogPosts.slice(0, 3).map(post => (
+              <Link key={post.id} to={`/blog/${post.slug || post.id}`}
+                className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-accent/40 transition-colors group">
+                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                   {post.cover_image
                     ? <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                    : <div className="w-full h-full flex items-center justify-center bg-muted">
-                        <Newspaper className="w-5 h-5 text-muted-foreground/30" />
-                      </div>
+                    : <div className="w-full h-full flex items-center justify-center"><Newspaper className="w-5 h-5 text-muted-foreground/30" /></div>
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  {post.category && (
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'hsl(var(--primary))' }}>{post.category}</p>
-                  )}
-                  <p className={`font-semibold group-hover:text-accent transition-colors leading-snug ${i === 0 ? 'text-sm' : 'text-xs'} line-clamp-2`}>{post.title}</p>
-                  <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
-                    <Clock className="w-3 h-3" />
-                    <span>{readTime(post.content || '')} min read</span>
-                    {post.published_at && (
-                      <>
-                        <span className="opacity-40">·</span>
-                        <span>{format(new Date(post.published_at), 'dd MMM yyyy')}</span>
-                      </>
-                    )}
+                  {post.category && <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'hsl(var(--primary))' }}>{post.category}</p>}
+                  <p className="font-semibold text-xs group-hover:text-accent transition-colors line-clamp-2">{post.title}</p>
+                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                    <Clock className="w-3 h-3" /><span>{readTime(post.content || '')} min read</span>
+                    {post.published_at && <><span className="opacity-40">·</span><span>{format(new Date(post.published_at), 'dd MMM yyyy')}</span></>}
                   </div>
                 </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-accent transition-colors flex-shrink-0" />
               </Link>
             ))}
-
             {blogPosts.length === 0 && [1,2,3].map(i => (
               <div key={i} className="h-20 bg-card border border-border rounded-xl animate-pulse" />
             ))}
           </div>
         </div>
 
-        {/* ── 6. PRICING ───────────────────────────────────────────────────── */}
+        {/* ── 4. PRICING (single compact card) ── */}
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-display font-bold text-base">School Fees</h2>
-          </div>
-          <p className="text-xs text-muted-foreground mb-4">Affordable access to quality education</p>
-
-          <div className="space-y-3">
-            {plans.map(({ id, name, icon: Icon, price, period, popular, features }) => (
-              <div key={id}
-                className={`rounded-xl border p-4 transition-all ${popular ? 'border-accent/50' : 'border-border bg-card'}`}
-                style={popular ? { background: 'hsl(var(--primary) / 0.05)', borderColor: 'hsl(var(--primary) / 0.5)' } : {}}>
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: popular ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--muted))' }}>
-                      <Icon className="w-4 h-4" style={{ color: popular ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm">{name}</p>
-                        {popular && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                            style={{ background:'hsl(var(--primary))', color:'hsl(var(--primary-foreground))' }}>Popular</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{period}</p>
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-extrabold text-base font-display"
-                      style={popular ? { color: '#ffffff' } : {}}>
-                      MWK {fmt(price)}
-                    </p>
-                  </div>
-                </div>
-                <ul className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
-                  {features.slice(0, 3).map(f => (
-                    <li key={f} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <CheckCircle className="w-3 h-3 flex-shrink-0" style={{ color: 'hsl(var(--primary))' }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => navigate('/register')}
-                  className="w-full py-2 rounded-lg text-xs font-semibold transition-all active:scale-95"
-                  style={popular
-                    ? { background: 'hsl(var(--primary))', color: '#fff' }
-                    : { background: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }
-                  }>
-                  {popular ? 'Get Started' : 'Choose Plan'}
-                </button>
+          <h2 className="font-display font-bold text-base mb-4">School Fees</h2>
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">MWK {fmt(pricing.monthly_price)}</p>
+                <p className="text-xs text-muted-foreground">per month — all subjects included</p>
               </div>
-            ))}
-          </div>
-
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Payments via Airtel Money &amp; TNM Mpamba
-          </p>
-        </div>
-
-        {/* ── 7. FINAL CTA ─────────────────────────────────────────────────── */}
-        <div className="rounded-2xl overflow-hidden relative" style={{ background: 'hsl(var(--sidebar-background))' }}>
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ backgroundImage: 'radial-gradient(ellipse at 80% 50%, hsl(var(--primary)) 0%, transparent 60%)' }} />
-          <div className="relative p-6 sm:p-8 text-center space-y-4">
-            <GraduationCap className="w-10 h-10 mx-auto" style={{ color: 'hsl(var(--primary))' }} />
-            <h2 className="font-display font-extrabold text-xl text-white leading-snug">
-              Your MSCE journey starts here.
-            </h2>
-            <p className="text-white/60 text-sm max-w-sm mx-auto">
-              Register for free and start with sample lessons today. No credit card required.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-              <button
-                onClick={() => navigate('/register')}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 hover:brightness-110"
-                style={{ background:'hsl(var(--primary))', color:'hsl(var(--primary-foreground))' }}>
-                Create Free Account <ArrowRight className="inline w-4 h-4 ml-1" />
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm border border-white/20 text-white/70 hover:border-white/40 hover:text-white transition-colors">
-                Already have an account?
-              </button>
+              <Link to="/subscription">
+                <button className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 hover:brightness-110"
+                  style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
+                  Pay Fees
+                </button>
+              </Link>
             </div>
+            <div className="flex items-center gap-2 pt-2 border-t border-border">
+              <CheckCircle className="w-3.5 h-3.5 text-primary" />
+              <p className="text-xs text-muted-foreground">
+                Or save MWK {fmt(pricing.monthly_price * 12 - pricing.annual_price)} with an annual plan — tap to compare.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground/70">Payments via Airtel Money &amp; TNM Mpamba</p>
           </div>
         </div>
 
