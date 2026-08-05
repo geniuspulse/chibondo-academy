@@ -66,6 +66,8 @@ export default function PayFees() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { user, isLoadingAuth, authChecked } = useAuth();
+
   const planKey = planId || 'monthly';
   const plan = PLAN_META[planKey] || PLAN_META.monthly;
   const PlanIcon = plan.icon;
@@ -83,8 +85,6 @@ export default function PayFees() {
   }, [user]);
 
   useEffect(() => () => clearInterval(pollRef.current), []);
-
-  const { user, isLoadingAuth, authChecked } = useAuth();
 
   useEffect(() => {
     // Wait for the auth check to finish before deciding to redirect.
