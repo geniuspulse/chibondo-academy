@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, GraduationCap, Zap, Crown, Loader2, BookOpen, Calendar, Users, Award } from 'lucide-react';
+import { Check, Zap, Crown, Loader2, BookOpen, Calendar, Users, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
@@ -205,9 +205,6 @@ export default function SubscriptionPage() {
 
       {/* ── Branded Hero — matches Subjects page style ── */}
       <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-center text-primary-foreground">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3 bg-primary-foreground/15">
-          <GraduationCap className="w-3.5 h-3.5" /> Chibondo Academy
-        </div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1">School Fees</h1>
         <p className="text-primary-foreground/70 text-sm max-w-md mx-auto">
           Unlock full access to every lesson, quiz, past paper, and learning resource across all your subjects
@@ -382,19 +379,6 @@ export default function SubscriptionPage() {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 text-sm">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <GraduationCap className="w-4 h-4 text-primary" />
-        </div>
-        <div>
-          <p className="font-medium">Need help with your fees?</p>
-          <p className="text-xs text-muted-foreground">
-            Secure payment via Airtel Money & TNM Mpamba. Contact us at{' '}
-            <a href="mailto:support@chibondoacademy.com" className="text-primary hover:underline">support@chibondoacademy.com</a>
-          </p>
         </div>
       </div>
 
