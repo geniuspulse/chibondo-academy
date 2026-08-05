@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL  = process.env.SUPABASE_URL || 'https://nckjjfxlmmsnmnexcgzg.supabase.co';
 const SERVICE_KEY   = process.env.CHIBONDO_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SHARED_SECRET = process.env.WA_REGISTER_SECRET;
+const SHARED_SECRET = process.env.WA_REGISTER_SECRET || process.env.OTP_SECRET;
 const APP_URL       = process.env.VITE_APP_URL || process.env.APP_URL || 'https://chibondoacademy.com';
 const WA_TOKEN      = process.env.WA_ACCESS_TOKEN;
 const WA_PHONE_ID   = process.env.WA_PHONE_NUMBER_ID;
