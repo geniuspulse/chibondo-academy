@@ -205,9 +205,9 @@ export default function SubscriptionPage() {
 
       {/* ── Branded Hero — matches Subjects page style ── */}
       <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-center text-primary-foreground">
-        <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1">School Fees</h1>
+        <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1">Unlock Every Lesson</h1>
         <p className="text-primary-foreground/70 text-sm max-w-md mx-auto">
-          Unlock full access to every lesson, quiz, past paper, and learning resource across all your subjects
+          Pay your school fees below to access all lessons, quizzes, past papers, and learning resources across every subject
         </p>
         <div className="flex flex-wrap justify-center gap-5 pt-4">
           {[{ icon: BookOpen, text: 'All Subjects' },{ icon: Users, text: lessonCount != null ? `${lessonCount}+ Lessons` : 'Lessons' },{ icon: Award, text: 'Past Papers' }].map(({ icon: Icon, text }) => (
