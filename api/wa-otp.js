@@ -718,21 +718,31 @@ async function handleIncomingMessage(req, res) {
             }
           }
 
-          // Generate magic link token
+          // Generate magic link token (and a code — the otp_codes table has
+          // a NOT NULL constraint on code, even though handleIncomingMessage
+          // only uses the token for magic-link verification)
           const token = generateToken();
+          const code  = String(Math.floor(100000 + Math.random() * 900000));
           const linkSuffix = isReset ? '&reset=true' : '';
           const verifyLink = `${APP_URL}/verify-link?t=${token}${linkSuffix}`;
 
-          // Store in otp_codes (5-min expiry)
-          await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
+          // Store in otp_codes (5-min expiry) — check for errors so failures
+          // are visible instead of silently swallowed
+          const otpStoreRes = await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
             body: JSON.stringify({
-              phone: fromPhone, token,
+              phone: fromPhone, code, token,
               expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
               used: false,
             }),
           });
+          if (!otpStoreRes.ok) {
+            const errText = await otpStoreRes.text().catch(() => '');
+            console.error('[wa-otp/webhook] OTP store failed:', otpStoreRes.status, errText.slice(0, 300));
+            await sendTextReply(fromPhone, 'Sorry, something went wrong. Please try again in a moment.');
+            continue;
+          }
 
           // Reply with magic link (free-form text — within 24h window)
           if (isReset) {
