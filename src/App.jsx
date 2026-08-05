@@ -231,7 +231,7 @@ const AppRoutes = () => {
           <Route path="/teacher/assignments" element={<RoleGuard allowed={['teacher','admin']}><TeacherAssignments /></RoleGuard>} />
           <Route path="/teacher/library" element={<RoleGuard allowed={['teacher','admin']}><TeacherLibrary /></RoleGuard>} />
           <Route path="/teacher/grading" element={<RoleGuard allowed={['teacher','admin']}><AssignmentGrading /></RoleGuard>} />
-          <Route path="/teacher/progress" element={<RoleGuard allowed={['teacher','admin']}><StudentProgressTracker /></RoleGuard>} />
+          <Route path="/teacher/progress" element={<Navigate to="/teacher" replace />} />
           <Route path="/teacher/settings" element={<RoleGuard allowed={['teacher']}><TeacherSettings /></RoleGuard>} />
           <Route path="/teacher/blog" element={<RoleGuard allowed={['teacher','admin']}><TeacherBlog /></RoleGuard>} />
           <Route path="/teacher/notifications" element={<RoleGuard allowed={['teacher','admin']}><TeacherNotifications /></RoleGuard>} />
@@ -245,12 +245,12 @@ const AppRoutes = () => {
           <Route path="/admin/bunny-migration" element={<RoleGuard allowed={['admin']}><BunnyMigration /></RoleGuard>} />
           <Route path="/admin/notifications" element={<RoleGuard allowed={['admin']}><AdminNotifications /></RoleGuard>} />
           <Route path="/admin/blog" element={<RoleGuard allowed={['admin']}><AdminBlog /></RoleGuard>} />
-          <Route path="/admin/curriculum" element={<RoleGuard allowed={['admin']}><CurriculumManagement /></RoleGuard>} />
+          <Route path="/admin/curriculum" element={<Navigate to="/admin/courses" replace />} />
           <Route path="/admin/courses" element={<RoleGuard allowed={['admin']}><AdminCourses /></RoleGuard>} />
           <Route path="/admin/affiliates" element={<RoleGuard allowed={['admin']}><AffiliateManagement /></RoleGuard>} />
           <Route path="/admin/tutors" element={<RoleGuard allowed={['admin']}><TutorManagement /></RoleGuard>} />
           <Route path="/admin/library" element={<RoleGuard allowed={['admin']}><LibraryManagement /></RoleGuard>} />
-          <Route path="/admin/enrollment-analytics" element={<RoleGuard allowed={['admin']}><EnrollmentAnalytics /></RoleGuard>} />
+          <Route path="/admin/enrollment-analytics" element={<Navigate to="/admin/users" replace />} />
         </Route>
       </Route>
 

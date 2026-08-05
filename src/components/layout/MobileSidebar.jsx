@@ -27,8 +27,6 @@ const teacherNav = [
   { label: 'Library',          icon: Library,         path: '/teacher/library' },
   { label: 'Quiz Builder',     icon: ClipboardList,   path: '/teacher/quizzes' },
   { label: 'Grading',          icon: PenTool,         path: '/teacher/grading' },
-  { label: 'Student Progress', icon: TrendingUp,      path: '/teacher/progress' },
-  { label: 'Affiliate',     icon: Gift,            path: '/affiliate' },
   { label: 'Blog',             icon: Newspaper,       path: '/teacher/blog' },
   { label: 'Notifications',    icon: Bell,            path: '/teacher/notifications' },
   { label: 'Settings',         icon: Settings,        path: '/teacher/settings' },
@@ -37,15 +35,12 @@ const teacherNav = [
 const adminNav = [
   { label: 'Dashboard',     icon: LayoutDashboard, path: '/admin' },
   { label: 'Courses',       icon: BookOpen,        path: '/admin/courses' },
-  { label: 'Curriculum',    icon: Layers,          path: '/admin/curriculum' },
   { label: 'Library',       icon: Library,         path: '/admin/library' },
   { label: 'Tutor Profiles',icon: GraduationCap,   path: '/admin/tutors' },
-  { label: 'Applications',  icon: FileText,        path: '/admin/teachers' },
   { label: 'Students',      icon: Users,           path: '/admin/users' },
   { label: 'Fees',          icon: CreditCard,      path: '/admin/subscriptions' },
   { label: 'Affiliates',    icon: Gift,            path: '/admin/affiliates' },
   { label: 'Blog',          icon: Newspaper,       path: '/admin/blog' },
-  { label: 'Notifications', icon: Bell,            path: '/admin/notifications' },
   { label: 'Settings',      icon: Settings,        path: '/admin/settings' },
 ];
 
