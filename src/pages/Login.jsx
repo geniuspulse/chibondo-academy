@@ -16,7 +16,7 @@ export default function Login() {
   const { isAuthenticated, authChecked } = useAuth();
   const refCode = searchParams.get("ref") || getReferralCode();
 
-  const [loginMethod, setLoginMethod] = useState("whatsapp"); // whatsapp | email
+  const [loginMethod, setLoginMethod] = useState("whatsapp");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,34 +24,14 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(
-    parseInt(localStorage.getItem("login_fail_count") || "0", 10)
-  );
 
   useEffect(() => {
     if (refCode) localStorage.setItem("pending_referral_code", refCode.toUpperCase());
   }, [refCode]);
 
-  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (authChecked && isAuthenticated) window.location.replace("/dashboard");
   }, [authChecked, isAuthenticated]);
-
-  const recordFailure = () => {
-    const count = failedAttempts + 1;
-    setFailedAttempts(count);
-    localStorage.setItem("login_fail_count", String(count));
-    if (count >= 3) {
-      localStorage.removeItem("login_fail_count");
-      setTimeout(() => navigate("/register", { replace: true }), 1500);
-    }
-    return count;
-  };
-
-  const resetFailures = () => {
-    setFailedAttempts(0);
-    localStorage.removeItem("login_fail_count");
-  };
 
   // ── WhatsApp login ──
   const handleWhatsAppSubmit = async (e) => {
@@ -64,12 +44,7 @@ export default function Login() {
       return;
     }
 
-    resetFailures();
     setSent(true);
-
-    // Redirect to WhatsApp with a pre-filled message to the business number.
-    // This opens the 24-hour customer service window so we can reply with a
-    // magic login link as free-form text — no template approval needed.
     const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567';
     const prefilled = encodeURIComponent(`Login`);
     window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
@@ -80,38 +55,23 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    if (!email.trim()) {
-      setError("Please enter your email");
-      return;
-    }
-    if (!password) {
-      setError("Please enter your password");
-      return;
-    }
+    if (!email.trim()) return setError("Please enter your email");
+    if (!password) return setError("Please enter your password");
 
     setLoading(true);
     try {
       const result = await db.auth.loginViaEmailPassword(email.trim(), password);
       if (result?.access_token || result?.user) {
-        resetFailures();
         window.location.replace("/dashboard");
       } else {
-        const count = recordFailure();
         setError("Invalid email or password.");
-        if (count >= 3) {
-          setError("Too many failed attempts. Redirecting to registration…");
-        }
       }
     } catch (err) {
-      const count = recordFailure();
       setError(
         err.message?.includes("Invalid") || err.message?.includes("invalid")
           ? "Invalid email or password."
           : "Login failed. Please try again."
       );
-      if (count >= 3) {
-        setError("Too many failed attempts. Redirecting to registration…");
-      }
     } finally {
       setLoading(false);
     }
@@ -126,7 +86,6 @@ export default function Login() {
       />
       <AuthLayout
         title="Welcome Back"
-        subtitle="Sign in with your WhatsApp number or email"
         footer={
           <>
             New to the academy?{" "}
@@ -166,8 +125,6 @@ export default function Login() {
           </div>
         )}
 
-
-
         {/* WhatsApp login */}
         {loginMethod === "whatsapp" && (
           <div className="space-y-4">
@@ -186,14 +143,11 @@ export default function Login() {
                   className="pl-10 h-12"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Tap below to open WhatsApp with a pre-filled message. Send it and we'll reply with a login link.
-              </p>
             </div>
 
             {!sent ? (
               <Button onClick={handleWhatsAppSubmit} className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700">
-                <MessageCircle className="w-4 h-4 mr-2" />Get Login Link
+                <MessageCircle className="w-4 h-4 mr-2" />Continue with WhatsApp
               </Button>
             ) : (
               <div className="space-y-3">
@@ -202,14 +156,10 @@ export default function Login() {
                     WhatsApp is opening…
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Send the pre-filled message to receive your login link, then tap it to log in.
+                    Send the message and tap the link we reply with.
                   </p>
                 </div>
-                <Button
-                  onClick={() => setSent(false)}
-                  variant="outline"
-                  className="w-full h-10 text-sm"
-                >
+                <Button onClick={() => setSent(false)} variant="outline" className="w-full h-10 text-sm">
                   Back
                 </Button>
               </div>
@@ -268,10 +218,6 @@ export default function Login() {
                 <><Mail className="w-4 h-4 mr-2" />Sign In</>
               )}
             </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              Registered with WhatsApp? Set a password in Settings → Security to log in here on any device.
-            </p>
           </form>
         )}
 

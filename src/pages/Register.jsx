@@ -25,7 +25,6 @@ export default function Register() {
     if (refCode) localStorage.setItem("pending_referral_code", refCode.toUpperCase());
   }, [refCode]);
 
-  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (authChecked && isAuthenticated) window.location.replace("/dashboard");
   }, [authChecked, isAuthenticated]);
@@ -34,21 +33,13 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    if (!fullName.trim()) {
-      setError("Please enter your name");
-      return;
-    }
+    if (!fullName.trim()) return setError("Please enter your name");
 
     const digits = phone.replace(/\D/g, "");
-    if (digits.length < 9) {
-      setError("Please enter a valid phone number");
-      return;
-    }
+    if (digits.length < 9) return setError("Please enter a valid phone number");
 
     setLoading(true);
 
-    // Redirect to WhatsApp with a pre-filled message to the business number.
-    // The webhook will catch it and reply with a verification magic link.
     const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567';
     const prefilled = encodeURIComponent(`Register ${digits} ${fullName.trim()}`);
     window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
@@ -62,18 +53,14 @@ export default function Register() {
         canonical={`${window.location.origin}/register`}
       />
       <AuthLayout
-        title="Welcome to The Chibondo Academy"
-        subtitle="Create your account with WhatsApp verification"
+        title="Join Chibondo Academy"
         footer={
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
               Already have an account?{" "}
               <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
             </div>
-            <div className="text-xs text-muted-foreground">
-              You can sign in with WhatsApp or email
-            </div>
-            <div className="pt-2 border-t border-gray-200">
+            <div className="pt-2 border-t border-border">
               Interested in teaching?{" "}
               <Link to="/register/teacher" className="text-primary font-medium hover:underline">Apply as Teacher</Link>
             </div>
@@ -95,7 +82,7 @@ export default function Register() {
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name <span className="text-red-500">*</span></Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="fullName"
                 type="text"
@@ -112,7 +99,7 @@ export default function Register() {
           <div className="space-y-2">
             <Label htmlFor="phone">WhatsApp Number <span className="text-red-500">*</span></Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="phone"
                 type="tel"
@@ -124,9 +111,6 @@ export default function Register() {
                 required
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tap below to open WhatsApp with a pre-filled message. Send it and we'll reply with a verification link.
-            </p>
           </div>
 
           <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
@@ -135,9 +119,9 @@ export default function Register() {
               : <><MessageCircle className="w-4 h-4 mr-2" />Continue with WhatsApp</>}
           </Button>
 
-          <p className="text-center text-xs text-gray-500">
+          <p className="text-center text-xs text-muted-foreground">
             By registering, you agree to our{" "}
-            <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+            <Link to="/terms" className="text-primary hover:underline">Terms</Link>
             {" "}and{" "}
             <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
           </p>

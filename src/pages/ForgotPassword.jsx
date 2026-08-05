@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,16 +17,14 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Set-password state (after magic link verification)
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [resetDone, setResetDone] = useState(false);
 
-  // If we got here from a magic link with setpw=1, show the set-password form
   const isSetPwMode = searchParams.get("setpw") === "1";
 
-  // ── Set new password (after WhatsApp magic link verification) ──
+  // ── Set new password ──
   const handleSetPassword = async (e) => {
     e.preventDefault();
     setError("");
@@ -53,7 +51,7 @@ export default function ForgotPassword() {
     return (
       <>
         <SEO title="Set New Password" description="Set a new password for your Chibondo Academy account." />
-        <AuthLayout title="Set New Password" subtitle="Enter a new password for your account">
+        <AuthLayout title="Set New Password">
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {error}
@@ -103,7 +101,6 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            {/* Password strength hint */}
             {newPw.length > 0 && (
               <div className="flex gap-1.5">
                 {[1,2,3,4].map(i => (
@@ -137,14 +134,12 @@ export default function ForgotPassword() {
     return (
       <>
         <SEO title="Password Updated" description="Your password has been updated." />
-        <AuthLayout title="Password Updated" subtitle="You can now log in with your new password">
+        <AuthLayout title="Password Updated">
           <div className="flex flex-col items-center gap-4 py-8">
             <div className="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10 text-green-500" />
             </div>
-            <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Redirecting you to login…
-            </p>
+            <p className="text-sm text-muted-foreground text-center">Redirecting you to login…</p>
           </div>
         </AuthLayout>
       </>
@@ -157,14 +152,9 @@ export default function ForgotPassword() {
     setError("");
 
     const digits = phone.replace(/\D/g, "");
-    if (digits.length < 9) {
-      setError("Please enter a valid phone number");
-      return;
-    }
+    if (digits.length < 9) return setError("Please enter a valid phone number");
 
     setSent(true);
-
-    // Open WhatsApp with "Reset" message — webhook will reply with a magic link
     const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || "265991234567";
     const prefilled = encodeURIComponent("Reset");
     window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
@@ -178,8 +168,7 @@ export default function ForgotPassword() {
         canonical={`${window.location.origin}/forgot-password`}
       />
       <AuthLayout
-        title="Reset your password"
-        subtitle="Verify via WhatsApp to set a new password"
+        title="Reset Password"
         footer={
           <>
             Remembered your login?{" "}
@@ -197,18 +186,12 @@ export default function ForgotPassword() {
           <div className="space-y-3">
             <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
               <MessageCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                WhatsApp is opening…
-              </p>
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">WhatsApp is opening…</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Send the "Reset" message to receive a link. Tap it to set your new password.
+                Send the message and tap the link we reply with.
               </p>
             </div>
-            <Button
-              onClick={() => setSent(false)}
-              variant="outline"
-              className="w-full h-10 text-sm"
-            >
+            <Button onClick={() => setSent(false)} variant="outline" className="w-full h-10 text-sm">
               Back
             </Button>
           </div>
@@ -230,9 +213,6 @@ export default function ForgotPassword() {
                   required
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Tap below to open WhatsApp with a pre-filled message. Send it and we'll reply with a link to set your new password.
-              </p>
             </div>
 
             <Button type="submit" className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700">

@@ -4,10 +4,9 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
       <div className="w-full max-w-md">
-        {/* Brand header */}
-        <div className="text-center mb-8">
-          {/* Real ACA logo — gold quill + twin frames */}
-          <div className="mx-auto w-20 h-20">
+        {/* Brand header — logo only, title below */}
+        <div className="text-center mb-6">
+          <div className="mx-auto w-16 h-16">
             <svg viewBox="0 0 200 244" xmlns="http://www.w3.org/2000/svg" fill="none" className="w-full h-full drop-shadow-lg">
               <rect x="26" y="12" width="108" height="146" rx="3" stroke="#C9A84C" strokeWidth="5.5" fill="none" opacity="0.6"/>
               <rect x="42" y="26" width="108" height="146" rx="3" stroke="#C9A84C" strokeWidth="5.5" fill="none"/>
@@ -25,18 +24,17 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
               <path d="M82 226 Q96 242 110 226 L104 218 L88 218 Z" fill="none" stroke="#C9A84C" strokeWidth="2"/>
             </svg>
           </div>
-          <h1 className="text-xl font-bold mt-3 font-display">Chibondo Academy</h1>
-          {title && <p className="text-base font-semibold text-gray-700 mt-1">{title}</p>}
-          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+          {title && <h1 className="text-lg font-bold mt-3 font-display">{title}</h1>}
+          {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
         </div>
 
         {/* Card */}
-        <div className="bg-card rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
           {children}
         </div>
 
         {footer && (
-          <div className="text-center text-sm text-gray-500 mt-6">{footer}</div>
+          <div className="text-center text-sm text-muted-foreground mt-6">{footer}</div>
         )}
       </div>
     </div>

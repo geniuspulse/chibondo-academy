@@ -53,7 +53,6 @@ function RoleHome() {
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const TeacherRegister = lazy(() => import('@/pages/TeacherRegister'));
-const VerifyOtp = lazy(() => import('@/pages/VerifyOtp'));
 const VerifyLink = lazy(() => import('@/pages/VerifyLink'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
@@ -170,7 +169,6 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/register/teacher" element={<TeacherRegister />} />
-      <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-link" element={<VerifyLink />} />
       <Route path="/welcome" element={<LandingPage />} />
