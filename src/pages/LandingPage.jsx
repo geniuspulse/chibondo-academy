@@ -146,10 +146,10 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <button onClick={() => navigate('/register')}
+          <button onClick={() => navigate('/subjects')}
             className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:brightness-110 mt-3"
             style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-            Join the conversation
+            Browse All Subjects
           </button>
         </div>
 
