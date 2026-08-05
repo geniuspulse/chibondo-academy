@@ -144,7 +144,7 @@ export default function TopBar({ user, notificationCount = 0, onMenuClick }) {
               </Button>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center lg:hidden">
               <Link to="/">
                 <img
                   src="https://nckjjfxlmmsnmnexcgzg.supabase.co/storage/v1/object/public/assets/logo_wide.jpg"

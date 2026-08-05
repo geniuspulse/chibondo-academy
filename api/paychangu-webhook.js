@@ -1,220 +1,211 @@
 // Vercel serverless function — POST /api/paychangu-webhook
-// Paychangu server-to-server webhook — fires after payment confirmation.
-// Register this URL in your Paychangu dashboard as the webhook endpoint.
-// Validates the payload, activates the subscription, and tracks affiliate commissions.
-// Sends WhatsApp payment confirmation to the student.
+// Paychangu server-to-server webhook for mobile money payment events.
+// Acts as a fallback: if the student closes the browser mid-poll,
+// this webhook still activates the subscription.
+//
+// Paychangu sends a POST with the payment event payload. We verify
+// the charge with Paychangu's API (don't trust the webhook body alone)
+// and then run the same activation logic as /api/direct-charge?action=verify.
+//
+// Setup: Add this URL in Paychangu dashboard → Settings → Webhooks:
+//   https://chibondoacademy.com/api/paychangu-webhook
 
-const PAYCHANGU_SECRET  = process.env.PAYCHANGU_SECRET_KEY;
-const SUPABASE_URL      = process.env.SUPABASE_URL;
-const SUPABASE_SRK      = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const WA_TOKEN          = process.env.WA_ACCESS_TOKEN;
-const WA_PHONE_ID       = process.env.WA_PHONE_NUMBER_ID;
+const PAYCHANGU_SECRET = process.env.PAYCHANGU_SECRET_KEY;
+const SUPABASE_URL     = process.env.SUPABASE_URL;
+const SUPABASE_SRK     = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const WA_TOKEN         = process.env.WA_ACCESS_TOKEN;
+const WA_PHONE_ID      = process.env.WA_PHONE_NUMBER_ID;
 
-const PLAN_MONTHS       = { monthly: 1, annual: 12, biannual: 24 };
+const PLAN_MONTHS = { monthly: 1, annual: 12, biannual: 24 };
 const COMMISSION_AMOUNT = 10000; // MWK
 
-async function supabaseGet(path) {
+// ── Supabase helpers (same as direct-charge.js) ───────────────────────────────
+async function sbGet(path) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
-    headers: {
-      apikey: SUPABASE_SRK,
-      Authorization: `Bearer ${SUPABASE_SRK}`,
-      Accept: 'application/json',
-    },
+    headers: { apikey: SUPABASE_SRK, Authorization: `Bearer ${SUPABASE_SRK}`, Accept: 'application/json' },
   });
   return r.json();
 }
-
-async function supabasePost(path, body) {
+async function sbPost(path, body) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     method: 'POST',
-    headers: {
-      apikey: SUPABASE_SRK,
-      Authorization: `Bearer ${SUPABASE_SRK}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal,resolution=ignore-duplicates',
-    },
+    headers: { apikey: SUPABASE_SRK, Authorization: `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json', Prefer: 'return=minimal,resolution=ignore-duplicates' },
     body: JSON.stringify(body),
   });
 }
-
-async function supabasePatch(path, body) {
+async function sbPatch(path, body) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     method: 'PATCH',
-    headers: {
-      apikey: SUPABASE_SRK,
-      Authorization: `Bearer ${SUPABASE_SRK}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
+    headers: { apikey: SUPABASE_SRK, Authorization: `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify(body),
   });
 }
 
-async function sendWhatsAppMessage(phone, message, template) {
-  if (!WA_TOKEN || !WA_PHONE_ID) return;
-  let cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.startsWith('0')) cleanPhone = '265' + cleanPhone.slice(1);
-  if (!cleanPhone.startsWith('265')) cleanPhone = '265' + cleanPhone;
-  try {
-    const body = template
-      ? { messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'template', template }
-      : { messaging_product: 'whatsapp', recipient_type: 'individual', to: cleanPhone, type: 'text', text: { body: message } };
-    await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch (err) {
-    console.error('[webhook/whatsapp] send error:', err.message);
-  }
+function normalisePhone(raw) {
+  let p = String(raw).replace(/\D/g, '');
+  if (p.startsWith('0')) p = '265' + p.slice(1);
+  if (!p.startsWith('265')) p = '265' + p;
+  return p;
 }
 
-async function processReferralCommission(uid, txRef) {
-  try {
-    const refs = await supabaseGet(
-      `/referrals?referred_user_id=eq.${encodeURIComponent(uid)}&tracking_active=eq.true&limit=1`
-    );
-    const ref = Array.isArray(refs) ? refs[0] : null;
-    if (!ref) { console.log('[webhook/referral] no open referral for user:', uid); return; }
+// ── Subscription activation (shared logic with direct-charge.js) ─────────────
+async function activateSubscription(uid, plan, amount, chargeRef) {
+  const subId = `sub-${chargeRef}`;
 
-    const commissionAmt = ref.reward_amount || COMMISSION_AMOUNT;
-    const now = new Date().toISOString();
-
-    await supabasePatch(`/referrals?id=eq.${encodeURIComponent(ref.id)}`, {
-      status:          'paid',
-      reward_status:   'earned',
-      reward_amount:   commissionAmt,
-      tracking_active: false,  // Stop tracking after first commission payout
-      notes:           `Confirmed via webhook tx_ref: ${txRef}`,
-      updated_date:    now,
-    });
-    console.log('[webhook/referral] commission marked paid for referral:', ref.id);
-
-    // Notify affiliate via in-app notification
-    try {
-      await supabasePost('/notifications', {
-        user_id:      ref.referrer_id,
-        type:         'affiliate_commission',
-        title:        '💰 Commission Earned!',
-        message:      `${ref.referred_name || 'Your referral'} just subscribed. You earned MWK ${commissionAmt.toLocaleString()}!`,
-        is_read:      false,
-        created_date: now,
-        updated_date: now,
-      });
-    } catch (_) {}
-
-    // Notify affiliate via WhatsApp
-    try {
-      const affiliateUsers = await supabaseGet(`/users?id=eq.${encodeURIComponent(ref.referrer_id)}&select=phone_number,full_name&limit=1`);
-      const affUser = Array.isArray(affiliateUsers) ? affiliateUsers[0] : null;
-      if (affUser?.phone_number) {
-        await sendWhatsAppMessage(affUser.phone_number, null, {
-          name: 'commission_earned',
-          language: { code: 'en' },
-          components: [{ type: 'body', parameters: [
-            { type: 'text', text: ref.referred_name || 'Your referral' },
-            { type: 'text', text: commissionAmt.toLocaleString() },
-          ]}],
-        });
-      }
-    } catch (_) {}
-  } catch (err) {
-    console.error('[webhook/referral] error:', err.message);
+  // Idempotency guard — prevent double-activation from concurrent
+  // webhook + frontend poll arriving at the same time.
+  const existing = await sbGet(`/subscriptions?id=eq.${encodeURIComponent(subId)}&limit=1`);
+  if (Array.isArray(existing) && existing.length > 0) {
+    return { expiresAt: existing[0].expires_at, alreadyActive: true };
   }
+
+  const months = PLAN_MONTHS[plan] || 1;
+  const now = new Date();
+  const startsAt = now.toISOString();
+  const expiresAt = new Date(new Date().setMonth(now.getMonth() + months)).toISOString();
+
+  // Deactivate existing active subscriptions (excluding the new one)
+  await sbPatch(
+    `/subscriptions?student_id=eq.${encodeURIComponent(uid)}&status=eq.active&id=neq.${encodeURIComponent(subId)}`,
+    { status: 'expired', updated_date: now.toISOString() }
+  );
+
+  // Create new subscription
+  await sbPost('/subscriptions', {
+    id: subId,
+    student_id: uid, plan, status: 'active', amount, currency: 'MWK',
+    starts_at: startsAt, expires_at: expiresAt,
+    created_date: now.toISOString(), updated_date: now.toISOString(),
+  });
+
+  // Mark payment completed
+  await sbPatch(`/payments?reference=eq.${encodeURIComponent(chargeRef)}`,
+    { status: 'completed', updated_date: now.toISOString() });
+
+  // Process referral commission
+  try {
+    const refs = await sbGet(`/referrals?referred_user_id=eq.${encodeURIComponent(uid)}&status=neq.paid&limit=1`);
+    const ref = Array.isArray(refs) ? refs[0] : null;
+    if (ref) {
+      const commissionAmt = ref.reward_amount || COMMISSION_AMOUNT;
+      await sbPatch(`/referrals?id=eq.${encodeURIComponent(ref.id)}`, {
+        status: 'paid', reward_status: 'earned', reward_amount: commissionAmt,
+        notes: `Webhook confirmed: ${chargeRef}`, updated_date: now.toISOString(),
+      });
+      try {
+        await sbPost('/notifications', {
+          user_id: ref.referrer_id, type: 'affiliate_commission',
+          title: '💰 Commission Earned!',
+          message: `${ref.referred_name || 'Your referral'} has subscribed. You earned MWK ${commissionAmt.toLocaleString()}!`,
+          is_read: false, created_date: now.toISOString(), updated_date: now.toISOString(),
+        });
+      } catch (_) {}
+    }
+  } catch (err) { console.error('[paychangu-webhook] referral error:', err.message); }
+
+  // Send WhatsApp confirmation
+  try {
+    const userRows = await sbGet(`/users?id=eq.${encodeURIComponent(uid)}&select=phone_number,full_name&limit=1`);
+    const u = Array.isArray(userRows) ? userRows[0] : null;
+    if (u?.phone_number && WA_TOKEN && WA_PHONE_ID) {
+      const phone = normalisePhone(u.phone_number);
+      const expiryStr = new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp', recipient_type: 'individual', to: phone,
+          type: 'template',
+          template: {
+            name: 'payment_confirmation',
+            language: { code: 'en' },
+            components: [{ type: 'body', parameters: [
+              { type: 'text', text: plan },
+              { type: 'text', text: amount.toLocaleString() },
+              { type: 'text', text: expiryStr },
+            ]}],
+          },
+        }),
+      }).catch(() => {});
+    }
+  } catch (_) {}
+
+  return { expiresAt, alreadyActive: false };
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const payload = req.body;
-    console.log('[paychangu-webhook] payload:', JSON.stringify(payload).slice(0, 400));
+    const body = req.body || {};
+    console.log('[paychangu-webhook] received:', JSON.stringify(body).slice(0, 500));
 
-    const event  = payload?.event;
-    const data   = payload?.data || payload;
-    const tx_ref = data?.tx_ref;
-    const status = data?.status;
+    // Paychangu webhook payload typically includes:
+    //   charge_id / tx_ref / reference — our internal charge ID
+    //   status — 'success', 'failed', etc.
+    // We don't trust the webhook body — we re-verify with Paychangu's API.
 
-    if (event !== 'charge.success' && status !== 'success') {
-      return res.status(200).json({ received: true });
-    }
-    if (!tx_ref) {
-      console.warn('[paychangu-webhook] no tx_ref');
-      return res.status(200).json({ received: true });
+    const chargeId = body.charge_id || body.tx_ref || body.reference || body.data?.charge_id || body.data?.tx_ref;
+    if (!chargeId) {
+      console.error('[paychangu-webhook] no charge_id in payload');
+      return res.status(400).json({ error: 'Missing charge_id' });
     }
 
-    const meta       = data?.meta || {};
-    const planPrefix = tx_ref.split('-')[1]?.toUpperCase();
-    const prefixMap  = { MON: 'monthly', ANN: 'annual', BIA: 'biannual' };
-    const plan       = meta.plan || prefixMap[planPrefix] || 'monthly';
-    const months     = PLAN_MONTHS[plan] || 1;
-    const amount     = data?.amount || 0;
-    const uid        = meta.user_id;
-
-    if (!uid) {
-      console.warn('[paychangu-webhook] no user_id in meta');
-      return res.status(200).json({ received: true });
+    // Look up the payment record in Supabase to get user_id and plan
+    const payments = await sbGet(`/payments?reference=eq.${encodeURIComponent(chargeId)}&limit=1`);
+    const payment = Array.isArray(payments) ? payments[0] : null;
+    if (!payment) {
+      console.error('[paychangu-webhook] payment not found for charge:', chargeId);
+      return res.status(404).json({ error: 'Payment record not found' });
     }
 
-    const now      = new Date();
-    const startsAt = now.toISOString();
-    const expiresAt = new Date(new Date().setMonth(new Date().getMonth() + months)).toISOString();
+    // Skip if already completed
+    if (payment.status === 'completed') {
+      console.log('[paychangu-webhook] already completed, skipping');
+      return res.status(200).json({ ok: true, alreadyCompleted: true });
+    }
 
-    // Deactivate existing subscriptions
-    await supabasePatch(
-      `/subscriptions?student_id=eq.${encodeURIComponent(uid)}&status=eq.active`,
-      { status: 'expired', updated_date: now.toISOString() }
+    const userId = payment.student_id;
+    const plan = payment.description || 'monthly';
+
+    // Re-verify with Paychangu (don't trust webhook body alone)
+    const verifyRes = await fetch(
+      `https://api.paychangu.com/mobile-money/payments/${encodeURIComponent(chargeId)}/verify`,
+      { headers: { Authorization: `Bearer ${PAYCHANGU_SECRET}`, Accept: 'application/json' } }
     );
+    const verifyData = await verifyRes.json();
+    console.log('[paychangu-webhook] verify response:', verifyRes.status, JSON.stringify(verifyData).slice(0, 300));
 
-    // Create subscription
-    const subRes = await supabasePost('/subscriptions', {
-      id:           `sub-${tx_ref}`,
-      student_id:   uid,
-      plan,
-      status:       'active',
-      amount,
-      currency:     'MWK',
-      starts_at:    startsAt,
-      expires_at:   expiresAt,
-      created_date: now.toISOString(),
-      updated_date: now.toISOString(),
-    });
-    console.log('[paychangu-webhook] subscription insert:', subRes.status);
+    const dataStatus = verifyData?.data?.status;
+    // Accept multiple success indicators — Paychangu may use 'success', 'completed', 'paid', etc.
+    const isSuccess = verifyData?.status === 'success' && ['success', 'completed', 'paid', 'approved'].includes(dataStatus);
+    const isFailed = ['failed', 'cancelled', 'rejected', 'expired'].includes(dataStatus);
 
-    // Mark payment completed
-    await supabasePatch(
-      `/payments?reference=eq.${encodeURIComponent(tx_ref)}`,
-      { status: 'completed', updated_date: now.toISOString() }
-    );
-
-    // ✅ Process referral commission
-    await processReferralCommission(uid, tx_ref);
-
-    // ✅ Send WhatsApp payment confirmation to student
-    try {
-      const userRows = await supabaseGet(`/users?id=eq.${encodeURIComponent(uid)}&select=phone_number,full_name&limit=1`);
-      const user = Array.isArray(userRows) ? userRows[0] : null;
-      if (user?.phone_number) {
-        const expiryDate = new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-        await sendWhatsAppMessage(user.phone_number, null, {
-          name: 'payment_confirmation',
-          language: { code: 'en' },
-          components: [{ type: 'body', parameters: [
-            { type: 'text', text: plan },
-            { type: 'text', text: amount.toLocaleString() },
-            { type: 'text', text: expiryDate },
-          ]}],
-        });
-      }
-    } catch (err) {
-      console.error('[webhook/whatsapp] student notification error:', err.message);
+    if (isFailed) {
+      await sbPatch(`/payments?reference=eq.${encodeURIComponent(chargeId)}`,
+        { status: 'failed', updated_date: new Date().toISOString() });
+      return res.status(200).json({ ok: true, failed: true });
     }
 
-    console.log('[paychangu-webhook] ✅ done for', uid, 'plan:', plan);
-    return res.status(200).json({ received: true, activated: true });
+    if (!isSuccess) {
+      console.log('[paychangu-webhook] not yet confirmed, status:', dataStatus);
+      return res.status(200).json({ ok: true, pending: true, status: dataStatus });
+    }
+
+    // Payment confirmed — activate subscription
+    const amount = verifyData?.data?.amount || payment.amount || 0;
+    const { expiresAt, alreadyActive } = await activateSubscription(userId, plan, amount, chargeId);
+
+    console.log('[paychangu-webhook] subscription activated:', { userId, plan, expiresAt, alreadyActive });
+    return res.status(200).json({ ok: true, activated: true, expires_at: expiresAt, already_active: alreadyActive });
 
   } catch (err) {
-    console.error('[paychangu-webhook] error:', err);
-    return res.status(200).json({ received: true, error: err.message });
+    console.error('[paychangu-webhook] error:', err.message);
+    return res.status(500).json({ error: 'Webhook processing failed' });
   }
 }

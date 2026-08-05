@@ -305,7 +305,7 @@ async function verifyCharge(req, res) {
     console.log('[direct-charge] verify response:', verifyRes.status, JSON.stringify(verifyData).slice(0, 300));
 
     const dataStatus = verifyData?.data?.status;
-    const isPaid   = verifyData?.status === 'success' && dataStatus === 'success';
+    const isPaid = verifyData?.status === 'success' && ['success', 'completed', 'paid', 'approved'].includes(dataStatus);
     const isFailed = dataStatus === 'failed' || dataStatus === 'cancelled' || dataStatus === 'rejected';
     const isPending = !isPaid && !isFailed;
 
