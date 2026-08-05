@@ -56,8 +56,6 @@ const TeacherRegister = lazy(() => import('@/pages/TeacherRegister'));
 const VerifyLink = lazy(() => import('@/pages/VerifyLink'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
-const TutorProfilePage = lazy(() => import('@/pages/tutors/TutorProfile'));
-const TutorsPage = lazy(() => import('@/pages/tutors/TutorsPage'));
 const MyClassesPage = lazy(() => import('@/pages/MyClassesPage'));
 const EnrollmentAnalytics = lazy(() => import('@/pages/admin/EnrollmentAnalytics'));
 const ForumsHome = lazy(() => import('@/pages/forums/ForumsHome'));
@@ -187,8 +185,6 @@ const AppRoutes = () => {
         <Route path="/blog/:slugOrId" element={<BlogPostDetail />} />
         <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/subjects/:subjectId" element={<SubjectDetail />} />
-        <Route path="/tutors" element={<TutorsPage />} />
-        <Route path="/tutors/:slug" element={<TutorProfilePage />} />
         <Route path="/forums" element={<ForumsHome />} />
         <Route path="/forums/:subjectSlug/chat" element={<SubjectGroupChat />} />
         <Route path="/forums/:subjectSlug" element={<ForumRedirect />} />

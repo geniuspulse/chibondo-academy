@@ -16,7 +16,7 @@ const authNavItems = [
 const guestNavItems = [
   { label: 'Blog',     icon: Newspaper,     path: '/blog' },
   { label: 'Subjects', icon: BookOpen,      path: '/subjects' },
-  { label: 'Tutors',   icon: Home,          path: '/tutors' },
+  { label: 'Subjects',   icon: BookOpen,    path: '/subjects' },
   { label: 'Library',  icon: Library,       path: '/library' },
   { label: 'Chats',   icon: MessageSquare, path: '/forums' },
 ];
