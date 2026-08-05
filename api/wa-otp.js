@@ -5,6 +5,7 @@
  * GET  /api/wa-otp?action=check-uniqueness   — phone/email uniqueness check
  * POST /api/wa-otp  { action: "send", phone } — generate & send OTP (templates)
  * POST /api/wa-otp  { action: "verify", ... }  — verify code/token, issue session
+ * POST /api/wa-otp  { action: "generate-link", phone } — generate magic link (for AI agent)
  * GET  /api/wa-otp?hub.mode=subscribe&...     — Meta webhook verification
  * POST /api/wa-otp  { entry: [...] }          — Meta incoming message webhook
  *
@@ -530,6 +531,116 @@ async function verifyOTP(req, res) {
 }
 
 
+
+// ─── GENERATE LINK (for Nyasadesk AI agent) ─────────────────────────────────
+// POST /api/wa-otp  { action: "generate-link", phone: "265..." }
+//
+// Called by the Nyasadesk AI agent when a student in the WhatsApp chat wants
+// to start learning. Generates a magic-link token and returns the verify URL
+// so the agent can include it directly in its chat reply — no separate
+// WhatsApp message needed, since the student is already in the conversation.
+//
+// Security: requires a shared secret (OTP_SECRET) in the Authorization header
+// so only the Nyasadesk backend (or Chibondo's own frontend) can call it.
+
+async function generateLink(req, res) {
+  const { phone } = req.body || {};
+  if (!phone) return res.status(400).json({ error: 'Phone number is required' });
+
+  const cleanPhone = normalisePhone(phone);
+  if (cleanPhone.length < 12 || cleanPhone.length > 13)
+    return res.status(400).json({ error: 'Invalid phone number' });
+
+  // Verify the shared secret
+  const OTP_SECRET = process.env.OTP_SECRET || 'chibondo-wa-otp-2026';
+  const authHeader = req.headers.authorization || '';
+  const providedSecret = authHeader.replace(/^Bearer\s+/i, '');
+  if (providedSecret !== OTP_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const APP_URL = process.env.APP_URL || 'https://chibondoacademy.com';
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY)
+    return res.status(500).json({ error: 'Server configuration error' });
+
+  const headers = {
+    apikey: SUPABASE_SERVICE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+  };
+
+  // Check if user exists
+  const autoEmail = `${cleanPhone}@chibondoacademy.com`;
+  const waPrefixEmail = `wa_${cleanPhone}@chibondoacademy.com`;
+  const phoneQuery = buildPhoneOrQuery(cleanPhone, [`email.eq.${autoEmail}`, `email.eq.${waPrefixEmail}`]);
+  const userRes = await fetch(`${SUPABASE_URL}/rest/v1/users?${phoneQuery}&limit=1`, { headers });
+  const userRows = userRes.ok ? await userRes.json() : [];
+  const userExists = userRows.length > 0;
+
+  // Rate limit: 1 link per phone per 60s
+  const recentRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/otp_codes?phone=eq.${cleanPhone}&order=created_at.desc&limit=1`,
+    { headers }
+  );
+  if (recentRes.ok) {
+    const recent = await recentRes.json();
+    if (recent.length > 0) {
+      const ageSeconds = (Date.now() - new Date(recent[0].created_at).getTime()) / 1000;
+      if (ageSeconds < 60) {
+        // Return the existing valid link if it's still active
+        const existingToken = recent[0].token;
+        if (existingToken && !recent[0].used && new Date(recent[0].expires_at) > new Date()) {
+          const link = `${APP_URL}/verify-link?t=${existingToken}`;
+          return res.status(200).json({
+            ok: true,
+            link,
+            phone: cleanPhone,
+            registered: userExists,
+            name: userRows[0]?.full_name || null,
+            reused: true,
+          });
+        }
+        return res.status(429).json({ error: `Please wait ${Math.ceil(60 - ageSeconds)} seconds` });
+      }
+    }
+  }
+
+  // Generate new token
+  const token = generateToken();
+  const code  = String(Math.floor(100000 + Math.random() * 900000));
+  const link  = `${APP_URL}/verify-link?t=${token}`;
+
+  // Store in otp_codes
+  const storeRes = await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify({
+      phone: cleanPhone, code, token,
+      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      used: false,
+    }),
+  });
+
+  if (!storeRes.ok) {
+    const errText = await storeRes.text().catch(() => '');
+    console.error('[wa-otp/generate-link] store failed:', storeRes.status, errText.slice(0, 300));
+    return res.status(500).json({ error: 'Failed to generate link' });
+  }
+
+  console.log(`[wa-otp/generate-link] generated for ${cleanPhone}, registered=${userExists}`);
+
+  return res.status(200).json({
+    ok: true,
+    link,
+    phone: cleanPhone,
+    registered: userExists,
+    name: userRows[0]?.full_name || null,
+    expires_in_seconds: 300,
+  });
+}
+
 // ─── Generate a unique referral code from a user's name ────────────────────────
 function isPlaceholderEmail(email) {
   if (!email) return true;
@@ -861,8 +972,9 @@ export default async function handler(req, res) {
       return handleIncomingMessage(req, res);
     }
     const action = req.query.action || req.body?.action;
-    if (action === 'send')    return sendOTP(req, res);
-    if (action === 'verify') return verifyOTP(req, res);
+    if (action === 'send')           return sendOTP(req, res);
+    if (action === 'verify')        return verifyOTP(req, res);
+    if (action === 'generate-link') return generateLink(req, res);
     return res.status(400).json({ error: 'Invalid action' });
   }
 
