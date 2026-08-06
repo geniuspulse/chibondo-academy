@@ -202,15 +202,6 @@ export default function SubjectDetail() {
           </div>
         )}
 
-        {/* Single CTA button */}
-        {ctaConfig && (
-          <Link to={ctaConfig.to} onClick={ctaConfig.onClick}>
-            <Button className="w-full h-12 text-base font-semibold" size="lg">
-              {ctaConfig.label}
-            </Button>
-          </Link>
-        )}
-
         {/* Course Content */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
@@ -287,6 +278,15 @@ export default function SubjectDetail() {
             </div>
           )}
         </div>
+
+        {/* CTA button — below course content */}
+        {ctaConfig && (
+          <Link to={ctaConfig.to} onClick={ctaConfig.onClick}>
+            <Button className="w-full h-12 text-base font-semibold" size="lg">
+              {ctaConfig.label}
+            </Button>
+          </Link>
+        )}
       </div>
     </>
   );

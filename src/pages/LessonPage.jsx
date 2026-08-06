@@ -5,7 +5,6 @@ import { db } from '@/api/supabaseClient';
 import { ArrowLeft, ArrowRight, CheckCircle2, Download, MessageSquare, BookOpen, PlayCircle, FileText, Lock, Layers, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import LessonDiscussion from '@/components/lesson/LessonDiscussion';
 import LessonComments from '@/components/lesson/LessonComments';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
@@ -443,10 +442,13 @@ export default function LessonPage() {
                 )}
 
                 {activeTab === 'discussion' && (
-                  <div className="space-y-4">
-                    <LessonDiscussion lessonId={lessonId} />
-                    <LessonComments lessonId={lessonId} />
-                  </div>
+                  <LessonComments
+                    lessonId={lessonId}
+                    lessonTitle={lesson.title}
+                    lessonUrl={lessonUrl}
+                    subjectId={lesson.subject_id}
+                    user={user}
+                  />
                 )}
 
                 {activeTab === 'downloads' && user && lesson.attachments?.length > 0 && (
