@@ -1,3 +1,4 @@
+import { SectionLoader } from '@/components/BrandedSpinner';
 import React from 'react';
 import { NavLink, Outlet, useOutletContext } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -35,7 +36,7 @@ export default function AffiliateLayout() {
   if (settingsLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
+        <SectionLoader label="Loading…" />
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from 'react';
+import { BrandedSpinner } from '@/components/BrandedSpinner';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -151,12 +152,7 @@ const AppRoutes = () => {
 
   return (
     <ChunkErrorBoundary>
-  <Suspense fallback={
-    <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'#f5f5f5',zIndex:999}}>
-      <div style={{width:36,height:36,borderRadius:'50%',border:'3px solid #1A237E',borderTopColor:'transparent',animation:'aca-spin 0.7s linear infinite'}} />
-      <style>{`@keyframes aca-spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  }>
+  <Suspense fallback={<BrandedSpinner />}>
     <Routes>
       {/* ── Auth pages (standalone, no layout) ── */}
       <Route path="/login" element={<Login />} />
