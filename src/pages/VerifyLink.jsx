@@ -23,7 +23,8 @@ export default function VerifyLink() {
 
   useEffect(() => {
     if (!token) {
-      navigate("/login", { replace: true });
+      setError("Invalid or missing login link. Please request a new one via WhatsApp.");
+      setStatus("error");
       return;
     }
     verifyToken();
@@ -42,9 +43,8 @@ export default function VerifyLink() {
 
       if (!res.ok) {
         if (data.needsRegistration) {
-          setError("No account found. Redirecting to registration…");
+          setError("No account found. To register, send a WhatsApp message saying \"register\" to the Chibondo Academy number.");
           setStatus("error");
-          setTimeout(() => navigate("/register", { replace: true }), 1500);
           return;
         }
         setError(data.error || "Verification link is invalid or has expired.");
@@ -108,10 +108,10 @@ export default function VerifyLink() {
               <div className="text-center space-y-2 max-w-xs">
                 <p className="text-sm font-medium text-destructive">{error}</p>
                 <button
-                  onClick={() => navigate("/login", { replace: true })}
+                  onClick={() => window.location.href = "https://wa.me/265991234567?text=login"}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" /> Try again
+                  <MessageCircle className="w-3.5 h-3.5" /> Log in via WhatsApp
                 </button>
               </div>
             </>

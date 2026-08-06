@@ -916,8 +916,9 @@ async function handleIncomingMessage(req, res) {
             await sendTextReply(fromPhone,
               `Welcome to Chibondo Academy! 🎓\n\n` +
               `We don't have an account for this number yet.\n` +
-              `Register here: ${APP_URL}/register\n\n` +
-              `Or tap: ${verifyLink} to verify your number first.`
+              `Reply with "register" and your full name to create an account, e.g.:\n` +
+              `register John Smith\n\n` +
+              `Or tap here to verify your number: ${verifyLink}`
             );
           }
         }

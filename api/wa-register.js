@@ -328,7 +328,7 @@ export default async function handler(req, res) {
 
   const { tool, args } = req.body || {};
 
-  if (tool === 'login_student') {
+  if (tool === 'login_student' || tool === 'generate_login_link') {
     return handleLoginStudent(res, args);
   }
 
@@ -392,7 +392,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         already_registered: true,
-        message: `Welcome back, ${existingRow.full_name || full_name}! You already have an account. Log in here: ${APP_URL}/login?ref=AGENT — just enter your phone number.`,
+        message: `Welcome back, ${existingRow.full_name || full_name}! I've sent a login link to your WhatsApp. Tap it to log in instantly! 📲`,
       });
     }
 
@@ -476,7 +476,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       already_registered: false,
-      message: `You're now a student at *The Chibondo Academy*! 🎉\n\nLog in here: ${APP_URL}/login?ref=AGENT — enter your phone number.\n\nAfter logging in, choose a plan to unlock your lessons. Welcome aboard!`,
+      message: `You're now a student at *The Chibondo Academy*! 🎉\n\nI've sent a verification link to your WhatsApp. Tap it to log in instantly! 📲\n\nAfter logging in, choose a plan to unlock your lessons. Welcome aboard!`,
     });
 
   } catch (err) {
