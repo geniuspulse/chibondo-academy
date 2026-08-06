@@ -297,11 +297,10 @@ export default async function handler(req, res) {
       // Existing account — send WhatsApp verification link
       const waResult = await sendWhatsAppOTP(normPhone, existingRow.full_name || full_name, args?.referral_code);
       if (waResult.ok) {
-        const deliveryMsg = waResult.delivery_method === 'sms'
-          ? `Welcome back, ${existingRow.full_name || full_name}! I've sent a verification code to your phone via SMS. Use it to log in here: ${APP_URL}/login?ref=AGENT`
-          : waResult.delivery_method === 'fallback'
-            ? `Welcome back, ${existingRow.full_name || full_name}! Your verification code is *${waResult.code}*. Enter it here to log in: ${APP_URL}/verify-otp?ref=AGENT`
-            : `Welcome back, ${existingRow.full_name || full_name}! I've sent a login link to your WhatsApp. Check your messages and tap the link to log in. 📲`;
+        // Always hand back a one-tap magic link — same as the "login" flow.
+        // There is no code-entry page in the app (no /verify-otp route), so
+        // never tell the user to type a code; /verify-link auto-verifies.
+        const deliveryMsg = `Welcome back, ${existingRow.full_name || full_name}! Tap here to verify and log in:\n${waResult.verifyLink}\n\nLink expires in 5 minutes. 📲`;
         return res.status(200).json({
           ok: true,
           already_registered: true,
@@ -378,11 +377,10 @@ export default async function handler(req, res) {
     const waResult = await sendWhatsAppOTP(normPhone, full_name, args?.referral_code);
 
     if (waResult.ok) {
-      const deliveryMsg = waResult.delivery_method === 'sms'
-        ? `You're now a student at *The Chibondo Academy*! 🎉\n\nI've sent a verification code to your phone via SMS. Enter it here to log in: ${APP_URL}/verify-otp?ref=AGENT\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`
-        : waResult.delivery_method === 'fallback'
-          ? `You're now a student at *The Chibondo Academy*! 🎉\n\nYour verification code is *${waResult.code}*. Enter it here to log in: ${APP_URL}/verify-otp?ref=AGENT\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`
-          : `You're now a student at *The Chibondo Academy*! 🎉\n\nI've sent a verification link to your WhatsApp. Tap it to log in — no password needed!\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`;
+      // Always hand back a one-tap magic link — same as the "login" flow.
+      // There is no code-entry page in the app (no /verify-otp route), so
+      // never tell the user to type a code; /verify-link auto-verifies.
+      const deliveryMsg = `You're now a student at *The Chibondo Academy*! 🎉\n\nTap here to verify and log in:\n${waResult.verifyLink}\n\nAfter logging in, choose a plan to unlock your lessons — fees start at *MK10,000 per month*. Welcome aboard! 📲`;
       return res.status(200).json({
         ok: true,
         already_registered: false,
