@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL  = process.env.SUPABASE_URL || 'https://nckjjfxlmmsnmnexcgzg.supabase.co';
 const SERVICE_KEY   = process.env.CHIBONDO_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SHARED_SECRET = process.env.WA_REGISTER_SECRET || process.env.OTP_SECRET;
+const OTP_SECRET     = process.env.OTP_SECRET || 'chibondo-wa-otp-2026';
 const APP_URL       = process.env.VITE_APP_URL || process.env.APP_URL || 'https://chibondoacademy.com';
 const WA_TOKEN      = process.env.WA_ACCESS_TOKEN;
 const WA_PHONE_ID   = process.env.WA_PHONE_NUMBER_ID;
@@ -19,6 +20,15 @@ function normalisePhone(raw) {
   if (p.startsWith('0')) p = '265' + p.slice(1);
   if (!p.startsWith('265')) p = '265' + p;
   return p;
+}
+
+// Must exactly match derivePassword() in api/wa-otp.js — that endpoint is what
+// signs the student in when they tap the magic link. Any mismatch here causes
+// "Authentication failed" for every new WhatsApp registration.
+async function derivePassword(phone, secret) {
+  const data = new TextEncoder().encode(`${phone}:${secret}`);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
 function generateToken() {
@@ -387,7 +397,10 @@ export default async function handler(req, res) {
     }
 
     // Create new auth user
-    const password = normPhone + '_chibondo_2026';
+    // IMPORTANT: password must be derived the same way api/wa-otp.js's
+    // verifyOTP() derives it, or the magic-link sign-in will fail right after
+    // this account is created.
+    const password = await derivePassword(normPhone, OTP_SECRET);
     const { data: authData, error: signUpErr } = await sb.auth.admin.createUser({
       email: autoEmail,
       password,
