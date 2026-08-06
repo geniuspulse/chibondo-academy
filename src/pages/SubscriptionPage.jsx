@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
+import { usePricing } from '@/hooks/usePricing';
 import { Button } from '@/components/ui/button';
 import { Check, Zap, Crown, Loader2, BookOpen, Calendar, Award } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,20 +14,13 @@ export default function SubscriptionPage() {
   const currentPlan = user?.subscription_plan || 'free';
   const navigate = useNavigate();
 
-  const [pricing, setPricing] = useState({ monthly_price: 10000, annual_price: 80000, biannual_price: 150000 });
   const [verifying, setVerifying] = useState(false);
 
-  const { data: pricingData, isLoading } = useQuery({
-    queryKey: ['pricing'],
-    queryFn: async () => {
-      const rows = await db.entities.PlatformSettings.filter({ key: 'pricing' }).catch(() => []);
-      const val = rows?.[0]?.value;
-      if (val?.monthly_price) return val;
-      if (val?.data?.pricing) return val.data.pricing;
-      if (val?.pricing) return val.pricing;
-      return null;
-    },
-  });
+  // Shared pricing hook — DO NOT inline a separate ['pricing'] query here,
+  // it will collide with the shared cache key and can serve the wrong
+  // shape/price to the checkout page — see usePricing.js
+  const { data: pricingData, isLoading } = usePricing();
+  const pricing = pricingData || { monthly_price: 10000, annual_price: 80000, biannual_price: 150000 };
 
   const { data: lessonCount } = useQuery({
     queryKey: ['lessonCount'],
@@ -77,14 +71,6 @@ export default function SubscriptionPage() {
     };
     poll();
   }, [user?.id]);
-
-  useEffect(() => {
-    if (pricingData) setPricing({
-      monthly_price: pricingData.monthly_price || 10000,
-      annual_price: pricingData.annual_price || 80000,
-      biannual_price: pricingData.biannual_price || 150000,
-    });
-  }, [pricingData]);
 
   const plans = [
     { id: 'monthly', name: 'Monthly', price: pricing.monthly_price, period: '/month', icon: Zap, popular: true },

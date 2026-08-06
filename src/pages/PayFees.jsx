@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Smartphone, Loader2, CheckCircle2, AlertCircle, Phone,
   ShieldCheck, Zap, Crown, Award, Lock,
@@ -8,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/AuthContext';
+import { usePricing } from '@/hooks/usePricing';
 
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
@@ -52,26 +52,10 @@ export default function PayFees() {
   const pollRef = useRef(null);
   const isVerifyingRef = useRef(false);
 
-  // ── Fetch pricing ─────────────────────────────────────────────────────────
-  const { data: pricing } = useQuery({
-    queryKey: ['pricing'],
-    queryFn: async () => {
-      const rows = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/platform_settings?select=value&key=eq.pricing`, {
-        headers: {
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-      }).then(r => r.json()).catch(() => []);
-      const val = Array.isArray(rows) ? rows[0]?.value : null;
-      const cfg = val?.data?.pricing || val?.pricing || val;
-      return {
-        monthly: cfg?.monthly_price || 10000,
-        annual: cfg?.annual_price || 80000,
-        biannual: cfg?.biannual_price || 150000,
-      };
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  // ── Fetch pricing (shared hook — DO NOT inline a separate ['pricing'] query
+  // here, it will collide with the shared cache key and can serve the wrong
+  // shape/price — see usePricing.js) ────────────────────────────────────────
+  const { data: pricing } = usePricing();
 
   const { user, isLoadingAuth, authChecked } = useAuth();
   const plan = PLAN_META[planKey] || PLAN_META.monthly;

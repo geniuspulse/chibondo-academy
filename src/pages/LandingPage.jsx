@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
+import { usePricing } from '@/hooks/usePricing';
 import SEO from '@/components/SEO';
 import { format } from 'date-fns';
 import {
@@ -21,19 +22,13 @@ function readTime(content = '') { return Math.max(1, Math.ceil(content.replace(/
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  const [pricing, setPricing] = useState({ monthly_price: 10000, annual_price: 80000 });
-
-  useQuery({
-    queryKey: ['pricing'],
-    queryFn: async () => {
-      const rows = await db.entities.PlatformSettings.filter({ key: 'pricing' }).catch(() => []);
-      const val = rows?.[0]?.value;
-      return val?.monthly_price ? val : (val?.data?.pricing || val?.pricing || null);
-    },
-    onSuccess: (data) => {
-      if (data) setPricing({ monthly_price: data.monthly_price || 10000, annual_price: data.annual_price || 80000 });
-    },
-  });
+  // Shared pricing hook — DO NOT inline a separate ['pricing'] query here.
+  // (This used to rely on useQuery's onSuccess callback, which was removed
+  // in React Query v5 — so it silently never updated and always showed the
+  // MWK 10,000 default. Also avoids the ['pricing'] cache-shape collision
+  // that broke the checkout page — see usePricing.js.)
+  const { data: pricingData } = usePricing();
+  const pricing = pricingData || { monthly_price: 10000, annual_price: 80000 };
 
   const { data: subjects = [] } = useQuery({
     queryKey: ['landing-subjects'],
