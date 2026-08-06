@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Home, BookOpen, GraduationCap, FileText, BarChart3,
   Users, Settings, CreditCard, MessageSquare, Library,
-PenTool, LogOut, LayoutDashboard, Bell, TrendingUp, Gift, Newspaper, Layers
+PenTool, LogOut, LayoutDashboard, Bell, TrendingUp, Gift, Newspaper, Layers, ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { db } from '@/api/supabaseClient';
