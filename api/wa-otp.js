@@ -955,6 +955,156 @@ async function sendTextReply(to, message) {
 
 // ─── ROUTER ──────────────────────────────────────────────────────────────────
 
+
+// ─── BROADCAST (send login-link messages to a list of numbers) ─────────────
+async function handleBroadcast(req, res) {
+  const { phones, message_template } = req.body || {};
+  if (!Array.isArray(phones) || phones.length === 0) {
+    return res.status(400).json({ error: 'phones array is required' });
+  }
+
+  const SUPABASE_URL   = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const OTP_SECRET     = process.env.OTP_SECRET || 'chibondo-wa-otp-2026';
+  const APP_URL        = process.env.VITE_APP_URL || process.env.APP_URL || 'https://chibondoacademy.com';
+  const WA_TOKEN       = process.env.WA_ACCESS_TOKEN;
+  const WA_PHONE_ID    = process.env.WA_PHONE_NUMBER_ID;
+
+  if (!WA_TOKEN || !WA_PHONE_ID) {
+    return res.status(500).json({ error: 'WhatsApp credentials not configured' });
+  }
+
+  const headers = {
+    apikey: SUPABASE_SERVICE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+
+  const results = [];
+
+  for (const rawPhone of phones) {
+    const normPhone = normalisePhone(rawPhone);
+    const autoEmail = `${normPhone}@chibondoacademy.com`;
+
+    try {
+      // 1. Check if user exists
+      const phoneQuery = buildPhoneOrQuery(normPhone, [`email.eq.${autoEmail}`]);
+      const userRes = await fetch(`${SUPABASE_URL}/rest/v1/users?${phoneQuery}&limit=1`, { headers });
+      const userRows = userRes.ok ? await userRes.json() : [];
+      const userRow = userRows[0];
+      let userExists = !!userRow;
+      let fullName = userRow?.full_name || '';
+
+      // 2. Fix auth password for existing WhatsApp-registered users
+      if (userRow?.id) {
+        const correctPassword = await derivePassword(normPhone, OTP_SECRET);
+        await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userRow.id}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ password: correctPassword }),
+        });
+        console.log(`[broadcast] Fixed auth password for ${normPhone}`);
+      }
+
+      // 3. Generate magic-link token
+      const token = generateToken();
+      const verifyLink = `${APP_URL}/verify-link?t=${token}`;
+
+      const otpInsertRes = await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          phone: normPhone,
+          code: String(Math.floor(100000 + Math.random() * 900000)),
+          token,
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          used: false,
+        }),
+      });
+
+      if (!otpInsertRes.ok) {
+        console.error(`[broadcast] OTP insert failed for ${normPhone}`);
+        results.push({ phone: normPhone, ok: false, error: 'Failed to generate login link' });
+        continue;
+      }
+
+      // 4. Build message
+      const greeting = fullName ? `Hi ${fullName}!` : 'Hi!';
+      const messageText = (message_template || 'Hi!\n\nUse this link to log in:\n{login_link}')
+        .replace('{greeting}', greeting)
+        .replace('{login_link}', verifyLink);
+
+      // 5. Send WhatsApp text message
+      const sendRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: normPhone,
+          type: 'text',
+          text: { body: messageText },
+        }),
+      });
+
+      const sendBody = await sendRes.json().catch(() => ({}));
+
+      if (sendRes.ok) {
+        console.log(`[broadcast] Sent to ${normPhone} ✓`);
+        results.push({ phone: normPhone, ok: true, user_exists: userExists, link: verifyLink });
+      } else {
+        // Text failed — likely outside 24h window. Try template fallback.
+        console.warn(`[broadcast] Text failed for ${normPhone}, trying template`);
+
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        await fetch(`${SUPABASE_URL}/rest/v1/otp_codes?token=eq.${token}`, {
+          method: 'PATCH',
+          headers: { ...headers, Prefer: 'return=minimal' },
+          body: JSON.stringify({ code }),
+        });
+
+        const tmplRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: normPhone,
+            type: 'template',
+            template: {
+              name: 'login_verification',
+              language: { code: 'en_US' },
+              components: [
+                { type: 'body', parameters: [{ type: 'text', text: code }] },
+                { type: 'button', sub_type: 'copy_code', index: '0', parameters: [{ type: 'coupon_code', coupon_code: code }] },
+              ],
+            },
+          }),
+        });
+
+        if (tmplRes.ok) {
+          console.log(`[broadcast] Template sent to ${normPhone} ✓ (fallback)`);
+          results.push({ phone: normPhone, ok: true, user_exists: userExists, link: verifyLink, delivery: 'template_fallback' });
+        } else {
+          console.error(`[broadcast] Both sends failed for ${normPhone}`);
+          results.push({ phone: normPhone, ok: false, error: 'Send failed (outside 24h window)', link: verifyLink });
+        }
+      }
+    } catch (err) {
+      console.error(`[broadcast] Error for ${normPhone}:`, err.message);
+      results.push({ phone: normPhone, ok: false, error: err.message });
+    }
+
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  const sent = results.filter(r => r.ok).length;
+  const failed = results.filter(r => !r.ok).length;
+
+  return res.status(200).json({ ok: true, total: results.length, sent, failed, results });
+}
+
+
 export default async function handler(req, res) {
   // Meta webhook verification (GET)
   if (req.method === 'GET') {
@@ -974,6 +1124,7 @@ export default async function handler(req, res) {
     const action = req.query.action || req.body?.action;
     if (action === 'send')           return sendOTP(req, res);
     if (action === 'verify')        return verifyOTP(req, res);
+  if (action === 'broadcast')      return handleBroadcast(req, res);
     if (action === 'generate-link') return generateLink(req, res);
     return res.status(400).json({ error: 'Invalid action' });
   }
