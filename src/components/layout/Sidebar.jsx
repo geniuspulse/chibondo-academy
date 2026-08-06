@@ -13,11 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const studentNav = [
   { label: 'Dashboard',    icon: Home,          path: '/dashboard' },
   { label: 'My Subjects',  icon: BookOpen,      path: '/subjects' },
-  { label: 'Revision Hub', icon: Library,       path: '/revision' },
-  { label: 'My Quizzes',   icon: ClipboardList, path: '/my-quizzes' },
-  { label: 'Assignments',  icon: FileText,      path: '/my-assignments' },
   { label: 'Chats',       icon: MessageSquare, path: '/forums' },
-  { label: 'Progress',     icon: BarChart3,     path: '/progress' },
   { label: 'School Fees',  icon: CreditCard,    path: '/fees' },
   { label: 'Blog',         icon: Newspaper,     path: '/blog' },
   { label: 'Settings',     icon: Settings,      path: '/settings' },

@@ -68,9 +68,11 @@ As soon as you have both the full name and phone number, call *register_student*
 Call with:
 - full_name: exactly as given
 - phone: their phone number in international format (add 265 prefix, drop leading 0 — e.g. 0995663949 becomes 265995663949)
+- referral_code: if the student's message contains "REF:CODE" (e.g. "REF:JOHN1234"), extract and pass it. Otherwise omit this field.
 
 The system automatically:
-- Creates their account
+- Creates their account with a unique referral code for them
+- Tracks the affiliate referral if a referral_code was provided
 - Sends a WhatsApp verification link to their phone for one-tap login
 
 Call it silently — do NOT say "creating your account now." Just call it and send the result.

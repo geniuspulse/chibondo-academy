@@ -41,7 +41,8 @@ export default function Register() {
     setLoading(true);
 
     const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567';
-    const prefilled = encodeURIComponent(`Register ${digits} ${fullName.trim()}`);
+    const refCodeForWA = refCode ? ` REF:${refCode.toUpperCase()}` : '';
+    const prefilled = encodeURIComponent(`Register ${digits} ${fullName.trim()}${refCodeForWA}`);
     window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
   };
 

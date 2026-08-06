@@ -66,12 +66,7 @@ const StudentDashboard = lazy(() => import('@/pages/StudentDashboard'));
 const SubjectsPage = lazy(() => import('@/pages/SubjectsPage'));
 const SubjectDetail = lazy(() => import('@/pages/SubjectDetail'));
 const LessonPage = lazy(() => import('@/pages/LessonPage'));
-const RevisionHub = lazy(() => import('@/pages/RevisionHub'));
-const MyQuizzes = lazy(() => import('@/pages/MyQuizzes'));
-const QuizPage = lazy(() => import('@/pages/QuizPage'));
-const MyAssignments = lazy(() => import('@/pages/MyAssignments'));
 const DiscussionsPage = lazy(() => import('@/pages/DiscussionsPage'));
-const ProgressPage = lazy(() => import('@/pages/ProgressPage'));
 const ProgressAnalytics = lazy(() => import('@/pages/ProgressAnalytics'));
 const SubscriptionPage = lazy(() => import('@/pages/SubscriptionPage'));
 const PayFees = lazy(() => import('@/pages/PayFees'));
@@ -199,15 +194,8 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/lesson/:lessonId" element={<LessonPage />} />
           <Route path="/dashboard" element={<StudentDashboard />} />
-          <Route path="/revision" element={<RevisionHub />} />
-          <Route path="/my-quizzes" element={<MyQuizzes />} />
-          <Route path="/quiz/:quizId" element={<QuizPage />} />
-          <Route path="/my-assignments" element={<MyAssignments />} />
           <Route path="/discussions" element={<DiscussionsPage />} />
-          <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/progress/analytics" element={<Navigate to="/progress" replace />} />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/my-classes" element={<Navigate to="/subjects" replace />} />
           <Route path="/enroll-subjects" element={<EnrollSubjectsPage />} />
 
           {/* ── Affiliate Program ── */}

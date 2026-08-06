@@ -56,7 +56,7 @@ export default function GuestCTA({ compact = false, message }) {
       </h3>
       <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: 'hsl(215 20% 65%)' }}>
         Create your free account to enrol in subjects, track your progress,
-        join live forums, access the revision hub and more.
+        join live forums, access the library and more.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link to="/register">

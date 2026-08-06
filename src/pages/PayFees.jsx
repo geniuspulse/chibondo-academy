@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Smartphone, Loader2, CheckCircle2, AlertCircle, Phone,
@@ -36,6 +36,13 @@ const PLAN_META = {
 
 export default function PayFees() {
   const { planId } = useParams();
+  const location = useLocation();
+
+  // Fallback: extract plan from URL path if useParams doesn't provide it
+  // This guards against edge cases where React Router doesn't populate params
+  // when navigating between sibling routes with the same component
+  const pathPlan = location.pathname.split('/pay-fees/')[1]?.split('/')[0];
+  const planKey = (planId || pathPlan || 'monthly').toLowerCase();
   const navigate = useNavigate();
 
   const [phone, setPhone] = useState('');
@@ -67,8 +74,6 @@ export default function PayFees() {
   });
 
   const { user, isLoadingAuth, authChecked } = useAuth();
-
-  const planKey = planId || 'monthly';
   const plan = PLAN_META[planKey] || PLAN_META.monthly;
   const PlanIcon = plan.icon;
   const amount = pricing?.[planKey] || 10000;

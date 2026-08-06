@@ -5,52 +5,9 @@ import { db } from '@/api/supabaseClient';
 import WelcomeCard from '@/components/dashboard/WelcomeCard';
 import StatsGrid from '@/components/dashboard/StatsGrid';
 import SetupChecklist from '@/components/dashboard/SetupChecklist';
-import { Progress } from '@/components/ui/progress';
 import {
-  PlayCircle, BookOpen, ArrowRight, Trophy, Clock,
+  BookOpen, ArrowRight, Clock,
   Share2, Newspaper, ChevronRight, Phone, X, CreditCard, AlertCircle} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-
-/* ─── Mini in-progress class card ─────────────────────────────────────────── */
-function MiniClassCard({ enrollment }) {
-  const navigate = useNavigate();
-  const pct      = enrollment.progress_percentage || 0;
-  const resumeId = enrollment.last_lesson_id;
-  const ago      = enrollment.last_accessed
-    ? formatDistanceToNow(new Date(enrollment.last_accessed), { addSuffix: true })
-    : null;
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors group">
-      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-        {pct === 100
-          ? <Trophy className="w-5 h-5 text-accent" />
-          : <BookOpen className="w-4 h-4 text-primary" />}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-          {enrollment.subject_name}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <Progress value={pct} className="h-1.5 flex-1" />
-          <span className="text-[10px] font-bold text-primary flex-shrink-0">{pct}%</span>
-        </div>
-        {ago && (
-          <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-            <Clock className="w-2.5 h-2.5" />{ago}
-          </p>
-        )}
-      </div>
-      <button
-        onClick={() => navigate(resumeId ? `/lesson/${resumeId}` : `/subjects/${enrollment.subject_id}`)}
-        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-        style={{ background: 'hsl(var(--muted))' }}
-      >
-        <PlayCircle className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} />
-      </button>
-    </div>
-  );
-}
 
 /* ─── Platform CTA card — only 2 now ──────────────────────────────────────── */
 function ServiceCTA({ icon: Icon, label, description, to, accent }) {
@@ -89,13 +46,19 @@ export default function StudentDashboard() {
             if (refRows?.length) {
               await db.entities.Referral.create({
                 referrer_id: refRows[0].id,
-                referred_id: user?.id,
+                referrer_name: refRows[0].full_name || '',
+                referred_user_id: user?.id,
+                referred_name: user?.full_name || '',
+                referred_email: user?.email || '',
                 referral_code: pendingCode,
                 status: 'pending',
-                commission_amount: 0,
+                reward_amount: 0,
+                reward_status: 'pending',
+                recurring_reward_amount: 0,
+                recurring_count: 0,
               });
             }
-          } catch (_) {}
+          } catch (err) { console.warn('Frontend referral tracking failed:', err); }
         })()
       .then(() => console.log("✅ Referral tracked:", pendingCode))
       .catch(err => console.warn("Referral tracking failed:", err));
@@ -159,16 +122,6 @@ export default function StudentDashboard() {
   const completedCount = enrollments.filter(e =>
     (e.progress_percentage || 0) === 100 || e.status === 'completed'
   ).length;
-
-  const inProgressEnrollments = enrollments
-    .filter(e => (e.progress_percentage || 0) > 0 && (e.progress_percentage || 0) < 100)
-    .slice(0, 3);
-
-  const recentEnrollments = enrollments
-    .filter(e => !((e.progress_percentage || 0) > 0 && (e.progress_percentage || 0) < 100))
-    .slice(0, 3 - inProgressEnrollments.length);
-
-  const displayEnrollments = [...inProgressEnrollments, ...recentEnrollments].slice(0, 3);
 
   const statsData = {
     enrolled:  enrollments.length,
@@ -273,28 +226,7 @@ export default function StudentDashboard() {
 
       <StatsGrid data={statsData} />
 
-      {/* My Classes */}
-      {enrollments.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-semibold text-base flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-accent" /> My Classes
-            </h3>
-            <Link to="/subjects" className="text-xs font-medium text-primary flex items-center gap-1 hover:underline">
-              View All <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="space-y-1">
-            {displayEnrollments.map(e => <MiniClassCard key={e.id} enrollment={e} />)}
-          </div>
-          {enrollments.length > 3 && (
-            <Link to="/subjects"
-              className="block mt-3 text-center text-xs text-muted-foreground hover:text-primary transition-colors">
-              +{enrollments.length - 3} more classes →
-            </Link>
-          )}
-        </div>
-      )}
+
 
       {/* Affiliate CTA */}
       <ServiceCTA {...ctaServices[0]} />

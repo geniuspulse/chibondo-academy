@@ -93,8 +93,12 @@ export default function SubscriptionPage() {
   ];
 
   const handlePlanSelect = (planId) => {
+    if (!planId || !['monthly', 'annual', 'biannual'].includes(planId)) {
+      toast.error('Invalid plan selected. Please try again.');
+      return;
+    }
     if (!user) { toast.error('Please log in to subscribe'); navigate('/login?redirect=/pay-fees/' + planId); return; }
-    navigate('/pay-fees/' + planId);
+    navigate('/pay-fees/' + planId, { replace: false });
   };
 
   const fmt = (n) => n.toLocaleString('en-MW');

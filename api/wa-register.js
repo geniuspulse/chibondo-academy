@@ -27,11 +27,11 @@ function generateToken() {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function sendWhatsAppOTP(phone, name) {
+async function sendWhatsAppOTP(phone, name, referralCode) {
   const cleanPhone = normalisePhone(phone);
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const token = generateToken();
-  const verifyLink = `${APP_URL}/verify-link?t=${token}`;
+  const verifyLink = referralCode ? `${APP_URL}/verify-link?t=${token}&ref=${referralCode}` : `${APP_URL}/verify-link?t=${token}`;
 
   // Store OTP in otp_codes table (5-min expiry)
   const storeRes = await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
@@ -290,8 +290,12 @@ export default async function handler(req, res) {
     }
 
     if (existingRow) {
+      // Existing account — try to track referral if one was provided
+      if (args?.referral_code) {
+        await maybeTrackReferral(sb, { id: existingRow.id, full_name: existingRow.full_name || full_name, email: autoEmail }, args.referral_code);
+      }
       // Existing account — send WhatsApp verification link
-      const waResult = await sendWhatsAppOTP(normPhone, existingRow.full_name || full_name);
+      const waResult = await sendWhatsAppOTP(normPhone, existingRow.full_name || full_name, args?.referral_code);
       if (waResult.ok) {
         const deliveryMsg = waResult.delivery_method === 'sms'
           ? `Welcome back, ${existingRow.full_name || full_name}! I've sent a verification code to your phone via SMS. Use it to log in here: ${APP_URL}/login?ref=AGENT`
@@ -324,6 +328,7 @@ export default async function handler(req, res) {
         full_name,
         source: 'whatsapp_registration',
         auth_method: 'whatsapp_otp',
+        referral_code: args?.referral_code || null,
       },
     });
 
@@ -342,7 +347,7 @@ export default async function handler(req, res) {
       phone_number:  normPhone,
       role:          'user',
       created_by:    userId,
-      referral_code: args?.referral_code || 'AGENT',
+      referral_code: await generateUniqueReferralCode(sb, full_name),
       whatsapp_notifications: true,
       email_notifications: true,
       inapp_notifications: true,
@@ -370,7 +375,7 @@ export default async function handler(req, res) {
     await maybeTrackReferral(sb, { id: userId, full_name, email: autoEmail }, args?.referral_code);
 
     // Send WhatsApp verification link to the student
-    const waResult = await sendWhatsAppOTP(normPhone, full_name);
+    const waResult = await sendWhatsAppOTP(normPhone, full_name, args?.referral_code);
 
     if (waResult.ok) {
       const deliveryMsg = waResult.delivery_method === 'sms'

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Home, BookOpen, GraduationCap, FileText, BarChart3,
   Users, Settings, CreditCard, MessageSquare, Library,
-  ClipboardList, PenTool, LogOut, LayoutDashboard, Bell, TrendingUp, Gift, Newspaper, Layers
+PenTool, LogOut, LayoutDashboard, Bell, TrendingUp, Gift, Newspaper, Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { db } from '@/api/supabaseClient';
@@ -11,11 +11,7 @@ import { db } from '@/api/supabaseClient';
 const studentNav = [
   { label: 'Dashboard',    icon: Home,          path: '/dashboard' },
   { label: 'My Subjects',  icon: BookOpen,      path: '/subjects' },
-  { label: 'Revision Hub', icon: Library,       path: '/revision' },
-  { label: 'My Quizzes',   icon: ClipboardList, path: '/my-quizzes' },
-  { label: 'Assignments',  icon: FileText,      path: '/my-assignments' },
   { label: 'Chats',       icon: MessageSquare, path: '/forums' },
-  { label: 'Progress',     icon: BarChart3,     path: '/progress' },
   { label: 'School Fees',  icon: CreditCard,    path: '/fees' },
   { label: 'Blog',         icon: Newspaper,     path: '/blog' },
   { label: 'Settings',     icon: Settings,      path: '/settings' },
