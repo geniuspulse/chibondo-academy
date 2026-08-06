@@ -15,7 +15,6 @@ import { Badge } from '@/components/ui/badge';
 import SEO from '@/components/SEO';
 import { toast } from 'sonner';
 import { useAutosave, AutosaveIndicator } from '@/hooks/useAutosave.jsx';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 import {
   User, Bell, Sun, Moon, Briefcase, Wallet,
   Camera, Loader2, X, Upload, Plus,
@@ -119,30 +118,6 @@ function PhotoUploader({ value, onChange, size = 24, label = 'Photo', hint = 'JP
    Main component
 ───────────────────────────────────────────────────────────────────────────── */
 
-// ── Push Notification Toggle ─────────────────────────────────────────────────
-function PushNotificationToggle({ user }) {
-  const { isSupported, isSubscribed, permission, isSubscribing, subscribe, unsubscribe, error } = usePushNotifications(user);
-  if (!isSupported) return null;
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <Smartphone className="w-4 h-4 text-primary" />
-        <div>
-          <p className="text-sm font-medium">Push Notifications</p>
-          <p className="text-xs text-muted-foreground">
-            {permission === 'denied' ? 'Blocked — enable in browser settings' : isSubscribed ? 'Active on this device' : 'Instant alerts when app is closed'}
-          </p>
-          {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
-      </div>
-      <Switch
-        checked={isSubscribed}
-        disabled={isSubscribing || permission === 'denied'}
-        onCheckedChange={(v) => v ? subscribe() : unsubscribe()}
-      />
-    </div>
-  );
-}
 
 export default function TeacherSettings() {
   const { user } = useOutletContext() ?? {};
@@ -778,7 +753,6 @@ export default function TeacherSettings() {
               <CardHeader><CardTitle className="text-base">Notification Preferences</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 {/* Push Notifications */}
-                <PushNotificationToggle user={user} />
                 {[
                   { label: 'New Assignments', desc: 'When a student submits an assignment', value: notifAssignments, onChange: setNotifAssignments },
                   { label: 'New Students',    desc: 'When a student enrols in your course', value: notifStudents,    onChange: setNotifStudents },

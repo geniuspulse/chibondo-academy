@@ -8,7 +8,6 @@ import {
   Loader2, Eye, EyeOff, Phone, Mail, Check, MessageCircle, BookOpen,
   Shield, Smartphone, X, Info,
 } from 'lucide-react';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 import SEO from '@/components/SEO';
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -387,11 +386,9 @@ function AcademicPanel({ user }) {
 }
 
 function NotificationsPanel({ user }) {
-  const { permission, subscribe, unsubscribe, isSupported, isSubscribing, error, isSubscribed } = usePushNotifications(user);
   const [whatsappNotifs, setWhatsappNotifs] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const granted = permission === 'granted';
 
   // Load push_enabled or whatsapp_notifications on mount
   useEffect(() => {
@@ -457,52 +454,6 @@ function NotificationsPanel({ user }) {
 
   return (
     <div className="space-y-5">
-      {/* Push */}
-      <div className="rounded-xl border bg-card p-4 space-y-3">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Smartphone className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Push Notifications</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Get notified about new lessons, assignments, and announcements</p>
-          </div>
-          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${granted ? 'bg-emerald-100 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-            {granted ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-          </div>
-        </div>
-
-        {!isSubscribed && isSupported && (
-          <button
-            onClick={subscribe}
-            disabled={isSubscribing}
-            className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {isSubscribing
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Enabling…</>
-              : <><Bell className="w-4 h-4" /> Enable Notifications</>}
-          </button>
-        )}
-
-        {error && (
-          <p className="text-xs text-destructive px-1">{error}</p>
-        )}
-
-        {granted && isSubscribed && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex-1">Notifications are enabled</span>
-              <button onClick={unsubscribe} className="text-xs text-muted-foreground hover:text-destructive underline">Disable</button>
-            </div>
-          </div>
-        )}
-
-        {!isSupported && (
-          <p className="text-xs text-muted-foreground px-1">Push notifications are not supported on this device/browser.</p>
-        )}
-      </div>
-
       {/* Email notifications */}
       <div className="rounded-xl border bg-card p-4">
         <div className="flex items-center justify-between gap-4">

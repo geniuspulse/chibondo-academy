@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import PWAManager from '@/components/PWAManager';
 import MobileSidebar from './MobileSidebar';
 
 export default function AppLayout() {
@@ -253,7 +252,6 @@ export default function AppLayout() {
           </div>
         </div>
       )}
-      <PWAManager user={enrichedUser} />
       <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar — shown for authenticated users only */}
       {!isGuest && (
