@@ -32,7 +32,7 @@ export default function LandingPage() {
 
   const { data: subjects = [] } = useQuery({
     queryKey: ['landing-subjects'],
-    queryFn: () => db.entities.Subject.filter({ status: 'published' }, 'order', 6),
+    queryFn: async () => { try { return await db.entities.Subject.filter({ status: 'published' }, 'order', 6); } catch { return []; } },
     staleTime: 5 * 60_000,
   });
 

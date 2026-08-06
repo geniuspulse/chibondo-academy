@@ -121,12 +121,27 @@ async function _req(method, path, body, extra = {}, _retry = true) {
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
-  // If 401 and we have a refresh token, try to refresh and retry once
-  if (res.status === 401 && _retry && getRefreshToken()) {
-    const newToken = await refreshAccessToken();
-    if (newToken) {
-      return _req(method, path, body, { ...extra, Authorization: `Bearer ${newToken}` }, false);
+  // If 401: PostgREST rejects the WHOLE request outright when the bearer
+  // token is present but invalid/undecodable (it does NOT fall back to the
+  // anon role just because the JWT is bad) — it only returns rows for anon
+  // access when NO user token is sent at all. So a stale/dead token left in
+  // localStorage (e.g. from an old session, or a legacy pre-migration key
+  // like `token`/`base44_access_token`) permanently 401s every request,
+  // including public reads guests should be able to see (subjects, blog
+  // posts, etc.) — this is what caused those to silently stay blank for
+  // "logged out" visitors who still had a dead token hanging around.
+  if (res.status === 401 && _retry) {
+    if (getRefreshToken()) {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        return _req(method, path, body, { ...extra, Authorization: `Bearer ${newToken}` }, false);
+      }
     }
+    // Refresh wasn't possible or failed — the token is dead. Clear it so we
+    // stop sending it, then retry once as a clean anonymous request instead
+    // of failing forever for what should be a normal guest view.
+    clearTokens();
+    return _req(method, path, body, extra, false);
   }
   if (!res.ok && res.status !== 204) {
     const err = await res.json().catch(() => ({}));
