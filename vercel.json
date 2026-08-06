@@ -32,6 +32,9 @@
     },
     "api/paychangu-webhook.js": {
       "maxDuration": 30
+    },
+    "api/broadcast-wa.js": {
+      "maxDuration": 60
     }
   }
 }
