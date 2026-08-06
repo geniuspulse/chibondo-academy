@@ -240,6 +240,72 @@ async function maybeTrackReferral(sb, newUser, referralCode) {
   }
 }
 
+// ─── Login (no registration page — always an in-chat magic link) ──────────
+// Called by the AI agent when a student wants to log in. Takes ONLY a phone
+// number (collected in chat, never a page visit). Looks the account up and,
+// if found, sends the same one-tap magic link as registration. If no
+// account exists, tells the AI to pivot straight into registration instead
+// of bouncing the student to a /login page.
+async function handleLoginStudent(res, args) {
+  const { phone } = args || {};
+  if (!phone) {
+    return res.status(400).json({ error: 'Missing required field: phone' });
+  }
+
+  const normPhone = normalisePhone(phone);
+  const autoEmail = `${normPhone}@chibondoacademy.com`;
+
+  try {
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    let existingRow = null;
+    const { data: byEmail } = await sb
+      .from('users')
+      .select('id, full_name, phone_number')
+      .eq('email', autoEmail)
+      .maybeSingle();
+
+    if (byEmail) {
+      existingRow = byEmail;
+    } else {
+      const { data: byPhone } = await sb
+        .from('users')
+        .select('id, full_name, phone_number')
+        .or(`phone_number.eq.${normPhone},phone.eq.${normPhone}`)
+        .maybeSingle();
+      if (byPhone) existingRow = byPhone;
+    }
+
+    if (!existingRow) {
+      return res.status(200).json({
+        ok: true,
+        found: false,
+        message: "I couldn't find an account with that number. Let's get you registered instead — what's your full name?",
+      });
+    }
+
+    const waResult = await sendWhatsAppOTP(normPhone, existingRow.full_name);
+    if (!waResult.ok) {
+      return res.status(200).json({
+        ok: false,
+        found: true,
+        message: 'Sorry, something went wrong sending your login link. Please try again in a moment.',
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      found: true,
+      message: `Welcome back, ${existingRow.full_name || 'there'}! Tap here to log in:\n${waResult.verifyLink}\n\nLink expires in 5 minutes. 📲`,
+    });
+  } catch (err) {
+    console.error('[wa-register] login_student error:', err);
+    return res.status(500).json({ error: err.message || 'Login failed' });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -251,6 +317,11 @@ export default async function handler(req, res) {
   }
 
   const { tool, args } = req.body || {};
+
+  if (tool === 'login_student') {
+    return handleLoginStudent(res, args);
+  }
+
   if (tool !== 'register_student') {
     return res.status(400).json({ error: 'Unknown tool: ' + tool });
   }
