@@ -136,8 +136,8 @@ export default function ForgotPassword() {
         <SEO title="Password Updated" description="Your password has been updated." />
         <AuthLayout title="Password Updated">
           <div className="flex flex-col items-center gap-4 py-8">
-            <div className="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
+            <div className="w-20 h-20 rounded-2xl bg-success/15 flex items-center justify-center">
+              <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
             <p className="text-sm text-muted-foreground text-center">Redirecting you to login…</p>
           </div>
@@ -184,9 +184,9 @@ export default function ForgotPassword() {
 
         {sent ? (
           <div className="space-y-3">
-            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-              <MessageCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-green-700 dark:text-green-400">WhatsApp is opening…</p>
+            <div className="p-4 rounded-lg bg-success/10 border border-success/20 text-center">
+              <MessageCircle className="w-8 h-8 text-success mx-auto mb-2" />
+              <p className="text-sm font-medium text-success">WhatsApp is opening…</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Send the message and tap the link we reply with.
               </p>

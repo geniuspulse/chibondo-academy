@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -96,6 +96,17 @@
         fill: none; stroke: rgba(201,168,76,0.04); stroke-width: 1.5;
       }
     </style>
+  <script>
+    // Default to dark theme (BBA-inspired skeleton) — prevents FOUC
+    (function() {
+      var saved = localStorage.getItem('theme');
+      if (saved !== 'light') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
   </head>
   <body>
     <!-- Branded splash — visible before React JS loads -->
@@ -168,7 +179,5 @@
 
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- NyasaDesk Live Chat Widget -->
-    <script src="https://nyasadesk.com/widget.js" data-workspace-id="0fe009df-b410-478f-a41e-bcc15503caa4" defer></script>
   </body>
 </html>

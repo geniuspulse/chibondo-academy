@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
 import { usePricing } from '@/hooks/usePricing';
 import SEO from '@/components/SEO';
+import WhatsAppButton from '@/components/WhatsAppButton';
 import { format } from 'date-fns';
 import {
   BookOpen, Play, ChevronRight, ArrowRight, Zap,
@@ -316,6 +317,7 @@ export default function LandingPage() {
         </section>
 
       </div>
+      <WhatsAppButton />
     </>
   );
 }

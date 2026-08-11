@@ -45,7 +45,7 @@ export default function Login() {
     }
 
     setSent(true);
-    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265991234567';
+    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || '265997353102';
     const prefilled = encodeURIComponent(`Login`);
     window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
   };
@@ -151,8 +151,8 @@ export default function Login() {
               </Button>
             ) : (
               <div className="space-y-3">
-                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                <div className="p-4 rounded-lg bg-success/10 border border-success/20 text-center">
+                  <p className="text-sm font-medium text-success">
                     WhatsApp is opening…
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">

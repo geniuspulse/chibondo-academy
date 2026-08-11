@@ -76,12 +76,12 @@ export default function TeacherRegister() {
       <AuthLayout title="Application Submitted!" subtitle="We'll review your application soon">
         <div className="text-center space-y-6 py-6">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
+            <div className="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center">
+              <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Your teacher application has been received. Our team will review it and get back to you within 2–3 business days.
             </p>
           </div>
@@ -127,7 +127,7 @@ export default function TeacherRegister() {
         <div className="space-y-2">
           <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
@@ -145,7 +145,7 @@ export default function TeacherRegister() {
         <div className="space-y-2">
           <Label htmlFor="phone">Phone Number</Label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="phone"
               type="tel"
@@ -161,7 +161,7 @@ export default function TeacherRegister() {
         <div className="space-y-2">
           <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -172,7 +172,7 @@ export default function TeacherRegister() {
               className="pl-10 pr-10 h-12"
               required
             />
-            <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
@@ -182,7 +182,7 @@ export default function TeacherRegister() {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirm Password <span className="text-red-500">*</span></Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="confirmPassword"
               type={showPassword ? "text" : "password"}

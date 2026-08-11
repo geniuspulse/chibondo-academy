@@ -90,8 +90,8 @@ export default function VerifyLink() {
 
           {status === "success" && (
             <>
-              <div className="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10 text-green-500" />
+              <div className="w-20 h-20 rounded-2xl bg-success/15 flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-success" />
               </div>
               <div className="text-center space-y-1">
                 <p className="text-lg font-semibold text-foreground">Verified!</p>
@@ -108,7 +108,7 @@ export default function VerifyLink() {
               <div className="text-center space-y-2 max-w-xs">
                 <p className="text-sm font-medium text-destructive">{error}</p>
                 <button
-                  onClick={() => window.location.href = "https://wa.me/265991234567?text=login"}
+                  onClick={() => window.location.href = "https://wa.me/265997353102?text=login"}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
                 >
                   <MessageCircle className="w-3.5 h-3.5" /> Log in via WhatsApp

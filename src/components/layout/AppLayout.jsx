@@ -11,6 +11,7 @@ import { RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import MobileSidebar from './MobileSidebar';
+import WhatsAppButton from '../WhatsAppButton';
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => {
@@ -286,6 +287,7 @@ export default function AppLayout() {
           />
         <main key={location.pathname} className={isChatPage ? "chat-main-layout" : "flex-1 p-4 lg:p-6 pb-24 lg:pb-6 w-full max-w-7xl mx-auto page-enter"}>
           <Outlet context={{ user: enrichedUser, notifications }} />
+          <WhatsAppButton />
         </main>
       </div>
 

@@ -104,8 +104,7 @@ export default function TopBar({ user, notificationCount = 0, onMenuClick }) {
   return (
     <>
       <header
-        className="h-14 border-b flex items-center px-4 lg:px-6 sticky top-0 z-30"
-        style={{ background: 'hsl(var(--foreground))', borderColor: 'hsl(var(--muted))' }}
+        className="h-14 border-b border-border bg-card flex items-center px-4 lg:px-6 sticky top-0 z-30"
       >
         {isGuest ? (
           /* ── GUEST LAYOUT: Logo left · Login + Join Now right ── */
@@ -120,7 +119,7 @@ export default function TopBar({ user, notificationCount = 0, onMenuClick }) {
             <div className="flex-1" />
             <div className="flex items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="h-8 px-4 text-sm font-medium text-sidebar-foreground hover:text-white hover:bg-sidebar-accent">
+                <Button variant="ghost" size="sm" className="h-8 px-4 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted">
                   Login
                 </Button>
               </Link>
@@ -137,7 +136,7 @@ export default function TopBar({ user, notificationCount = 0, onMenuClick }) {
             <div className="flex-1 flex items-center">
               <Button
                 variant="ghost" size="icon"
-                className="lg:hidden text-sidebar-foreground hover:text-white hover:bg-sidebar-accent"
+                className="lg:hidden text-muted-foreground hover:text-foreground hover:bg-muted"
                 onClick={onMenuClick}
               >
                 <Menu className="w-5 h-5" />
@@ -157,7 +156,7 @@ export default function TopBar({ user, notificationCount = 0, onMenuClick }) {
             <div className="flex-1 flex items-center justify-end gap-2">
               <Link to="/notifications">
                 <Button variant="ghost" size="icon"
-                  className="relative h-8 w-8 text-sidebar-foreground hover:text-white hover:bg-sidebar-accent">
+                  className="relative h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted">
                   <Bell className="w-4 h-4" />
                   {notificationCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-accent-foreground text-[10px] rounded-full flex items-center justify-center font-bold">

@@ -63,11 +63,16 @@ export default function SubjectDetail() {
   const isEnrolled = !!enrollment || justEnrolled;
 
   // ── Lesson preview logic ──
-  // First lesson of each subject is a free preview (like BBA's preview lessons)
+  // Preview lessons are marked with is_free=true in the course builder.
+  // If no lessons are explicitly marked, auto-mark the first 3 as previews.
   const lessonsByTopic = {};
   lessons.forEach(l => { (lessonsByTopic[l.topic_id] ||= []).push(l); });
-  const firstLessonId = lessons.length > 0 ? lessons[0].id : null;
-  const isPreviewLesson = (lessonId) => lessonId === firstLessonId;
+  const hasExplicitPreviews = lessons.some(l => l.is_free);
+  const autoPreviewIds = !hasExplicitPreviews ? lessons.slice(0, 3).map(l => l.id) : [];
+  const isPreviewLesson = (lessonId) => {
+    const lesson = lessons.find(l => l.id === lessonId);
+    return lesson?.is_free || autoPreviewIds.includes(lessonId);
+  };
 
   const enrollMutation = useMutation({
     mutationFn: async () => {

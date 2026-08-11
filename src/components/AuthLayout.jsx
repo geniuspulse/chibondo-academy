@@ -1,3 +1,4 @@
+import WhatsAppButton from "./WhatsAppButton";
 import React from "react";
 
 export default function AuthLayout({ title, subtitle, footer, children }) {
@@ -42,6 +43,7 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
           <div className="text-center text-sm text-muted-foreground mt-6">{footer}</div>
         )}
       </div>
+      <WhatsAppButton />
     </div>
   );
 }

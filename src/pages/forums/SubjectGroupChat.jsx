@@ -1,5 +1,5 @@
 // src/pages/forums/SubjectGroupChat.jsx
-// Polished WhatsApp-style group chat — ACA navy/gold theme
+// Polished WhatsApp-style group chat — ACA navy/gold dark theme
 // Runs INSIDE the normal AppLayout (TopBar + BottomNav always visible)
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -14,18 +14,19 @@ import {
 import { toast } from 'sonner';
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
-const NAVY = '#0d1b4b';
-const GOLD = '#D4AF37';
+const NAVY = 'hsl(var(--background))';
+const GOLD = 'hsl(var(--primary))';
 
 // ── Chat themes ───────────────────────────────────────────────────────────────
 const THEMES = {
   classic: {
     label: 'Classic',
-    bg: '#E5DDD5',
-    sent: '#DCF8C6',
-    received: 'white',
-    header: NAVY,
-    inputBg: '#F0F2F5',
+    bg: 'hsl(var(--background))',
+    sent: 'hsl(var(--primary))',
+    received: 'hsl(var(--card))',
+    header: 'hsl(var(--card))',
+    inputBg: 'hsl(var(--background))',
+    textColor: 'hsl(var(--foreground))',
     pattern: null,
   },
   midnight: {
@@ -35,43 +36,47 @@ const THEMES = {
     received: '#0f3460',
     header: '#16213e',
     inputBg: '#16213e',
-    textColor: '#e0e0e0',
+    textColor: 'hsl(var(--foreground))',
     pattern: null,
   },
   ocean: {
     label: 'Ocean',
-    bg: '#e8f4f8',
-    sent: '#b3e5fc',
-    received: 'white',
-    header: '#0277bd',
-    inputBg: '#e1f5fe',
+    bg: '#0a1929',
+    sent: '#0d47a1',
+    received: '#102a43',
+    header: '#0a1929',
+    inputBg: '#0a1929',
+    textColor: 'hsl(var(--foreground))',
     pattern: null,
   },
   forest: {
     label: 'Forest',
-    bg: '#e8f5e9',
-    sent: '#c8e6c9',
-    received: 'white',
-    header: '#2e7d32',
-    inputBg: '#f1f8e9',
+    bg: '#0a1f0e',
+    sent: '#1b5e20',
+    received: '#132e16',
+    header: '#0a1f0e',
+    inputBg: '#0a1f0e',
+    textColor: 'hsl(var(--foreground))',
     pattern: null,
   },
   royal: {
     label: 'Royal',
-    bg: '#f3e5f5',
-    sent: '#e1bee7',
-    received: 'white',
-    header: '#6a1b9a',
-    inputBg: '#fce4ec',
+    bg: '#1a0a2e',
+    sent: '#4a148c',
+    received: '#2a1147',
+    header: '#1a0a2e',
+    inputBg: '#1a0a2e',
+    textColor: 'hsl(var(--foreground))',
     pattern: null,
   },
   aca: {
     label: 'ACA Gold',
-    bg: '#fdf8ee',
-    sent: '#fff3cd',
-    received: 'white',
-    header: NAVY,
-    inputBg: '#f5f0e8',
+    bg: 'hsl(var(--background))',
+    sent: '#2d4a1a',
+    received: 'hsl(var(--card))',
+    header: 'hsl(var(--card))',
+    inputBg: 'hsl(var(--background))',
+    textColor: 'hsl(var(--foreground))',
     pattern: null,
   },
 };
@@ -109,19 +114,20 @@ function ThemePicker({ current, onSelect, onClose }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 400,
-      background: 'rgba(0,0,0,0.5)',
+      background: 'rgba(0,0,0,0.65)',
       display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
     }} onClick={onClose}>
       <div
         style={{
-          background: 'white', borderRadius: '20px 20px 0 0',
+          background: 'hsl(var(--card))', borderRadius: '20px 20px 0 0',
           width: '100%', maxWidth: 480,
-          padding: '20px 16px 32px', boxShadow: '0 -8px 32px rgba(0,0,0,0.2)',
+          padding: '20px 16px 32px', boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
         }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontWeight: 700, fontSize: 16, color: NAVY }}>Chat Theme</span>
+          <span style={{ fontWeight: 700, fontSize: 16, color: '#ffffff' }}>Chat Theme</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa' }}>
             <X style={{ width: 18, height: 18 }} />
           </button>
@@ -132,18 +138,19 @@ function ThemePicker({ current, onSelect, onClose }) {
               key={key}
               onClick={() => { onSelect(key); onClose(); }}
               style={{
-                border: current === key ? `2px solid ${NAVY}` : '2px solid transparent',
+                border: current === key ? `2px solid ${GOLD}` : '2px solid transparent',
                 borderRadius: 14, overflow: 'hidden', cursor: 'pointer', padding: 0,
-                boxShadow: current === key ? `0 0 0 3px ${GOLD}66` : '0 2px 8px rgba(0,0,0,0.1)',
+                boxShadow: current === key ? `0 0 0 3px ${GOLD}66` : '0 2px 8px rgba(0,0,0,0.3)',
+                background: 'hsl(var(--background))',
               }}
             >
               {/* Mini preview */}
               <div style={{ height: 60, background: theme.bg, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, padding: '6px 8px', position: 'relative' }}>
-                <div style={{ height: 10, background: theme.received || 'white', borderRadius: 6, width: '60%', boxShadow: '0 1px 2px rgba(0,0,0,.1)' }} />
-                <div style={{ height: 10, background: theme.sent, borderRadius: 6, width: '50%', alignSelf: 'flex-end', boxShadow: '0 1px 2px rgba(0,0,0,.1)' }} />
+                <div style={{ height: 10, background: theme.received || 'hsl(var(--card))', borderRadius: 6, width: '60%', boxShadow: '0 1px 2px rgba(0,0,0,.3)' }} />
+                <div style={{ height: 10, background: theme.sent, borderRadius: 6, width: '50%', alignSelf: 'flex-end', boxShadow: '0 1px 2px rgba(0,0,0,.3)' }} />
                 {current === key && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: NAVY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Check style={{ width: 10, height: 10, color: 'white' }} />
+                  <div style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Check style={{ width: 10, height: 10, color: 'hsl(var(--background))' }} />
                   </div>
                 )}
               </div>
@@ -198,21 +205,21 @@ function EditIconModal({ group, onClose, onSaved }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 380, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.25)' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: 'hsl(var(--card))', borderRadius: 20, width: '100%', maxWidth: 380, overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ background: NAVY, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
           <span style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>Edit Group Icon</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
             <X style={{ width: 18, height: 18 }} />
           </button>
         </div>
-        <div style={{ display: 'flex', borderBottom: '1px solid #eee' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           {['emoji', 'upload'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               flex: 1, padding: '10px 0', border: 'none', background: 'none',
               fontWeight: 600, fontSize: 13, cursor: 'pointer',
-              borderBottom: tab === t ? `2px solid ${NAVY}` : '2px solid transparent',
-              color: tab === t ? NAVY : '#999',
+              borderBottom: tab === t ? `2px solid ${GOLD}` : '2px solid transparent',
+              color: tab === t ? GOLD : '#aaa',
             }}>
               {t === 'emoji' ? '😊 Emoji' : '🖼️ Photo'}
             </button>
@@ -221,13 +228,13 @@ function EditIconModal({ group, onClose, onSaved }) {
         <div style={{ padding: 16 }}>
           {tab === 'emoji' ? (
             <>
-              <p style={{ fontSize: 12, color: '#888', margin: '0 0 10px' }}>Choose an emoji icon</p>
+              <p style={{ fontSize: 12, color: '#aaa', margin: '0 0 10px' }}>Choose an emoji icon</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                 {EMOJIS.map(e => (
                   <button key={e} onClick={() => setEmoji(e)} style={{
                     width: 42, height: 42, borderRadius: '50%', fontSize: 20, cursor: 'pointer',
-                    border: emoji === e ? `2px solid ${NAVY}` : '1px solid #eee',
-                    background: emoji === e ? `${NAVY}12` : '#fafafa',
+                    border: emoji === e ? `2px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)',
+                    background: emoji === e ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.05)',
                   }}>{e}</button>
                 ))}
               </div>
@@ -236,25 +243,26 @@ function EditIconModal({ group, onClose, onSaved }) {
             <>
               <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
               <button onClick={() => fileRef.current?.click()} style={{
-                width: '100%', border: `2px dashed ${NAVY}`, borderRadius: 12, padding: '20px 0',
-                background: `${NAVY}06`, cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', gap: 8, marginBottom: 12,
+                width: '100%', border: `2px dashed ${GOLD}`, borderRadius: 12, padding: '20px 0',
+                background: 'rgba(201,168,76,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 6, marginBottom: 16,
               }}>
-                <ImageIcon style={{ width: 28, height: 28, color: NAVY, opacity: 0.6 }} />
-                <span style={{ fontSize: 13, color: NAVY, fontWeight: 600 }}>Choose Photo</span>
+                <ImageIcon style={{ width: 28, height: 28, color: GOLD, opacity: 0.8 }} />
+                <span style={{ fontSize: 13, color: GOLD, fontWeight: 600 }}>Choose Photo</span>
               </button>
               {url && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 10, marginBottom: 10 }}>
-                  <img src={url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                  <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>✓ Image ready</span>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', margin: '0 auto 16px', border: `2px solid ${GOLD}` }}>
+                  <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                 </div>
               )}
             </>
           )}
+
           <button onClick={handleSave} disabled={saving || (tab === 'upload' && !url)} style={{
-            width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-            background: (saving || (tab === 'upload' && !url)) ? '#ccc' : NAVY,
-            color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginTop: 8,
+            width: '100%', padding: '12px 0', borderRadius: 12, border: 'none',
+            background: (saving || (tab === 'upload' && !url)) ? '#444' : GOLD,
+            color: (saving || (tab === 'upload' && !url)) ? '#888' : 'hsl(var(--background))',
+            fontWeight: 700, fontSize: 14, cursor: 'pointer',
           }}>
             {saving ? 'Saving…' : 'Save Icon'}
           </button>
@@ -264,8 +272,7 @@ function EditIconModal({ group, onClose, onSaved }) {
   );
 }
 
-// ── Custom Audio Player for Voice Notes ───────────────────────────────────────
-// Global registry so tapping play on one note pauses all others
+// Audio playback registry — ensures only ONE audio plays at a time
 const audioRegistry = new Set();
 
 function CustomAudioPlayer({ url, isMine }) {
@@ -363,8 +370,8 @@ function CustomAudioPlayer({ url, isMine }) {
   };
 
   const BAR_HEIGHTS = [8, 14, 10, 18, 12, 16, 7, 15, 11, 17, 9, 14, 12, 16, 8];
-  const accentColor = isMine ? 'rgba(255,255,255,0.9)' : NAVY;
-  const trackColor  = isMine ? 'rgba(255,255,255,0.3)' : '#d0d0d0';
+  const accentColor = isMine ? 'rgba(255,255,255,0.95)' : GOLD;
+  const trackColor  = 'rgba(255,255,255,0.25)';
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0', minWidth: 210 }}>
@@ -373,8 +380,8 @@ function CustomAudioPlayer({ url, isMine }) {
         onClick={togglePlay}
         style={{
           width: 38, height: 38, borderRadius: '50%',
-          background: isMine ? 'rgba(255,255,255,0.25)' : NAVY,
-          border: isMine ? '1.5px solid rgba(255,255,255,0.5)' : 'none',
+          background: isMine ? 'rgba(255,255,255,0.2)' : NAVY,
+          border: '1px solid rgba(255,255,255,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', flexShrink: 0, transition: 'transform 0.15s',
         }}
@@ -412,7 +419,7 @@ function CustomAudioPlayer({ url, isMine }) {
 
         {/* Time row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10,
-          color: isMine ? 'rgba(255,255,255,0.7)' : '#888' }}>
+          color: 'rgba(255,255,255,0.7)' }}>
           <span>{fmtDuration(currentSec)}</span>
           <span>{fmtDuration(duration)}</span>
         </div>
@@ -452,30 +459,31 @@ function MessageActionSheet({ msg, isMine, isStaff, onReply, onCopy, onDelete, o
       <div
         onClick={onClose}
         style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
           zIndex: 1000, backdropFilter: 'blur(2px)'
         }}
       />
       {/* Sheet */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'var(--card, #fff)', borderRadius: '20px 20px 0 0',
+        background: 'hsl(var(--card))', borderRadius: '20px 20px 0 0',
         zIndex: 1001, padding: '8px 0 32px',
-        boxShadow: '0 -4px 24px rgba(0,0,0,0.18)',
+        boxShadow: '0 -4px 24px rgba(0,0,0,0.5)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
         animation: 'slideUp 0.18s ease-out',
       }}>
         {/* Drag handle */}
-        <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 99, margin: '0 auto 12px' }} />
+        <div style={{ width: 40, height: 4, background: '#475569', borderRadius: 99, margin: '0 auto 12px' }} />
 
         {/* Message preview */}
         <div style={{
           margin: '0 16px 12px', padding: '10px 14px',
-          background: 'rgba(0,0,0,0.04)', borderRadius: 12,
-          fontSize: 13, color: '#555',
+          background: 'rgba(255,255,255,0.06)', borderRadius: 12,
+          fontSize: 13, color: '#cbd5e1',
           maxHeight: 60, overflow: 'hidden', textOverflow: 'ellipsis',
-          borderLeft: '3px solid hsl(var(--primary))',
+          borderLeft: `3px solid ${GOLD}`,
         }}>
-          <div style={{ fontWeight: 700, fontSize: 11, color: 'hsl(var(--primary))', marginBottom: 3 }}>
+          <div style={{ fontWeight: 700, fontSize: 11, color: GOLD, marginBottom: 3 }}>
             {msg.author_name}
           </div>
           {msg.type === 'image' ? '📷 Photo' : msg.type === 'voice' ? '🎤 Voice note' : msg.body?.slice(0, 80)}
@@ -486,7 +494,7 @@ function MessageActionSheet({ msg, isMine, isStaff, onReply, onCopy, onDelete, o
           <button key={label} onClick={fn} style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 16,
             padding: '14px 24px', background: 'none', border: 'none',
-            fontSize: 15, color: danger ? '#e53935' : 'var(--foreground, #111)',
+            fontSize: 15, color: danger ? '#ef4444' : '#ffffff',
             cursor: 'pointer', textAlign: 'left',
           }}>
             <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{icon}</span>
@@ -507,11 +515,11 @@ function MessageActionSheet({ msg, isMine, isStaff, onReply, onCopy, onDelete, o
 
 // ── Message Bubble ────────────────────────────────────────────────────────────
 function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAction }) {
-  const t         = THEMES[theme] || THEMES.classic;
+  const t         = THEMES[theme] || THEMES.midnight;
   const color     = nameColor(msg.author_id);
   const isStaff   = msg.author_role === 'teacher' || msg.author_role === 'admin';
-  const textColor = t.textColor || '#111';
-  const receivedBg = t.received || 'white';
+  const textColor = t.textColor || '#e0e0e0';
+  const receivedBg = t.received || 'hsl(var(--card))';
 
   // Long-press → action sheet
   const pressTimer  = useRef(null);
@@ -547,7 +555,7 @@ function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAc
     const parts = text.split(/(@[a-zA-Z0-9_\s.\-]+?)(?=\s|$|[@.,!?])/g);
     return parts.map((part, i) => {
       if (part.startsWith('@')) {
-        return <span key={i} style={{ color: '#1d9bf0', fontWeight: 600 }}>{part}</span>;
+        return <span key={i} style={{ color: '#38bdf8', fontWeight: 600 }}>{part}</span>;
       }
       return part;
     });
@@ -590,14 +598,14 @@ function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAc
           background: isMine ? t.sent : receivedBg,
           borderRadius: isMine ? '14px 0 14px 14px' : '0 14px 14px 14px',
           padding: '7px 11px 6px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
         }}>
           {!isMine && showName && (
             <div style={{ fontSize: 11, fontWeight: 700, color, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
               {msg.author_name}
               {isStaff && (
                 <span style={{
-                  fontSize: 9, background: GOLD, color: NAVY,
+                  fontSize: 9, background: GOLD, color: 'hsl(var(--background))',
                   borderRadius: 4, padding: '1px 5px', fontWeight: 800,
                 }}>TUTOR ⭐</span>
               )}
@@ -607,13 +615,13 @@ function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAc
           {/* Quoted Message (WhatsApp-style Reply Bubble) */}
           {msg.reply_preview && (
             <div style={{
-              background: 'rgba(0,0,0,0.05)',
+              background: 'rgba(255,255,255,0.08)',
               borderLeft: `3px solid ${color}`,
               borderRadius: 6,
               padding: '4px 8px',
               marginBottom: 6,
               fontSize: 12,
-              color: '#555',
+              color: '#cbd5e1',
             }}>
               <div style={{ fontWeight: 700, color, fontSize: 11 }}>{msg.reply_author}</div>
               <div style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
@@ -624,7 +632,7 @@ function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAc
 
           {/* Deleted message */}
           {msg.deleted ? (
-            <p style={{ margin: 0, fontSize: 13, color: '#aaa', fontStyle: 'italic' }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
               🚫 This message was deleted
             </p>
           ) : msg.type === 'voice' ? (
@@ -650,22 +658,22 @@ function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAc
                   display: 'block'
                 }}
               />
-              <p style={{ margin: '4px 0 0', fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+              <p style={{ margin: '4px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>
                 {msg.body !== '📷 Photo' && msg.body}
               </p>
             </div>
           ) : msg.type === 'document' ? (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px', background: 'rgba(0,0,0,0.04)',
-              borderRadius: 8, margin: '4px 0', border: '1px solid rgba(0,0,0,0.08)'
+              padding: '10px 12px', background: 'rgba(255,255,255,0.06)',
+              borderRadius: 8, margin: '4px 0', border: '1px solid rgba(255,255,255,0.12)'
             }}>
-              <FileText style={{ width: 28, height: 28, color: NAVY }} />
+              <FileText style={{ width: 28, height: 28, color: GOLD }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#333', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#ffffff', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                   {msg.media_name || 'Document'}
                 </div>
-                <div style={{ fontSize: 11, color: '#888' }}>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
                   Document Card
                 </div>
               </div>
@@ -675,25 +683,25 @@ function MessageBubble({ msg, isMine, showName, theme, onReply, onImageTap, onAc
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  width: 32, height: 32, borderRadius: '50%', background: 'white',
+                  width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.15)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)', color: NAVY
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)', color: '#ffffff'
                 }}
               >
                 <Download style={{ width: 16, height: 16 }} />
               </a>
             </div>
           ) : (
-            <p style={{ margin: 0, fontSize: 14, color: isMine ? '#111' : textColor, lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+            <p style={{ margin: 0, fontSize: 14, color: isMine ? '#ffffff' : textColor, lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
               {renderBody(msg.body)}
             </p>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 3, marginTop: 3 }}>
-            <span style={{ fontSize: 10, color: isMine ? '#888' : (theme === 'midnight' ? '#aaa' : '#aaa') }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>
               {fmtTime(msg.created_date)}
             </span>
-            {isMine && <span style={{ fontSize: 11, color: '#53bdeb' }}>✓✓</span>}
+            {isMine && <span style={{ fontSize: 11, color: '#38bdf8' }}>✓✓</span>}
           </div>
         </div>
       </div>
@@ -739,9 +747,9 @@ export default function SubjectGroupChat() {
 
   // Theme persisted to localStorage per-group
   const themeKey = `chat-theme-${subjectSlug}`;
-  const [theme, setTheme] = useState(() => localStorage.getItem(themeKey) || 'classic');
+  const [theme, setTheme] = useState(() => localStorage.getItem(themeKey) || 'midnight');
 
-  const t = THEMES[theme] || THEMES.classic;
+  const t = THEMES[theme] || THEMES.midnight;
   const isPrivileged = user?.role === 'admin' || user?.role === 'teacher';
 
   // Guest redirect — guests can view but not send
@@ -1210,7 +1218,7 @@ export default function SubjectGroupChat() {
           flexShrink: 0, height: 58, background: headerColor,
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '0 10px', zIndex: 10,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
         }}>
           <button onClick={() => navigate('/forums')} style={{
             background: 'none', border: 'none', color: 'white', cursor: 'pointer',
@@ -1259,34 +1267,35 @@ export default function SubjectGroupChat() {
             {showMenu && (
               <div style={{
                 position: 'absolute', right: 0, top: 'calc(100% + 6px)',
-                background: 'white', borderRadius: 14,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: 190, zIndex: 200,
+                background: 'hsl(var(--card))', borderRadius: 14,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)', minWidth: 190, zIndex: 200,
+                border: '1px solid rgba(255,255,255,0.1)',
                 overflow: 'hidden',
               }}>
                 <button onClick={() => { setShowTheme(true); setShowMenu(false); }} style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '12px 16px', background: 'none', border: 'none',
-                  fontSize: 13, cursor: 'pointer', color: '#333', textAlign: 'left',
+                  fontSize: 13, cursor: 'pointer', color: '#ffffff', textAlign: 'left',
                 }}>
-                  <Palette style={{ width: 15, height: 15, color: '#888' }} /> Change Theme
+                  <Palette style={{ width: 15, height: 15, color: '#94a3b8' }} /> Change Theme
                 </button>
                 {isPrivileged && (
                   <button onClick={() => { setShowEditIcon(true); setShowMenu(false); }} style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                     padding: '12px 16px', background: 'none', border: 'none',
-                    fontSize: 13, cursor: 'pointer', color: '#333', textAlign: 'left',
-                    borderTop: '1px solid #f5f5f5',
+                    fontSize: 13, cursor: 'pointer', color: '#ffffff', textAlign: 'left',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
                   }}>
-                    <Camera style={{ width: 15, height: 15, color: '#888' }} /> Edit Group Icon
+                    <Camera style={{ width: 15, height: 15, color: '#94a3b8' }} /> Edit Group Icon
                   </button>
                 )}
                 <button onClick={() => { navigate('/forums'); setShowMenu(false); }} style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '12px 16px', background: 'none', border: 'none',
-                  fontSize: 13, cursor: 'pointer', color: '#333', textAlign: 'left',
-                  borderTop: '1px solid #f5f5f5',
+                  fontSize: 13, cursor: 'pointer', color: '#ffffff', textAlign: 'left',
+                  borderTop: '1px solid rgba(255,255,255,0.08)',
                 }}>
-                  <ArrowLeft style={{ width: 15, height: 15, color: '#888' }} /> Back to Chats
+                  <ArrowLeft style={{ width: 15, height: 15, color: '#94a3b8' }} /> Back to Chats
                 </button>
               </div>
             )}
@@ -1296,12 +1305,12 @@ export default function SubjectGroupChat() {
         {/* ── Messages ── */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0', WebkitOverflowScrolling: 'touch' }}>
           {isLoading && (
-            <div style={{ textAlign: 'center', padding: 32, color: '#aaa', fontSize: 13 }}>Loading messages…</div>
+            <div style={{ textAlign: 'center', padding: 32, color: '#94a3b8', fontSize: 13 }}>Loading messages…</div>
           )}
           {!isLoading && messages.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 24px', color: theme === 'midnight' ? '#aaa' : '#999' }}>
+            <div style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>{(localGroup || group).icon || subjectMeta.icon}</div>
-              <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 4px' }}>{(localGroup || group).name}</p>
+              <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 4px', color: '#ffffff' }}>{(localGroup || group).name}</p>
               <p style={{ fontSize: 12, margin: 0, opacity: 0.7 }}>No messages yet — say hello! 👋</p>
             </div>
           )}
@@ -1309,9 +1318,9 @@ export default function SubjectGroupChat() {
             item.type === 'date' ? (
               <div key={item.key} style={{ textAlign: 'center', margin: '10px 0' }}>
                 <span style={{
-                  background: 'rgba(255,255,255,0.88)', padding: '3px 14px',
+                  background: 'rgba(255,255,255,0.12)', padding: '3px 14px',
                   borderRadius: 12, fontSize: 11,
-                  color: '#555', boxShadow: '0 1px 3px rgba(0,0,0,.08)',
+                  color: '#e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
                 }}>
                   {item.label}
                 </span>
@@ -1336,8 +1345,8 @@ export default function SubjectGroupChat() {
         {showMentions && filteredMembers.length > 0 && (
           <div style={{
             position: 'absolute', bottom: 64, left: 10, right: 10,
-            background: 'white', borderRadius: 12, border: '1px solid #eee',
-            boxShadow: '0 -4px 16px rgba(0,0,0,0.1)', maxOverflowY: 'auto', maxHeight: 200, zIndex: 100
+            background: 'hsl(var(--card))', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 -4px 16px rgba(0,0,0,0.3)', maxOverflowY: 'auto', maxHeight: 200, zIndex: 100
           }}>
             {filteredMembers.map((m, idx) => (
               <button
@@ -1346,11 +1355,11 @@ export default function SubjectGroupChat() {
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 14px', background: 'none', border: 'none',
-                  textAlign: 'left', cursor: 'pointer', borderBottom: '1px solid #f9f9f9',
-                  fontSize: 13, fontWeight: 500, color: '#333'
+                  textAlign: 'left', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  fontSize: 13, fontWeight: 500, color: '#ffffff'
                 }}
               >
-                <AtSign style={{ width: 14, height: 14, color: '#1d9bf0' }} />
+                <AtSign style={{ width: 14, height: 14, color: '#38bdf8' }} />
                 <span>{m}</span>
               </button>
             ))}
@@ -1360,34 +1369,34 @@ export default function SubjectGroupChat() {
         {/* ── Reply preview ── */}
         {replyTo && (
           <div style={{
-            flexShrink: 0, background: 'rgba(255,255,255,0.95)',
+            flexShrink: 0, background: 'hsl(var(--card))',
             borderTop: '2px solid #25D366', padding: '7px 14px',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
             <div style={{ overflow: 'hidden' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#25D366' }}>{replyTo.author_name}</span>
-              <p style={{ margin: 0, fontSize: 12, color: '#555', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: 260 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#e0e0e0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: 260 }}>
                 {replyTo.body}
               </p>
             </div>
-            <button onClick={() => setReplyTo(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#aaa' }}>×</button>
+            <button onClick={() => setReplyTo(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>×</button>
           </div>
         )}
 
         {/* ── Recording Indicator ── */}
         {recording && (
           <div style={{
-            flexShrink: 0, background: 'rgba(255,255,255,0.97)',
-            borderTop: '1px solid rgba(0,0,0,0.08)', padding: '10px 16px',
+            flexShrink: 0, background: 'hsl(var(--card))',
+            borderTop: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px',
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
             {/* Cancel */}
             <button
               onClick={() => stopRecording(true)}
               style={{
-                width: 36, height: 36, borderRadius: '50%', background: '#f5f5f5',
-                border: '1px solid #ddd', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: '#e53935'
+                width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', flexShrink: 0, color: '#ef4444'
               }}
             >
               <X style={{ width: 16, height: 16 }} />
@@ -1397,7 +1406,7 @@ export default function SubjectGroupChat() {
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 3, height: 24 }}>
               {[10,16,8,18,12,15,7,14,11,17,9,13,16,8,12].map((h, i) => (
                 <div key={i} style={{
-                  flex: 1, height: h, borderRadius: 2, background: 'red',
+                  flex: 1, height: h, borderRadius: 2, background: '#ef4444',
                   animation: `recPulse 0.9s ${i * 0.06}s infinite ease-in-out`,
                   opacity: 0.8,
                 }} />
@@ -1411,7 +1420,7 @@ export default function SubjectGroupChat() {
             </div>
 
             {/* Timer */}
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#e53935', fontVariantNumeric: 'tabular-nums', minWidth: 40 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', fontVariantNumeric: 'tabular-nums', minWidth: 40 }}>
               {String(Math.floor(recSeconds / 60)).padStart(2,'0')}:{String(recSeconds % 60).padStart(2,'0')}
             </span>
 
@@ -1432,8 +1441,8 @@ export default function SubjectGroupChat() {
         {/* ── Input bar ── */}
         <div style={{
           flexShrink: 0,
-          background: t.inputBg || '#F0F2F5',
-          borderTop: '1px solid rgba(0,0,0,0.06)',
+          background: t.inputBg || 'hsl(var(--background))',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
           padding: '8px 10px',
           display: 'flex', alignItems: 'flex-end', gap: 8,
           position: 'relative'
@@ -1443,12 +1452,12 @@ export default function SubjectGroupChat() {
             onClick={() => setShowPicker(p => !p)}
             style={{
               width: 44, height: 44, borderRadius: '50%',
-              background: 'white', border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
             }}
           >
-            <Paperclip style={{ width: 20, height: 20, color: NAVY }} />
+            <Paperclip style={{ width: 20, height: 20, color: '#ffffff' }} />
           </button>
 
           {/* Attachment Selector Dropdown */}
@@ -1457,9 +1466,9 @@ export default function SubjectGroupChat() {
               ref={pickerRef}
               style={{
                 position: 'absolute', bottom: 64, left: 10,
-                background: 'white', borderRadius: 14, overflow: 'hidden',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column',
-                zIndex: 200, width: 160
+                background: 'hsl(var(--card))', borderRadius: 14, overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column',
+                zIndex: 200, width: 160, border: '1px solid rgba(255,255,255,0.1)'
               }}
             >
               <button
@@ -1467,10 +1476,10 @@ export default function SubjectGroupChat() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
                   background: 'none', border: 'none', cursor: 'pointer', fontSize: 13,
-                  fontWeight: 600, color: '#333', textAlign: 'left', borderBottom: '1px solid #f5f5f5'
+                  fontWeight: 600, color: '#ffffff', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.05)'
                 }}
               >
-                <ImageIcon style={{ width: 16, height: 16, color: NAVY }} />
+                <ImageIcon style={{ width: 16, height: 16, color: GOLD }} />
                 <span>Image</span>
               </button>
               <button
@@ -1478,10 +1487,10 @@ export default function SubjectGroupChat() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
                   background: 'none', border: 'none', cursor: 'pointer', fontSize: 13,
-                  fontWeight: 600, color: '#333', textAlign: 'left'
+                  fontWeight: 600, color: '#ffffff', textAlign: 'left'
                 }}
               >
-                <FileText style={{ width: 16, height: 16, color: NAVY }} />
+                <FileText style={{ width: 16, height: 16, color: GOLD }} />
                 <span>Document</span>
               </button>
             </div>
@@ -1511,11 +1520,12 @@ export default function SubjectGroupChat() {
             placeholder="Type a message…"
             rows={1}
             style={{
-              flex: 1, borderRadius: 24, border: '1px solid rgba(0,0,0,0.1)',
+              flex: 1, borderRadius: 24, border: '1px solid rgba(255,255,255,0.15)',
               padding: '9px 14px', fontSize: 14, resize: 'none',
-              background: 'white', outline: 'none', lineHeight: 1.4,
+              background: 'rgba(255,255,255,0.08)', outline: 'none', lineHeight: 1.4,
               maxHeight: 120, overflowY: 'auto', fontFamily: 'inherit',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+              color: '#ffffff',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
             }}
           />
 
@@ -1544,13 +1554,13 @@ export default function SubjectGroupChat() {
               onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }}
               style={{
                 width: 44, height: 44, borderRadius: '50%',
-                background: recording ? 'red' : NAVY,
-                border: 'none', cursor: 'pointer',
+                background: recording ? '#ef4444' : NAVY,
+                border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
                 transition: 'background 0.15s, transform 0.1s',
                 transform: recording ? 'scale(1.15)' : 'scale(1)',
-                boxShadow: recording ? '0 2px 12px rgba(255,0,0,0.5)' : '0 2px 8px rgba(13,27,75,0.3)',
+                boxShadow: recording ? '0 2px 12px rgba(239,68,68,0.5)' : '0 2px 8px rgba(0,0,0,0.3)',
               }}
             >
               {recording ? (

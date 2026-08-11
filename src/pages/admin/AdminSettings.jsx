@@ -1025,8 +1025,8 @@ export default function AdminSettings() {
         <nav className="w-full lg:w-56 flex-shrink-0">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             {/* Mini profile in sidebar */}
-            <div className="p-4 border-b border-border flex items-center gap-3"
-              style={{ background: 'hsl(var(--foreground))' }}>
+            <div className="p-4 border-b border-border flex items-center gap-3 bg-muted"
+            >
               <div className="w-9 h-9 rounded-xl overflow-hidden border border-[hsl(var(--primary)_/_0.3)] flex-shrink-0">
                 {user?.avatar_url
                   ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />

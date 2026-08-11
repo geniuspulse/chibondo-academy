@@ -235,10 +235,11 @@ export default function LessonPage() {
   const isLocked = !!user && !hasPaidFees;
 
   // ── Lesson Preview Feature (BBA-style) ──
-  // First lesson of each subject is a free preview
-  const allLessonIds = allLessons.map(l => l.id);
-  const isFirstLesson = allLessonIds.length > 0 && allLessonIds[0] === lessonId;
-  const isPreviewLesson = isFirstLesson; // First lesson is always a free preview
+  // Preview lessons: explicitly marked with is_free in course builder,
+  // or auto-preview the first 3 lessons if none are explicitly marked.
+  const hasExplicitPreviews = allLessons.some(l => l.is_free);
+  const autoPreviewIds = !hasExplicitPreviews ? allLessons.slice(0, 3).map(l => l.id) : [];
+  const isPreviewLesson = lesson?.is_free || autoPreviewIds.includes(lessonId);
   const canPreview = isPreviewLesson && !user;
   const isGuestPreviewing = canPreview; // Guest viewing a preview lesson
 
@@ -412,7 +413,7 @@ export default function LessonPage() {
               <div className="bg-slate-900 py-12 px-6 flex flex-col items-center text-center">
                 <FileText className="w-12 h-12 text-primary mb-3" />
                 <p className="text-lg font-bold text-white">Reading Lesson</p>
-                <p className="text-sm text-slate-400 mt-1">Study notes below — no video for this lesson.</p>
+                <p className="text-sm text-muted-foreground mt-1">Study notes below — no video for this lesson.</p>
               </div>
             )}
           </div>
