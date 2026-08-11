@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
-import { BookOpen, PlayCircle, CheckCircle2, Lock, ArrowLeft, FileText, Share2, GraduationCap } from 'lucide-react';
+import { BookOpen, PlayCircle, CheckCircle2, Lock, ArrowLeft, FileText, Share2, GraduationCap, ChevronDown, Eye, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
+import { cn } from '@/lib/utils';
 
 export default function SubjectDetail() {
   const { subjectId } = useParams();
@@ -17,6 +17,7 @@ export default function SubjectDetail() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [justEnrolled, setJustEnrolled] = useState(false);
+  const [openTopics, setOpenTopics] = useState({ 0: true });
 
   const referralCode = user?.referral_code || (user?.id ? `CHIB-${user.id.slice(-6).toUpperCase()}` : '');
 
@@ -61,6 +62,13 @@ export default function SubjectDetail() {
   const hasPaidFees = !!subscription;
   const isEnrolled = !!enrollment || justEnrolled;
 
+  // ── Lesson preview logic ──
+  // First lesson of each subject is a free preview (like BBA's preview lessons)
+  const lessonsByTopic = {};
+  lessons.forEach(l => { (lessonsByTopic[l.topic_id] ||= []).push(l); });
+  const firstLessonId = lessons.length > 0 ? lessons[0].id : null;
+  const isPreviewLesson = (lessonId) => lessonId === firstLessonId;
+
   const enrollMutation = useMutation({
     mutationFn: async () => {
       const rec = await db.entities.Enrollment.create({
@@ -81,13 +89,20 @@ export default function SubjectDetail() {
     onError: () => toast.error('Could not join class. Please try again.'),
   });
 
-  const handleLessonClick = async () => {
+  const handleLessonClick = (lessonId) => {
+    if (isPreviewLesson(lessonId)) {
+      navigate(`/lesson/${lessonId}`);
+      return;
+    }
     if (!hasPaidFees) { navigate('/subscription'); return; }
-    if (!isEnrolled) await enrollMutation.mutateAsync();
+    if (!isEnrolled) {
+      enrollMutation.mutateAsync().then(() => navigate(`/lesson/${lessonId}`));
+      return;
+    }
+    navigate(`/lesson/${lessonId}`);
   };
 
   const firstLesson = lessons.length > 0 ? lessons[0] : null;
-  // ── Smart CTA ──
   const ctaConfig = !user
     ? { label: 'Get Started', to: '/register' }
     : !hasPaidFees
@@ -108,8 +123,6 @@ export default function SubjectDetail() {
     }
   };
 
-  const lessonsByTopic = {};
-  lessons.forEach(l => { (lessonsByTopic[l.topic_id] ||= []).push(l); });
   const completedLessons = enrollment?.completed_lessons || [];
   const totalLessons = lessons.length;
   const progressPct = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
@@ -152,50 +165,65 @@ export default function SubjectDetail() {
         ogImageOverride={subject.og_image || subject.cover_image || undefined} />
 
       <div className="space-y-5">
-        {/* Compact Header — back + share */}
+        {/* Compact Header */}
         <div className="flex items-center justify-between">
           <Link to="/subjects" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </Link>
           <div className="flex items-center gap-3">
-            {subject.is_premium && <Badge className="text-[10px] bg-accent/10 text-accent border-accent/20">Premium</Badge>}
+            {subject.is_premium && <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">Premium</Badge>}
             <button onClick={handleShare} className="text-muted-foreground hover:text-foreground transition-colors" title="Share course">
               <Share2 className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Title + description folded together */}
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-display font-bold">{subject.name}</h1>
-          {subject.form_name && <p className="text-sm text-muted-foreground mt-1">{subject.form_name}</p>}
-          {subject.description && <p className="text-sm text-muted-foreground leading-relaxed mt-2">{subject.description}</p>}
-          {subject.teacher_name && (
-            <div className="flex items-center gap-1.5 mt-3 text-sm text-muted-foreground">
-              <GraduationCap className="w-4 h-4 text-primary/70" />
-              <span className="text-xs uppercase tracking-widest font-semibold mr-1">Tutor</span>
-              <span className="font-semibold text-foreground">{subject.teacher_name}</span>
+        {/* BBA-style hero header */}
+        <div className="relative overflow-hidden rounded-2xl p-6 border border-border"
+          style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--chart-3) / 0.1) 100%)' }}>
+          <div className="absolute inset-0 dot-grid opacity-20" />
+          <div className="relative z-10">
+            <h1 className="text-2xl lg:text-3xl font-heading font-bold">{subject.name}</h1>
+            {subject.form_name && <p className="text-sm text-muted-foreground mt-1">{subject.form_name}</p>}
+            {subject.description && <p className="text-sm text-muted-foreground leading-relaxed mt-2 max-w-2xl">{subject.description}</p>}
+            <div className="flex items-center gap-4 mt-4 flex-wrap">
+              {subject.teacher_name && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <GraduationCap className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="font-semibold">{subject.teacher_name}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <FileText className="w-3.5 h-3.5" />
+                <span>{totalLessons} lessons</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{topicCount} topics</span>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Thumbnail or Intro Video */}
         {subject.video_url ? (
-          <div className="rounded-2xl overflow-hidden aspect-video bg-black">
+          <div className="rounded-2xl overflow-hidden aspect-video bg-black border border-border">
             <iframe src={subject.video_url} className="w-full h-full" allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
           </div>
         ) : subject.cover_image ? (
-          <div className="rounded-2xl overflow-hidden aspect-video bg-muted">
+          <div className="rounded-2xl overflow-hidden aspect-video bg-muted border border-border">
             <img src={subject.cover_image} alt={subject.name} className="w-full h-full object-cover" />
           </div>
         ) : null}
 
-        {/* Progress + CTA — merged into one card */}
+        {/* Progress + CTA — merged card */}
         {isEnrolled && totalLessons > 0 && (
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold">Progress</span>
+              <span className="font-semibold font-heading">Your Progress</span>
               <span className="font-bold text-primary">{progressPct}%</span>
             </div>
             <Progress value={progressPct} className="h-2" />
@@ -203,90 +231,178 @@ export default function SubjectDetail() {
           </div>
         )}
 
-        {/* Course Content */}
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold text-base">Course Content</h2>
-            <span className="text-xs text-muted-foreground">
-              {topics.length > 0 ? `${topics.length} topics · ${lessons.length} lessons` : `${lessons.length} lessons`}
-            </span>
-          </div>
-
-          {lessons.length === 0 && topics.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              No lessons published yet
-            </div>
-          ) : topics.length > 0 ? (
-            <Accordion type="multiple" defaultValue={topics.map(t => t.id)}>
-              {topics.map((topic) => {
-                const tl = lessonsByTopic[topic.id] || [];
-                return (
-                  <AccordionItem key={topic.id} value={topic.id} className="border-0 border-b border-border last:border-b-0">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline [&>svg]:text-primary">
-                      <span className="font-medium text-sm text-left flex-1">
-                        {topic.title || topic.name || 'Untitled Topic'}
-                        <span className="ml-2 text-xs font-normal text-muted-foreground">({tl.length})</span>
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent className="p-0">
-                      {tl.length === 0 ? (
-                        <p className="px-4 py-3 text-xs text-muted-foreground italic">No lessons yet</p>
-                      ) : tl.map((lesson) => {
-                        const isCompleted = completedLessons.includes(lesson.id);
-                        const locked = !user || !hasPaidFees;
-                        const to = !user ? '/register' : !hasPaidFees ? '/subscription' : `/lesson/${lesson.id}`;
-                        return (
-                          <Link key={lesson.id} to={to} onClick={() => !locked && handleLessonClick()}
-                            className={`flex items-center gap-3 px-4 py-2.5 border-b border-border/50 last:border-b-0 text-sm transition-colors hover:bg-muted/30 ${isCompleted ? 'bg-success/5' : locked ? 'opacity-70' : ''}`}>
-                            <span className="flex-shrink-0">
-                              {isCompleted ? <CheckCircle2 className="w-4 h-4 text-success" />
-                              : locked ? <Lock className="w-4 h-4 text-muted-foreground/50" />
-                              : lesson.video_url ? <PlayCircle className="w-4 h-4 text-primary" />
-                              : <FileText className="w-4 h-4 text-muted-foreground" />}
-                            </span>
-                            <span className="flex-1 text-foreground/80">{lesson.title}</span>
-                            {lesson.duration_minutes && <span className="text-[10px] text-muted-foreground">{lesson.duration_minutes}m</span>}
-                          </Link>
-                        );
-                      })}
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          ) : (
-            <div>
-              {lessons.map((lesson, idx) => {
-                const isCompleted = completedLessons.includes(lesson.id);
-                const locked = !user || !hasPaidFees;
-                const to = !user ? '/register' : !hasPaidFees ? '/subscription' : `/lesson/${lesson.id}`;
-                return (
-                  <Link key={lesson.id} to={to} onClick={() => !locked && handleLessonClick()}
-                    className={`flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0 text-sm transition-colors hover:bg-muted/30 ${isCompleted ? 'bg-success/5' : locked ? 'opacity-70' : ''}`}>
-                    <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-muted-foreground">{idx + 1}</span>
-                    <span className="flex-shrink-0">
-                      {isCompleted ? <CheckCircle2 className="w-4 h-4 text-success" />
-                      : locked ? <Lock className="w-4 h-4 text-muted-foreground/50" />
-                      : lesson.video_url ? <PlayCircle className="w-4 h-4 text-primary" />
-                      : <FileText className="w-4 h-4 text-muted-foreground" />}
-                    </span>
-                    <span className="flex-1 text-foreground/80">{lesson.title}</span>
-                    {lesson.duration_minutes && <span className="text-[10px] text-muted-foreground">{lesson.duration_minutes}m</span>}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* CTA button — below course content */}
+        {/* CTA Button */}
         {ctaConfig && (
-          <Link to={ctaConfig.to} onClick={ctaConfig.onClick}>
-            <Button className="w-full h-12 text-base font-semibold" size="lg">
+          <div className="bg-card border border-border rounded-2xl p-5">
+            <Button
+              onClick={() => {
+                if (ctaConfig.onClick) ctaConfig.onClick();
+                if (ctaConfig.to) navigate(ctaConfig.to);
+              }}
+              className="w-full py-3 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all"
+            >
               {ctaConfig.label}
             </Button>
-          </Link>
+            {!user && (
+              <p className="text-center text-xs text-muted-foreground mt-2">
+                Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Curriculum — BBA-style accordion with lesson previews */}
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="p-5 border-b border-border">
+            <h2 className="font-heading text-lg font-bold flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Course Content
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalLessons} lessons · {topicCount} topics
+              {firstLessonId && ' · 1 free preview'}
+            </p>
+          </div>
+
+          <div className="divide-y divide-border">
+            {topics.length === 0 && lessons.length === 0 && (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                No content available yet.
+              </div>
+            )}
+
+            {topics.map((topic, topicIdx) => {
+              const topicLessons = lessonsByTopic[topic.id] || [];
+              const isOpen = openTopics[topicIdx] ?? (topicIdx === 0);
+              const topicCompletedCount = topicLessons.filter(l => completedLessons.includes(l.id)).length;
+
+              return (
+                <div key={topic.id} className="bg-background">
+                  <button
+                    onClick={() => setOpenTopics(prev => ({ ...prev, [topicIdx]: !prev[topicIdx] }))}
+                    className="w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-primary">{topicIdx + 1}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{topic.title || topic.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {topicLessons.length} lesson{topicLessons.length !== 1 ? 's' : ''}
+                        {topicCompletedCount > 0 && ` · ${topicCompletedCount} completed`}
+                      </p>
+                    </div>
+                    <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="pb-2 pl-4 pr-4 space-y-1">
+                      {topicLessons.map((lesson, lessonIdx) => {
+                        const isDone = completedLessons.includes(lesson.id);
+                        const isPreview = isPreviewLesson(lesson.id);
+                        const canAccess = isPreview || hasPaidFees;
+                        const globalIdx = lessons.findIndex(l => l.id === lesson.id) + 1;
+
+                        return (
+                          <button
+                            key={lesson.id}
+                            onClick={() => handleLessonClick(lesson.id)}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all",
+                              canAccess ? "hover:bg-muted/50 cursor-pointer" : "opacity-60 cursor-not-allowed"
+                            )}
+                          >
+                            <span className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center">
+                              {isDone ? (
+                                <CheckCircle2 className="w-4 h-4 text-success" />
+                              ) : isPreview ? (
+                                <Eye className="w-4 h-4 text-primary" />
+                              ) : !canAccess ? (
+                                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                              ) : lesson.video_url ? (
+                                <PlayCircle className="w-4 h-4 text-primary" />
+                              ) : (
+                                <FileText className="w-4 h-4 text-muted-foreground" />
+                              )}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{lesson.title}</p>
+                              {lesson.estimated_minutes > 0 && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{lesson.estimated_minutes} min</p>
+                              )}
+                            </div>
+                            {isPreview && (
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 uppercase tracking-wide flex-shrink-0">
+                                Free Preview
+                              </span>
+                            )}
+                            {!isPreview && !canAccess && (
+                              <Lock className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Lessons without topics */}
+            {lessonsByTopic[null] && lessonsByTopic[null].length > 0 && (
+              <div className="bg-background">
+                <div className="pb-2 pl-4 pr-4 space-y-1 pt-2">
+                  {lessonsByTopic[null].map(lesson => {
+                    const isDone = completedLessons.includes(lesson.id);
+                    const isPreview = isPreviewLesson(lesson.id);
+                    const canAccess = isPreview || hasPaidFees;
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={() => handleLessonClick(lesson.id)}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all",
+                          canAccess ? "hover:bg-muted/50 cursor-pointer" : "opacity-60 cursor-not-allowed"
+                        )}
+                      >
+                        <span className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center">
+                          {isDone ? <CheckCircle2 className="w-4 h-4 text-success" />
+                          : isPreview ? <Eye className="w-4 h-4 text-primary" />
+                          : !canAccess ? <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                          : <FileText className="w-4 h-4 text-muted-foreground" />}
+                        </span>
+                        <p className="text-sm font-medium truncate flex-1">{lesson.title}</p>
+                        {isPreview && (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 uppercase tracking-wide">
+                            Free Preview
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Subscribe banner for non-paying users */}
+        {user && !hasPaidFees && (
+          <div className="bg-card border border-primary/30 rounded-2xl p-5 text-center">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+              <Zap className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="font-heading font-bold text-base mb-1">Unlock All Lessons</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Subscribe to access all {totalLessons} lessons, quizzes, and past papers.
+            </p>
+            <Button
+              onClick={() => navigate('/subscription')}
+              className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all"
+            >
+              Pay School Fees
+            </Button>
+          </div>
         )}
       </div>
     </>

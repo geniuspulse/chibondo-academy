@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
-import { BookOpen, Users, ArrowRight, Plus, CheckCircle2, Clock, ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
+import { BookOpen, Users, ArrowRight, Plus, CheckCircle2, Clock, ChevronDown, ChevronUp, GraduationCap, TrendingUp, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,45 +35,51 @@ export default function TeacherDashboard() {
   });
 
   const profileByUserId = Object.fromEntries(studentProfiles.map(p => [p.user_id, p]));
-
   const uniqueStudentIds = [...new Set(allEnrollments.map(e => e.student_id))];
 
+  // BBA-style stat cards with colored backgrounds
   const stats = [
-    { label: 'My Subjects', value: subjects.length, icon: BookOpen, color: 'text-primary bg-primary/10' },
-    { label: 'Total Students', value: uniqueStudentIds.length, icon: Users, color: 'text-accent bg-accent/10' },
-    { label: 'Published', value: subjects.filter(s => s.status === 'published').length, icon: CheckCircle2, color: 'text-success bg-success/10' },
+    { label: 'My Subjects', value: subjects.length, icon: BookOpen, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+    { label: 'Total Students', value: uniqueStudentIds.length, icon: Users, color: 'text-chart-2', bg: 'bg-chart-2/10', border: 'border-chart-2/20' },
+    { label: 'Published', value: subjects.filter(s => s.status === 'published').length, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Hero header — matches the site-wide gradient hero style */}
-      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* BBA-style gradient hero header */}
+      <div className="relative overflow-hidden rounded-2xl p-6 border border-border"
+        style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.9) 0%, hsl(var(--chart-3) / 0.8) 100%)' }}>
+        <div className="absolute inset-0 dot-grid opacity-20" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-card/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <GraduationCap className="w-5 h-5" />
-              <span className="text-sm font-medium text-primary-foreground/80">Tutor Dashboard</span>
+              <GraduationCap className="w-5 h-5 text-primary-foreground" />
+              <span className="text-sm font-medium text-primary-foreground/70">Tutor Dashboard</span>
             </div>
-            <h1 className="text-2xl font-display font-bold mb-1">Welcome, {user?.full_name?.split(' ')[0]} 👋</h1>
-            <p className="text-primary-foreground/70 text-sm">Manage your subjects and track student progress</p>
+            <h1 className="text-2xl font-heading font-bold mb-1 text-primary-foreground">
+              Welcome, {user?.full_name?.split(' ')[0]} 👋
+            </h1>
+            <p className="text-primary-foreground/60 text-sm">Manage your subjects and track student progress</p>
           </div>
           <Link to="/teacher/courses">
-            <Button size="sm" className="bg-card text-foreground hover:bg-card/90 shadow-sm">
-              <Plus className="w-4 h-4 mr-1" /> Manage Content
-            </Button>
+            <button className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold bg-card text-foreground transition-all hover:scale-[1.02]">
+              <Plus className="w-4 h-4" /> Manage Content
+            </button>
           </Link>
         </div>
 
-        {/* Stats inline in the hero, same pattern as Forums/Subjects */}
-        <div className="flex gap-6 mt-5 flex-wrap">
+        {/* Stats inline in the hero */}
+        <div className="relative z-10 flex gap-6 mt-5 flex-wrap">
           {stats.map(stat => (
             <div key={stat.label} className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-card/15 flex-shrink-0">
-                <stat.icon className="w-5 h-5" />
+                <stat.icon className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <p className="text-xl font-bold font-display leading-none">{stat.value}</p>
-                <p className="text-[11px] text-primary-foreground/70 mt-1">{stat.label}</p>
+                <p className="text-xl font-bold font-heading leading-none text-primary-foreground">{stat.value}</p>
+                <p className="text-[11px] text-primary-foreground/60 mt-1">{stat.label}</p>
               </div>
             </div>
           ))}
@@ -81,11 +87,11 @@ export default function TeacherDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* My Subjects */}
+        {/* My Subjects — BBA-style cards */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-display">My Subjects</CardTitle>
+              <CardTitle className="text-base font-heading">My Subjects</CardTitle>
               <Link to="/teacher/courses" className="text-sm text-primary flex items-center gap-1 hover:underline">
                 Manage <ArrowRight className="w-3 h-3" />
               </Link>
@@ -103,7 +109,7 @@ export default function TeacherDashboard() {
                 .filter(e => e.profile);
 
               return (
-                <div key={s.id} className="rounded-lg border border-border overflow-hidden">
+                <div key={s.id} className="rounded-xl border border-border overflow-hidden">
                   <button
                     onClick={() => setExpandedSubject(isExpanded ? null : s.id)}
                     className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-left"
@@ -154,11 +160,11 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
 
-        {/* All Students */}
+        {/* All Students — BBA-style cards */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <GraduationCap className="w-4 h-4" /> Enrolled Students
+            <CardTitle className="text-base font-heading flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-primary" /> Enrolled Students
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -171,7 +177,7 @@ export default function TeacherDashboard() {
                 const studentEnrollments = allEnrollments.filter(e => e.student_id === sid);
                 if (!profile) return null;
                 return (
-                  <div key={sid} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div key={sid} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-sidebar flex items-center justify-center text-xs font-bold text-sidebar-primary flex-shrink-0">
                       {profile.full_name?.[0] || '?'}
                     </div>
@@ -180,9 +186,11 @@ export default function TeacherDashboard() {
                       <p className="text-xs text-muted-foreground">{profile.form} · {profile.school_name || 'Distance learner'}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="flex items-center gap-1 justify-end">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{studentEnrollments.length} subject{studentEnrollments.length !== 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: `${studentEnrollments[0]?.progress_percentage || 0}%` }} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground w-7">{studentEnrollments[0]?.progress_percentage || 0}%</span>
                       </div>
                     </div>
                   </div>

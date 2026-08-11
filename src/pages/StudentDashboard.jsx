@@ -223,6 +223,52 @@ export default function StudentDashboard() {
 
       <StatsGrid data={statsData} />
 
+      {/* ── Continue Learning — BBA-style progress cards ── */}
+      {enrollments.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-lg font-bold">Continue Learning</h2>
+            <Link to="/subjects" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+              All subjects <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {enrollments.slice(0, 6).map(e => {
+              // Find subject info from enrollments — they include subject_name
+              const progress = e.progress_percentage || 0;
+              const isCompleted = progress === 100 || e.status === 'completed';
+              return (
+                <Link key={e.id} to={`/subjects/${e.subject_id}`}
+                  className="group p-4 bg-card border border-border rounded-2xl hover:border-primary/40 transition-all">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-primary" />
+                    </div>
+                    {isCompleted ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/10 text-success">COMPLETED</span>
+                    ) : (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{progress}%</span>
+                    )}
+                  </div>
+                  <p className="font-semibold text-sm group-hover:text-primary transition-colors truncate">
+                    {e.subject_name || 'Subject'}
+                  </p>
+                  <div className="mt-3">
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    {isCompleted ? 'Completed' : progress > 0 ? 'In progress' : 'Not started'}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
 
 
       {/* Affiliate CTA */}

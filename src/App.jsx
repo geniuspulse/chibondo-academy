@@ -14,14 +14,13 @@ import RoleGuard from '@/components/RoleGuard';
 import { useOutletContext } from 'react-router-dom';
 import { captureReferralFromURL } from '@/lib/referralCookie';
 
-// Default theme is LIGHT. Only switch to dark if the user has explicitly chosen it.
-// System preference is intentionally ignored — the app ships light by default.
+// Default theme is DARK (BBA-inspired skeleton). Only switch to light if explicitly chosen.
 if (typeof window !== 'undefined') {
   const saved = localStorage.getItem('theme');
-  if (saved === 'dark') {
-    document.documentElement.classList.add('dark');
-  } else {
+  if (saved === 'light') {
     document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
   }
 
   // Capture referral code from ?ref= URL param on any page (cookie + localStorage)

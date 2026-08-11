@@ -63,6 +63,17 @@ module.exports = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			// BBA brand colors — used alongside CSS variables for special effects
+  			brand: {
+  			  DEFAULT: '#0b0b14',
+  			  accent: '#3b82f6',
+  			  accentHover: '#60a5fa',
+  			  surface: '#131221',
+  			  border: '#2a2749',
+  			  blue: '#3fa8fc',
+  			  purple: '#4a2fd1',
+  			  muted: '#9aa3b8',
   			}
   		},
   		fontFamily: {
@@ -71,27 +82,40 @@ module.exports = {
   			display: ['var(--font-display)'],
   			mono: ['var(--font-mono)']
   		},
+  		backgroundImage: {
+  		  "brand-gradient": "linear-gradient(135deg, #3fa8fc 0%, #4a2fd1 100%)",
+  		  "brand-gradient-radial": "radial-gradient(circle, #3fa8fc 0%, #4a2fd1 100%)",
+  		},
   		keyframes: {
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
+  			},
+  			// BBA animations
+  			'float-slow': {
+  				'0%, 100%': { transform: 'translateY(0px)' },
+  				'50%': { transform: 'translateY(-14px)' },
+  			},
+  			'blob-move': {
+  				'0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+  				'33%': { transform: 'translate(30px, -30px) scale(1.08)' },
+  				'66%': { transform: 'translate(-20px, 20px) scale(0.95)' },
+  			},
+  			'fade-in-up': {
+  				'0%': { opacity: '0', transform: 'translateY(16px)' },
+  				'100%': { opacity: '1', transform: 'translateY(0)' },
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'float-slow': 'float-slow 6s ease-in-out infinite',
+  			'blob-move': 'blob-move 12s ease-in-out infinite',
+  			'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
   		}
   	}
   },

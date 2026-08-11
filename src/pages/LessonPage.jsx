@@ -192,6 +192,8 @@ export default function LessonPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('notes');
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [showEnrollBanner, setShowEnrollBanner] = useState(false);
+  const [previewTimerStarted, setPreviewTimerStarted] = useState(false);
 
   const { data: lesson } = useQuery({
     queryKey: ['lesson', lessonId],
@@ -231,6 +233,22 @@ export default function LessonPage() {
 
   const hasPaidFees = !!subscription;
   const isLocked = !!user && !hasPaidFees;
+
+  // ── Lesson Preview Feature (BBA-style) ──
+  // First lesson of each subject is a free preview
+  const allLessonIds = allLessons.map(l => l.id);
+  const isFirstLesson = allLessonIds.length > 0 && allLessonIds[0] === lessonId;
+  const isPreviewLesson = isFirstLesson; // First lesson is always a free preview
+  const canPreview = isPreviewLesson && !user;
+  const isGuestPreviewing = canPreview; // Guest viewing a preview lesson
+
+  // Show enroll banner after 30 seconds for preview viewers
+  useEffect(() => {
+    if (!isGuestPreviewing || previewTimerStarted) return;
+    setPreviewTimerStarted(true);
+    const timer = setTimeout(() => setShowEnrollBanner(true), 30000);
+    return () => clearTimeout(timer);
+  }, [isGuestPreviewing, previewTimerStarted]);
 
   const markCompleteMutation = useMutation({
     mutationFn: async () => {
@@ -275,15 +293,34 @@ export default function LessonPage() {
     </div>
   );
 
-  if (user && isLocked) {
+  if (user && isLocked && !isPreviewLesson) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center space-y-4">
         <Lock className="w-12 h-12 text-primary" />
-        <h2 className="text-xl font-display font-bold">Pay Fees to Access Lessons</h2>
+        <h2 className="text-xl font-heading font-bold">Pay Fees to Access Lessons</h2>
         <p className="text-sm text-muted-foreground max-w-sm">Pay your school fees to unlock all lessons on the platform.</p>
         <div className="flex gap-3">
           <Link to="/subscription"><Button>Pay Fees Now</Button></Link>
           <Link to={`/subjects/${lesson.subject_id}`}><Button variant="outline">Back to Course</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  // For non-preview lessons accessed by guests, show locked screen
+  if (!user && !isPreviewLesson && lesson) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <Lock className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-xl font-heading font-bold">This Lesson is Locked</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Create a free account and subscribe to unlock all {allLessons.length} lessons in this subject.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link to="/register"><Button className="rounded-full px-6">Create Free Account</Button></Link>
+          <Link to={`/subjects/${lesson.subject_id}`}><Button variant="outline" className="rounded-full px-6">Back to Course</Button></Link>
         </div>
       </div>
     );
@@ -320,6 +357,7 @@ export default function LessonPage() {
               <h2 className="text-xs font-bold truncate">{lesson.title}</h2>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              {isGuestPreviewing && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 uppercase">Preview</span>}
               {user && <span className="text-xs font-semibold px-2 py-1 rounded-full bg-muted text-muted-foreground">{completedLessons.length}/{allLessons.length}</span>}
               {completeBtn}
             </div>
@@ -369,7 +407,7 @@ export default function LessonPage() {
           {/* VIDEO AREA — sticky on desktop */}
           <div className="w-full bg-black lg:sticky lg:top-0 z-30">
             {hasVideo ? (
-              !user ? <GuestVideoGate lesson={lesson} /> : <VideoPlayer lesson={lesson} />
+              !user && !isGuestPreviewing ? <GuestVideoGate lesson={lesson} /> : <VideoPlayer lesson={lesson} />
             ) : (
               <div className="bg-slate-900 py-12 px-6 flex flex-col items-center text-center">
                 <FileText className="w-12 h-12 text-primary mb-3" />
@@ -416,6 +454,9 @@ export default function LessonPage() {
                   <div className="bg-card rounded-2xl border border-border p-6 lg:p-8 shadow-sm">
                     {lesson.content ? (
                       !user ? (
+                        isGuestPreviewing ? (
+                          <div className="lesson-prose max-w-none" dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                        ) : (
                         <div className="relative">
                           <div className="lesson-prose max-w-none pointer-events-none select-none"
                             style={{ maxHeight: '8rem', overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)' }}
@@ -425,11 +466,12 @@ export default function LessonPage() {
                             <p className="text-sm font-bold">Sign in to read the full notes</p>
                             <p className="text-xs text-muted-foreground mb-4">Create a free account to access all notes and track progress.</p>
                             <div className="flex gap-2 justify-center">
-                              <a href="/register"><Button size="sm" className="text-xs h-9 px-5">Start Learning</Button></a>
-                              <a href="/login"><Button variant="outline" size="sm" className="text-xs h-9 px-5">Login</Button></a>
+                              <a href="/register"><Button size="sm" className="text-xs h-9 px-5 rounded-full">Start Learning</Button></a>
+                              <a href="/login"><Button variant="outline" size="sm" className="text-xs h-9 px-5 rounded-full">Login</Button></a>
                             </div>
                           </div>
                         </div>
+                        )
                       ) : (
                         <div className="lesson-prose max-w-none" dangerouslySetInnerHTML={{ __html: lesson.content }} />
                       )
@@ -551,6 +593,32 @@ export default function LessonPage() {
           </div>
         )}
       </div>
+
+      {/* ── BBA-style enroll banner — appears after 30s for preview viewers ── */}
+      {showEnrollBanner && isGuestPreviewing && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 pt-8 pb-4 px-4"
+          style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background)) 60%, transparent 100%)' }}>
+          <div className="max-w-3xl mx-auto bg-card border border-primary/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 shadow-2xl">
+            <div className="flex-1 text-center sm:text-left">
+              <p className="text-sm font-bold">Enjoying the lesson? 🎬</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Create a free account to unlock all {allLessons.length} lessons & track your progress
+              </p>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <a href="/register"
+                className="flex-1 sm:flex-none px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold text-center text-sm transition-all whitespace-nowrap hover:opacity-90">
+                Create Free Account
+              </a>
+              <button onClick={() => setShowEnrollBanner(false)}
+                className="px-3 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-all"
+                aria-label="Dismiss">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

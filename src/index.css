@@ -1,5 +1,5 @@
-/* theme v2.0 — electric-blue, Inter font, CSS var tokens throughout — 1782829129 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800&display=swap');
+/* theme v3.0 — BBA-inspired dark skeleton, Inter + Plus Jakarta Sans — 1782829129 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,108 +7,147 @@
 
 @layer base {
   :root {
-    /* ── NEW THEME: Modern, sharp, blue-electric (inspired by Brandfletch Academy) ── */
-    /* To revert: copy src/index.original.css back to src/index.css                   */
+    /* ── BBA-INSPIRED DARK THEME ── */
+    /* Matches the Brandfletch Business Academy visual identity */
 
-    /* Background: near-white, very slightly cool */
-    --background: 210 20% 98%;
-    --foreground: 222 47% 8%;
+    /* Background: indigo-tinted dark (BBA #0b0b14) */
+    --background: 240 30% 5%;
+    --foreground: 210 20% 95%;
 
-    /* Cards: pure white, clean */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 8%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 8%;
+    /* Cards: slightly lighter dark (BBA #131221) */
+    --card: 240 25% 8%;
+    --card-foreground: 210 20% 95%;
+    --popover: 240 25% 8%;
+    --popover-foreground: 210 20% 95%;
 
-    /* Primary: electric blue — the signature BrandFletch accent */
-    --primary: 221 83% 53%;
+    /* Primary: electric blue (BBA #3b82f6) */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: very light blue tint */
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 18%;
+    /* Secondary: muted surface (BBA #131221 lighter) */
+    --secondary: 240 20% 12%;
+    --secondary-foreground: 210 20% 90%;
 
-    /* Muted: cool light gray */
-    --muted: 210 20% 93%;
-    --muted-foreground: 215 16% 47%;
+    /* Muted: cool dark gray (BBA #9aa3b8 for text) */
+    --muted: 240 20% 12%;
+    --muted-foreground: 220 10% 60%;
 
-    /* Accent: electric blue (same as primary for this design) */
-    --accent: 221 83% 53%;
+    /* Accent: same blue as primary */
+    --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders: crisp light gray */
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 221 83% 53%;
+    /* Borders: subtle (BBA #2a2749) */
+    --border: 240 30% 16%;
+    --input: 240 30% 16%;
+    --ring: 217 91% 60%;
 
     /* Charts */
-    --chart-1: 221 83% 53%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 262 83% 58%;
-    --chart-4: 32 95% 44%;
-    --chart-5: 340 75% 55%;
-
-    /* Radius: tighter, more geometric feel */
-    --radius: 0.5rem;
-
-    /* Fonts: Inter as primary (clean, modern, geometric) */
-    --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-    /* Sidebar: deep navy — preserved from original for header consistency */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 221 83% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 40% 18%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 222 40% 20%;
-    --sidebar-ring: 221 83% 60%;
-
-    /* Success */
-    --success: 142 71% 40%;
-    --success-foreground: 0 0% 100%;
-  }
-
-  .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 20% 95%;
-    --card: 222 40% 10%;
-    --card-foreground: 210 20% 95%;
-    --popover: 222 40% 10%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 221 83% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 35% 16%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 222 35% 16%;
-    --muted-foreground: 215 16% 56%;
-    --accent: 221 83% 60%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 222 35% 18%;
-    --input: 222 35% 18%;
-    --ring: 221 83% 60%;
-    --chart-1: 221 83% 60%;
+    --chart-1: 217 91% 60%;
     --chart-2: 142 71% 50%;
     --chart-3: 262 83% 65%;
     --chart-4: 32 95% 55%;
     --chart-5: 340 75% 60%;
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 221 83% 60%;
+
+    /* Radius */
+    --radius: 0.5rem;
+
+    /* Fonts: Inter for body, Plus Jakarta Sans for headings (matches BBA) */
+    --font-heading: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Sidebar: same dark as background — seamless look (BBA #0b0b14) */
+    --sidebar-background: 240 30% 5%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 40% 13%;
+    --sidebar-accent: 240 20% 10%;
     --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 222 35% 15%;
-    --sidebar-ring: 221 83% 60%;
+    --sidebar-border: 240 30% 14%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Success */
     --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  /* Dark mode is the default — light mode kept for completeness but not used */
+  .dark {
+    --background: 240 30% 5%;
+    --foreground: 210 20% 95%;
+    --card: 240 25% 8%;
+    --card-foreground: 210 20% 95%;
+    --popover: 240 25% 8%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 20% 12%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 240 20% 12%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 30% 16%;
+    --input: 240 30% 16%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 142 71% 50%;
+    --chart-3: 262 83% 65%;
+    --chart-4: 32 95% 55%;
+    --chart-5: 340 75% 60%;
+    --sidebar-background: 240 30% 5%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 20% 10%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 240 30% 14%;
+    --sidebar-ring: 217 91% 60%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  /* Light mode (kept for completeness — app defaults to dark) */
+  .light {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 8%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 18%;
+    --muted: 210 20% 93%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 262 83% 58%;
+    --chart-4: 32 95% 44%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 30% 5%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 20% 10%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 240 30% 14%;
+    --sidebar-ring: 217 91% 60%;
+    --success: 142 71% 40%;
     --success-foreground: 0 0% 100%;
   }
 }
@@ -124,13 +163,45 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Tighter, crisper headings */
+  /* Tighter, crisper headings — BBA style */
   h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     letter-spacing: -0.02em;
+    font-family: var(--font-heading);
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   BBA-INSPIRED DESIGN ELEMENTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Dot grid background — matches BBA's hero section */
+.dot-grid {
+  background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Gradient text utility — BBA's signature blue→purple gradient */
+.text-gradient {
+  background: linear-gradient(135deg, #3fa8fc 0%, #4a2fd1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Brand gradient background */
+.brand-gradient {
+  background: linear-gradient(135deg, #3fa8fc 0%, #4a2fd1 100%);
+}
+
+/* BBA-style pill button */
+.btn-pill {
+  @apply inline-flex items-center justify-center rounded-full font-bold transition-all duration-200;
+}
+.btn-pill:hover {
+  @apply scale-[1.02];
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    GOOGLE PLAY STORE READINESS — native-feel mobile fixes
@@ -165,16 +236,14 @@ html { scroll-behavior: smooth; }
 /* Custom scrollbar — thin & blue-tinted */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(221 83% 53% / 0.3); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(221 83% 53% / 0.6); }
+::-webkit-scrollbar-thumb { background: hsl(217 91% 60% / 0.3); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(217 91% 60% / 0.6); }
 
-/* ── Button refinements for the new theme ── */
-/* Sharper, more confident buttons */
+/* ── Button refinements ── */
 .btn-primary {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
-
 
 /* Chat page: fixed-height container so only messages scroll, input stays visible above BottomNav */
 .chat-main-layout {
@@ -182,12 +251,9 @@ html { scroll-behavior: smooth; }
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  /* no extra padding needed — SubjectGroupChat uses calc() height directly */
 }
 
-/* ── NyasaDesk WhatsApp widget — lift above BottomNav on mobile ──
-   The widget hard-codes bottom:24px which sits on top of the bottom nav
-   and hides the Fees button. Push it up on screens where BottomNav shows. */
+/* ── NyasaDesk WhatsApp widget — lift above BottomNav on mobile ── */
 @media (max-width: 1023px) {
   #nyasa-wa-widget {
     bottom: 72px !important;
