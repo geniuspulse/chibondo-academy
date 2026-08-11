@@ -12,7 +12,7 @@ export default function UpcomingItems({ quizzes = [], assignments = [] }) {
   if (items.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="font-display font-semibold text-lg mb-4">Upcoming</h3>
+        <h3 className="font-heading font-semibold text-lg mb-4">Upcoming</h3>
         <div className="text-center py-8">
           <Calendar className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground text-sm">Nothing upcoming</p>
@@ -23,7 +23,7 @@ export default function UpcomingItems({ quizzes = [], assignments = [] }) {
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 flex flex-col min-h-0">
-      <h3 className="font-display font-semibold text-lg mb-4">Upcoming</h3>
+      <h3 className="font-heading font-semibold text-lg mb-4">Upcoming</h3>
       <div className="space-y-2">
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">

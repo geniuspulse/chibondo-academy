@@ -68,15 +68,15 @@ export default function AffiliateCommissions() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <p className="text-xl font-display font-bold" style={{ color: 'hsl(var(--primary))' }}>MWK {totals.total.toLocaleString()}</p>
+          <p className="text-xl font-heading font-bold" style={{ color: 'hsl(var(--primary))' }}>MWK {totals.total.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Total Earned</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <p className="text-xl font-display font-bold text-yellow-500">{totals.pending} referral{totals.pending !== 1 ? 's' : ''}</p>
+          <p className="text-xl font-heading font-bold text-yellow-500">{totals.pending} referral{totals.pending !== 1 ? 's' : ''}</p>
           <p className="text-xs text-muted-foreground">Awaiting Payment</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <p className="text-xl font-display font-bold text-green-500">MWK {totals.paid.toLocaleString()}</p>
+          <p className="text-xl font-heading font-bold text-green-500">MWK {totals.paid.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Paid Out</p>
         </div>
       </div>

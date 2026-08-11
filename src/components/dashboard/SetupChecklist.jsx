@@ -85,7 +85,7 @@ export default function SetupChecklist({ user }) {
             <Sparkles className="w-4 h-4 text-accent" />
           </div>
           <div>
-            <p className="font-display font-bold text-sm text-foreground">Set up your account</p>
+            <p className="font-heading font-bold text-sm text-foreground">Set up your account</p>
             <p className="text-[11px] text-muted-foreground">{doneCount} of {items.length} complete</p>
           </div>
         </div>

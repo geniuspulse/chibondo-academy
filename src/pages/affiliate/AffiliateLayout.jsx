@@ -47,7 +47,7 @@ export default function AffiliateLayout() {
         <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
           <Gift className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h2 className="text-xl font-display font-bold">Affiliate Program Paused</h2>
+        <h2 className="text-xl font-heading font-bold">Affiliate Program Paused</h2>
         <p className="text-sm text-muted-foreground max-w-xs">
           The affiliate program is currently disabled. Check back soon!
         </p>
@@ -64,7 +64,7 @@ export default function AffiliateLayout() {
           <Gift className="w-5 h-5" style={{ color: 'hsl(var(--primary))' }} />
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold">Affiliate Program</h1>
+          <h1 className="text-2xl font-heading font-bold">Affiliate Program</h1>
           <p className="text-sm text-muted-foreground">
             Earn <span className="font-semibold text-foreground">MWK {commissionAmount.toLocaleString()}</span> per successful paid referral
           </p>

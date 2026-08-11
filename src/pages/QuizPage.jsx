@@ -93,9 +93,9 @@ export default function QuizPage() {
             <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${result.passed ? 'bg-success/10' : 'bg-destructive/10'}`}>
               {result.passed ? <Trophy className="w-10 h-10 text-success" /> : <XCircle className="w-10 h-10 text-destructive" />}
             </div>
-            <h2 className="text-2xl font-display font-bold">{result.passed ? 'Congratulations!' : 'Keep Trying!'}</h2>
+            <h2 className="text-2xl font-heading font-bold">{result.passed ? 'Congratulations!' : 'Keep Trying!'}</h2>
             <p className="text-muted-foreground mt-2">{result.passed ? 'You passed the quiz!' : 'You can retake this quiz.'}</p>
-            <div className="text-5xl font-bold font-display mt-4 text-primary">{result.percentage}%</div>
+            <div className="text-5xl font-bold font-heading mt-4 text-primary">{result.percentage}%</div>
             <p className="text-sm text-muted-foreground mt-1">{result.score}/{result.totalPoints} points</p>
           </CardContent>
         </Card>
@@ -135,7 +135,7 @@ export default function QuizPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-display font-bold">{quiz.title}</h1>
+          <h1 className="text-lg font-heading font-bold">{quiz.title}</h1>
           <p className="text-xs text-muted-foreground">Question {currentQ + 1} of {questions.length}</p>
         </div>
         {timeLeft !== null && (

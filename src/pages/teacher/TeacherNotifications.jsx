@@ -94,7 +94,7 @@ export default function TeacherNotifications() {
     <div className="space-y-6 max-w-2xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
           <Bell className="w-6 h-6 text-primary" /> Send Notification
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Notify your students about lessons, updates, or announcements</p>

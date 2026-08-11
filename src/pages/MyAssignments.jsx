@@ -26,7 +26,7 @@ export default function MyAssignments() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold">My Assignments</h1>
+        <h1 className="text-2xl font-heading font-bold">My Assignments</h1>
         <p className="text-sm text-muted-foreground mt-1">View and submit your assignments</p>
       </div>
 

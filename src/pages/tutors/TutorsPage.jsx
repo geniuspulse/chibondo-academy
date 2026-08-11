@@ -54,7 +54,7 @@ function TutorCard({ profile, courseCount, studentCount }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-display font-bold text-sm leading-snug group-hover:text-primary transition-colors line-clamp-1">
+          <p className="font-heading font-bold text-sm leading-snug group-hover:text-primary transition-colors line-clamp-1">
             {name}
           </p>
           {title && (
@@ -166,7 +166,7 @@ export default function TutorsPage() {
             <GraduationCap className="w-5 h-5" />
             <span className="text-sm font-medium text-primary-foreground/80">Chibondo Academy</span>
           </div>
-          <h1 className="text-2xl font-display font-bold mb-1">Our Tutors</h1>
+          <h1 className="text-2xl font-heading font-bold mb-1">Our Tutors</h1>
           <p className="text-primary-foreground/70 text-sm mb-4">
             {visibleTeachers.length} expert {visibleTeachers.length === 1 ? 'tutor' : 'tutors'} ready to help you excel
           </p>

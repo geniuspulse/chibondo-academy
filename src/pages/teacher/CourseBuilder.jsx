@@ -1750,7 +1750,7 @@ export default function CourseBuilder() {
             </Button>
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-display font-bold text-sm truncate">{subject.name}</h1>
+            <h1 className="font-heading font-bold text-sm truncate">{subject.name}</h1>
             <p className="text-xs text-muted-foreground truncate">{subject.form_name}</p>
           </div>
           <Badge className={`flex-shrink-0 gap-1 ${subject.status === 'published' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-muted text-muted-foreground'}`}>

@@ -352,7 +352,7 @@ export default function TeacherSettings() {
 
       <div className="space-y-6 max-w-3xl">
         <div>
-          <h1 className="text-2xl font-display font-bold">Settings</h1>
+          <h1 className="text-2xl font-heading font-bold">Settings</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage your account, public tutor profile, payout details, and preferences
           </p>

@@ -681,7 +681,7 @@ export default function CurriculumManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold">Courses</h1>
+        <h1 className="text-2xl font-heading font-bold">Courses</h1>
         <p className="text-sm text-muted-foreground mt-1">Manage classes, courses, topics, tutors, and student enrollments</p>
       </div>
 
@@ -692,7 +692,7 @@ export default function CurriculumManagement() {
               <s.icon className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xl font-bold font-display">{s.value}</p>
+              <p className="text-xl font-bold font-heading">{s.value}</p>
               <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
           </div>

@@ -84,7 +84,7 @@ export default function AffiliatePayouts() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-card border border-border rounded-2xl p-5 sm:col-span-1">
           <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide font-semibold">Available Balance</p>
-          <p className="text-3xl font-display font-bold" style={{ color: 'hsl(var(--primary))' }}>
+          <p className="text-3xl font-heading font-bold" style={{ color: 'hsl(var(--primary))' }}>
             MWK {available.toLocaleString()}
           </p>
           <p className="text-xs text-muted-foreground mt-1">

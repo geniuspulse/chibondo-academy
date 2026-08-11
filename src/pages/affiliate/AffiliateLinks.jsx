@@ -102,7 +102,7 @@ export default function AffiliateLinks() {
       {/* Your code */}
       <div className="bg-card border border-border rounded-2xl p-5 text-center space-y-2">
         <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Your Referral Code</p>
-        <p className="text-3xl font-display font-bold tracking-widest" style={{ color: 'hsl(var(--primary))' }}>{referralCode}</p>
+        <p className="text-3xl font-heading font-bold tracking-widest" style={{ color: 'hsl(var(--primary))' }}>{referralCode}</p>
         <p className="text-xs text-muted-foreground">Share this code or the links below</p>
       </div>
 

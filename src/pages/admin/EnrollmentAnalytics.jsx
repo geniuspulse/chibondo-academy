@@ -91,7 +91,7 @@ export default function EnrollmentAnalytics() {
             <BarChart3 className="w-5 h-5" style={{color:'hsl(var(--primary))'}}/>
             <span className="text-sm font-medium" style={{color:'hsl(var(--primary) / 0.8)'}}>Admin</span>
           </div>
-          <h1 className="text-xl font-display font-bold" style={{color:'hsl(var(--foreground))'}}>Enrollment Analytics</h1>
+          <h1 className="text-xl font-heading font-bold" style={{color:'hsl(var(--foreground))'}}>Enrollment Analytics</h1>
           <p className="text-sm mt-1" style={{color:'hsl(var(--muted-foreground))'}}>Live — {enrollments.length} records · {subjects.length} courses</p>
         </div>
 

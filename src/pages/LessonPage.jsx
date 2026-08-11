@@ -423,7 +423,7 @@ export default function LessonPage() {
             {/* LESSON HEADER */}
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-wider text-primary font-bold">{lesson.topic_title || 'Lesson'}</p>
-              <h1 className="text-2xl sm:text-3xl font-display font-extrabold">{lesson.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-heading font-extrabold">{lesson.title}</h1>
               {lesson.description && <p className="text-sm text-muted-foreground leading-relaxed">{lesson.description}</p>}
               {user && enrollment && (
                 <div className="pt-2">{completeBtn}</div>

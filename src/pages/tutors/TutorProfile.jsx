@@ -272,7 +272,7 @@ export default function TutorProfilePage() {
             </div>
           </div>
 
-          <h1 className="font-display font-bold text-2xl sm:text-3xl leading-tight">{displayName}</h1>
+          <h1 className="font-heading font-bold text-2xl sm:text-3xl leading-tight">{displayName}</h1>
           {title && (
             <p className="text-sm font-medium mt-0.5" style={{ color:'hsl(var(--primary))' }}>{title}</p>
           )}
@@ -334,7 +334,7 @@ export default function TutorProfilePage() {
             {/* Biography */}
             {bioText && (
               <section className="bg-card border border-border rounded-2xl p-5">
-                <h2 className="font-display font-bold text-base mb-3 flex items-center gap-2">
+                <h2 className="font-heading font-bold text-base mb-3 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-accent" /> About
                 </h2>
                 <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
@@ -352,7 +352,7 @@ export default function TutorProfilePage() {
             {/* Courses */}
             {subjects.length > 0 && (
               <section className="bg-card border border-border rounded-2xl p-5">
-                <h2 className="font-display font-bold text-base mb-4 flex items-center gap-2">
+                <h2 className="font-heading font-bold text-base mb-4 flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-accent" /> Courses
                   <span className="ml-auto text-xs font-normal text-muted-foreground">{subjects.length} available</span>
                 </h2>
@@ -365,7 +365,7 @@ export default function TutorProfilePage() {
             {/* Blog posts */}
             {tutorPosts.length > 0 && (
               <section className="bg-card border border-border rounded-2xl p-5">
-                <h2 className="font-display font-bold text-base mb-4 flex items-center gap-2">
+                <h2 className="font-heading font-bold text-base mb-4 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-accent" /> Articles & Resources
                 </h2>
                 <div className="space-y-3">
@@ -398,7 +398,7 @@ export default function TutorProfilePage() {
             {/* Qualifications */}
             {qualifications.length > 0 && (
               <section className="bg-card border border-border rounded-2xl p-5">
-                <h2 className="font-display font-bold text-base mb-3 flex items-center gap-2">
+                <h2 className="font-heading font-bold text-base mb-3 flex items-center gap-2">
                   <GraduationCap className="w-4 h-4 text-accent" /> Qualifications
                 </h2>
                 <div className="space-y-3">
@@ -420,7 +420,7 @@ export default function TutorProfilePage() {
             {/* Certifications */}
             {certifications.length > 0 && (
               <section className="bg-card border border-border rounded-2xl p-5">
-                <h2 className="font-display font-bold text-base mb-3 flex items-center gap-2">
+                <h2 className="font-heading font-bold text-base mb-3 flex items-center gap-2">
                   <Award className="w-4 h-4 text-accent" /> Certifications
                 </h2>
                 <div className="space-y-3">
@@ -448,7 +448,7 @@ export default function TutorProfilePage() {
               <div className="hidden lg:block rounded-2xl p-5 text-center"
                 style={{ background:'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%)' }}>
                 <Zap className="w-8 h-8 mx-auto mb-3" style={{ color:'hsl(var(--primary))' }} />
-                <p className="font-display font-bold text-sm mb-1">Start Learning Today</p>
+                <p className="font-heading font-bold text-sm mb-1">Start Learning Today</p>
                 <p className="text-xs text-muted-foreground mb-4">
                   Get full access to all courses by {displayName.split(' ')[0]}.
                 </p>

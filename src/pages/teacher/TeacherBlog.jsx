@@ -186,7 +186,7 @@ export default function TeacherBlog() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
             <Newspaper className="w-6 h-6 text-primary" /> My Blog Posts
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Share your knowledge with students</p>

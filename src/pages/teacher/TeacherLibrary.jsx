@@ -143,7 +143,7 @@ export default function TeacherLibrary() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">Teacher Library</h1>
+          <h1 className="text-2xl font-heading font-bold">Teacher Library</h1>
           <p className="text-sm text-muted-foreground mt-1">Upload and manage revision resources</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -89,7 +89,7 @@ export default function LibraryPage() {
 
         {/* ── Hero Header (matches site pattern) ── */}
         <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground">
-          <h1 className="text-xl sm:text-2xl font-display font-bold mb-1">Library</h1>
+          <h1 className="text-xl sm:text-2xl font-heading font-bold mb-1">Library</h1>
           <p className="text-primary-foreground/70 text-sm mb-4">
             {validResources.length} resources · Books, past papers & exam tips for MSCE
           </p>
@@ -172,7 +172,7 @@ export default function LibraryPage() {
                     {typeName === 'Past Paper' && <FileText  className="w-4 h-4 text-primary" />}
                     {typeName === 'Exam Tips'  && <Lightbulb className="w-4 h-4 text-yellow-600" />}
                   </div>
-                  <h2 className="text-base font-display font-bold">{typeName}s</h2>
+                  <h2 className="text-base font-heading font-bold">{typeName}s</h2>
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-xs text-muted-foreground">
                     {Object.values(grouped[typeName]).flat().length} files

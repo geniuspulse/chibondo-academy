@@ -277,7 +277,7 @@ export default function StudentDashboard() {
       {/* Blog mini-feed */}
       <div className="bg-card rounded-2xl border border-border p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display font-semibold text-base flex items-center gap-2">
+          <h3 className="font-heading font-semibold text-base flex items-center gap-2">
             <Newspaper className="w-4 h-4 text-accent" /> Latest from Our Blog
           </h3>
           <Link to="/blog" className="text-xs font-medium text-primary flex items-center gap-1 hover:underline">

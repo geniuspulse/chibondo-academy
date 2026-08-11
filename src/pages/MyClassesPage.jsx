@@ -50,7 +50,7 @@ function ClassCard({ enrollment, subject }) {
       {/* Body */}
       <div className="p-4 space-y-3">
         <div>
-          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2">
+          <h3 className="font-heading font-bold text-sm leading-snug line-clamp-2">
             {enrollment.subject_name}
           </h3>
           {enrollment.form_name && (

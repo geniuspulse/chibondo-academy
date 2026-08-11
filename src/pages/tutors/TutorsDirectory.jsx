@@ -29,7 +29,7 @@ function TutorCard({ tutor, subjectCount }) {
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-accent">
-            <span className="text-5xl font-display font-bold text-primary-foreground/90">
+            <span className="text-5xl font-heading font-bold text-primary-foreground/90">
               {tutor.full_name?.[0]?.toUpperCase()}
             </span>
           </div>
@@ -46,7 +46,7 @@ function TutorCard({ tutor, subjectCount }) {
       {/* Info */}
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div>
-          <h3 className="font-display font-bold text-base leading-tight">{tutor.full_name}</h3>
+          <h3 className="font-heading font-bold text-base leading-tight">{tutor.full_name}</h3>
           {tutor.professional_title && (
             <p className="text-xs text-muted-foreground mt-0.5">{tutor.professional_title}</p>
           )}
@@ -143,7 +143,7 @@ export default function TutorsDirectory() {
               </div>
               <span className="text-sm font-medium text-primary">Meet Our Team</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-display font-bold text-foreground mb-3">
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-3">
               Expert Tutors
             </h1>
             <p className="text-muted-foreground max-w-lg">

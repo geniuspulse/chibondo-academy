@@ -16,7 +16,7 @@ function StatCard({ label, value, icon: Icon, color, sub }) {
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${color}`}>
         <Icon className="w-5 h-5" />
       </div>
-      <p className="text-2xl font-display font-bold">{value}</p>
+      <p className="text-2xl font-heading font-bold">{value}</p>
       <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
       {sub && <p className="text-[11px] mt-1 font-medium text-muted-foreground">{sub}</p>}
     </div>
@@ -129,7 +129,7 @@ export default function AffiliateDashboard() {
           <div className="flex-1 space-y-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your commission</p>
-              <p className="text-4xl font-display font-bold text-foreground">
+              <p className="text-4xl font-heading font-bold text-foreground">
                 MWK <span style={{ color: 'hsl(var(--primary))' }}>{commissionAmount.toLocaleString()}</span>
               </p>
               <p className="text-sm text-muted-foreground mt-1">per successful paid subscription referral</p>

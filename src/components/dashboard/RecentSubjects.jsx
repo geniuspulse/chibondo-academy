@@ -7,7 +7,7 @@ export default function RecentSubjects({ enrollments = [] }) {
   if (enrollments.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="font-display font-semibold text-lg mb-4">My Subjects</h3>
+        <h3 className="font-heading font-semibold text-lg mb-4">My Subjects</h3>
         <div className="text-center py-8">
           <BookOpen className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground text-sm">No subjects enrolled yet</p>
@@ -22,7 +22,7 @@ export default function RecentSubjects({ enrollments = [] }) {
   return (
     <div className="bg-card rounded-xl border border-border p-5 flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display font-semibold text-lg">My Subjects</h3>
+        <h3 className="font-heading font-semibold text-lg">My Subjects</h3>
         <Link to="/subjects" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
           View All <ArrowRight className="w-3 h-3" />
         </Link>

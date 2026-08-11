@@ -453,7 +453,7 @@ export default function PageNotFound() {
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-display font-bold mb-4">
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-4">
                 Page Not Found
               </h1>
 
@@ -519,7 +519,7 @@ export default function PageNotFound() {
               className="rounded-2xl border p-6 sm:p-8"
               style={{ background: BRAND.card, borderColor: BRAND.border }}
             >
-              <h2 className="text-lg font-display font-semibold mb-1 text-center">
+              <h2 className="text-lg font-heading font-semibold mb-1 text-center">
                 Find what you're looking for
               </h2>
               <p className="text-sm text-center mb-5" style={{ color: BRAND.muted }}>
@@ -551,7 +551,7 @@ export default function PageNotFound() {
 
           {/* ── QUICK NAVIGATION CARDS ── */}
           <section className="mb-14">
-            <h2 className="text-xl font-display font-bold mb-5">Where would you like to go?</h2>
+            <h2 className="text-xl font-heading font-bold mb-5">Where would you like to go?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {QUICK_CARDS.map(({ icon: Icon, title, desc, cta, to, accent }) => (
                 <Link key={to} to={to} className="group block">
@@ -585,7 +585,7 @@ export default function PageNotFound() {
           {displayCourses.length > 0 && (
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-display font-bold">
+                <h2 className="text-xl font-heading font-bold">
                   {smartCourses.length > 0 ? 'Suggested Courses' : 'Popular Courses'}
                 </h2>
                 <Link
@@ -613,7 +613,7 @@ export default function PageNotFound() {
           {tutors.length > 0 && (
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-display font-bold">Meet Our Tutors</h2>
+                <h2 className="text-xl font-heading font-bold">Meet Our Tutors</h2>
                 <Link
                   to="/tutors"
                   className="text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-80"
@@ -634,7 +634,7 @@ export default function PageNotFound() {
           {blogPosts.length > 0 && (
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-display font-bold">Recent Learning Articles</h2>
+                <h2 className="text-xl font-heading font-bold">Recent Learning Articles</h2>
                 <Link
                   to="/blog"
                   className="text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-80"

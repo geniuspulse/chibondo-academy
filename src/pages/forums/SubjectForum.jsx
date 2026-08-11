@@ -537,7 +537,7 @@ export default function SubjectForum() {
 
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-display font-bold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>
+              <h1 className="text-xl font-heading font-bold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>
                 {forumName}
               </h1>
               {subject?.form_name && (

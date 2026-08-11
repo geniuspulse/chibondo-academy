@@ -34,7 +34,7 @@ export default function ProgressPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">My Progress</h1>
+          <h1 className="text-2xl font-heading font-bold">My Progress</h1>
           <p className="text-sm text-muted-foreground mt-1">Track your learning journey</p>
         </div>
         <Link to="/progress/analytics">
@@ -50,28 +50,28 @@ export default function ProgressPage() {
         <Card>
           <CardContent className="p-5 text-center">
             <Target className="w-8 h-8 mx-auto text-primary mb-2" />
-            <p className="text-3xl font-bold font-display">{overallProgress}%</p>
+            <p className="text-3xl font-bold font-heading">{overallProgress}%</p>
             <p className="text-xs text-muted-foreground">Overall Progress</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5 text-center">
             <Trophy className="w-8 h-8 mx-auto text-accent mb-2" />
-            <p className="text-3xl font-bold font-display">{totalLessonsCompleted}</p>
+            <p className="text-3xl font-bold font-heading">{totalLessonsCompleted}</p>
             <p className="text-xs text-muted-foreground">Lessons Completed</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5 text-center">
             <Flame className="w-8 h-8 mx-auto text-destructive mb-2" />
-            <p className="text-3xl font-bold font-display">{user?.study_streak || 0}</p>
+            <p className="text-3xl font-bold font-heading">{user?.study_streak || 0}</p>
             <p className="text-xs text-muted-foreground">Day Streak</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5 text-center">
             <Clock className="w-8 h-8 mx-auto text-success mb-2" />
-            <p className="text-3xl font-bold font-display">{avgQuizScore}%</p>
+            <p className="text-3xl font-bold font-heading">{avgQuizScore}%</p>
             <p className="text-xs text-muted-foreground">Avg Quiz Score</p>
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ export default function ProgressPage() {
       {/* Subject Progress */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-display">Subject Progress</CardTitle>
+          <CardTitle className="text-lg font-heading">Subject Progress</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -114,7 +114,7 @@ export default function ProgressPage() {
       {quizAttempts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-display">Recent Quiz Results</CardTitle>
+            <CardTitle className="text-lg font-heading">Recent Quiz Results</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

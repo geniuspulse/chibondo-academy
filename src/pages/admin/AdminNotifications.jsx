@@ -38,7 +38,7 @@ function StatCard({ label, value, icon: Icon, color }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4 text-center">
       <Icon className={`w-5 h-5 mx-auto mb-1.5 ${color}`} />
-      <p className="text-xl font-bold font-display">{value}</p>
+      <p className="text-xl font-bold font-heading">{value}</p>
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
@@ -501,7 +501,7 @@ export default function AdminNotifications() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
             <Bell className="w-6 h-6 text-primary" /> Notifications & Marketing
           </h1>
           <p className="text-sm text-muted-foreground mt-1">In-app notifications · Email campaigns · Audience targeting</p>

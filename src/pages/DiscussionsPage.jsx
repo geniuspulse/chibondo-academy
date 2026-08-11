@@ -425,7 +425,7 @@ export default function DiscussionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-display font-bold">Community</h1>
+          <h1 className="text-xl font-heading font-bold">Community</h1>
           <p className="text-xs text-muted-foreground">{rootPosts.length} posts · {allReplies.length} replies</p>
         </div>
         <div className="flex gap-1 bg-card border border-border rounded-lg p-1">

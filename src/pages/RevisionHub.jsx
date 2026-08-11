@@ -51,7 +51,7 @@ export default function RevisionHub() {
       />
       <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold">MSCE Revision Hub</h1>
+        <h1 className="text-2xl font-heading font-bold">MSCE Revision Hub</h1>
         <p className="text-sm text-muted-foreground mt-1">Past papers, model answers, and exam preparation resources</p>
       </div>
 

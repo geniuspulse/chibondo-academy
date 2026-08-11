@@ -90,7 +90,7 @@ export default function TeacherAssignments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">Assignments</h1>
+          <h1 className="text-2xl font-heading font-bold">Assignments</h1>
           <p className="text-sm text-muted-foreground mt-1">Create and manage assignments</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

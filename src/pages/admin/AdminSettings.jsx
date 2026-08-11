@@ -57,7 +57,7 @@ function Section({ icon: Icon, title, subtitle, children, gold = false }) {
           <Icon className="w-4 h-4" style={gold ? { color: GOLD } : {}} />
         </div>
         <div>
-          <h2 className="font-display font-semibold text-sm">{title}</h2>
+          <h2 className="font-heading font-semibold text-sm">{title}</h2>
           {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
       </div>
@@ -214,7 +214,7 @@ function ProfilePanel({ user }) {
           <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-[hsl(var(--primary)_/_0.4)] shadow-lg">
             {preview
               ? <img src={preview} alt="avatar" className="w-full h-full object-cover" />
-              : <div className="w-full h-full flex items-center justify-center text-2xl font-display font-bold"
+              : <div className="w-full h-full flex items-center justify-center text-2xl font-heading font-bold"
                   style={{ background: GOLD_BG, color: GOLD }}>{initials}</div>
             }
           </div>
@@ -228,7 +228,7 @@ function ProfilePanel({ user }) {
         </div>
         <div className="text-center sm:text-left">
           <div className="flex items-center gap-2 justify-center sm:justify-start">
-            <h2 className="text-xl font-display font-bold">{form.full_name || 'Administrator'}</h2>
+            <h2 className="text-xl font-heading font-bold">{form.full_name || 'Administrator'}</h2>
             <Badge className="text-[10px] px-2 py-0.5 font-semibold" style={{ background: GOLD_BG, color: GOLD, border: `1px solid ${GOLD_BORDER}` }}>
               <Star className="w-2.5 h-2.5 mr-1" />Admin
             </Badge>
@@ -1011,7 +1011,7 @@ export default function AdminSettings() {
           <Settings2 className="w-5 h-5" style={{ color: GOLD }} />
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold">Settings</h1>
+          <h1 className="text-2xl font-heading font-bold">Settings</h1>
           <p className="text-sm text-muted-foreground">Manage your platform, profile and configurations</p>
         </div>
         <Badge className="ml-auto hidden sm:flex items-center gap-1.5 px-3 py-1 text-xs font-semibold"

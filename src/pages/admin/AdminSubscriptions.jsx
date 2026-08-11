@@ -48,7 +48,7 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${color}`}>
         <Icon className="w-5 h-5" />
       </div>
-      <p className="text-2xl font-bold font-display">{value}</p>
+      <p className="text-2xl font-bold font-heading">{value}</p>
       <p className="text-sm font-medium mt-0.5">{label}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
@@ -66,7 +66,7 @@ function StudentHistoryPanel({ studentId, studentName, payments, onClose }) {
       <div className="w-full max-w-md bg-card border-l border-border h-full overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
           <div>
-            <p className="font-display font-bold text-sm">{studentName}</p>
+            <p className="font-heading font-bold text-sm">{studentName}</p>
             <p className="text-xs text-muted-foreground">Payment History ({studentPayments.length})</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors"><X className="w-4 h-4" /></button>
@@ -498,7 +498,7 @@ export default function AdminSubscriptions() {
       {/* Page header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-display font-bold leading-tight">School Fees &amp; Subscriptions</h1>
+          <h1 className="text-xl font-heading font-bold leading-tight">School Fees &amp; Subscriptions</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Manage student fee payments and access</p>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">

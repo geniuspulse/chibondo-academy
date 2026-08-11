@@ -56,8 +56,8 @@ export default function AffiliateReferrals() {
           { label: 'Conversion Rate',  value: `${convRate}%`,                                                      color: 'hsl(var(--primary))' },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-4 text-center">
-            <p className="text-2xl font-display font-bold" style={typeof color === 'string' && color.startsWith('hsl') ? { color } : {}}
-              {...(typeof color === 'string' && !color.startsWith('hsl') ? { className: `text-2xl font-display font-bold ${color}` } : {})}>
+            <p className="text-2xl font-heading font-bold" style={typeof color === 'string' && color.startsWith('hsl') ? { color } : {}}
+              {...(typeof color === 'string' && !color.startsWith('hsl') ? { className: `text-2xl font-heading font-bold ${color}` } : {})}>
               {value}
             </p>
             <p className="text-xs text-muted-foreground">{label}</p>

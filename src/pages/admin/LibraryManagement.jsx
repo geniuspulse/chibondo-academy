@@ -91,7 +91,7 @@ function FormManager({ forms, onClose }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Settings2 className="w-5 h-5" style={{ color: GOLD }} />
-          <h3 className="font-display font-bold text-base">Manage Academic Forms</h3>
+          <h3 className="font-heading font-bold text-base">Manage Academic Forms</h3>
         </div>
         <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors">
           <X className="w-4 h-4" />
@@ -196,7 +196,7 @@ function ResourceForm({ resource, subjects, forms, onSave, onCancel, isSaving })
   return (
     <div className="bg-card border border-border rounded-2xl p-5 space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-display font-bold text-base">{resource ? 'Edit Resource' : 'Add New Resource'}</h3>
+        <h3 className="font-heading font-bold text-base">{resource ? 'Edit Resource' : 'Add New Resource'}</h3>
         <button onClick={onCancel} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors">
           <X className="w-4 h-4" />
         </button>
@@ -420,12 +420,12 @@ export default function LibraryManagement() {
             <Library className="w-5 h-5" />
             <span className="text-sm font-medium opacity-80">Admin</span>
           </div>
-          <h1 className="text-2xl font-display font-bold mb-1">Library Management</h1>
+          <h1 className="text-2xl font-heading font-bold mb-1">Library Management</h1>
           <p className="text-primary-foreground/70 text-sm mb-4">Upload and manage books, past papers, and exam tips</p>
           <div className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-hide pb-1">
             {[{ label:'Total',   val:stats.total },{ label:'Premium', val:stats.premium },{ label:'Free', val:stats.free }].map(({ label,val }) => (
               <div key={label}>
-                <p className="font-bold text-2xl font-display">{val}</p>
+                <p className="font-bold text-2xl font-heading">{val}</p>
                 <p className="text-[11px] opacity-70">{label} resources</p>
               </div>
             ))}

@@ -40,7 +40,7 @@ function RelatedPosts({ currentId, category }) {
 
   return (
     <div className="bg-card border border-border rounded-2xl p-5">
-      <h3 className="font-display font-bold text-sm mb-4 flex items-center gap-2">
+      <h3 className="font-heading font-bold text-sm mb-4 flex items-center gap-2">
         <TrendingUp className="w-4 h-4 text-accent" /> Related Articles
       </h3>
       <div className="space-y-3">
@@ -80,7 +80,7 @@ function TutorBlock({ tutorProfileId, tutorSlug }) {
           : <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center"><User className="w-5 h-5 opacity-40" /></div>
         }
         <div>
-          <p className="font-display font-bold text-sm">{tutor.full_name}</p>
+          <p className="font-heading font-bold text-sm">{tutor.full_name}</p>
           <p className="text-xs text-muted-foreground">{tutor.professional_title || tutor.tagline}</p>
         </div>
       </div>
@@ -126,7 +126,7 @@ function CourseCTA({ post }) {
           <BookOpen className="w-5 h-5 text-accent" />
         </div>
         <div>
-          <p className="font-display font-bold text-sm">
+          <p className="font-heading font-bold text-sm">
             {match ? `Master ${match.name}` : isAcademic ? `Master ${post.category}` : 'Start Learning Today'}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -264,7 +264,7 @@ export default function BlogPostDetail() {
     return (
       <div className="text-center py-20 max-w-md mx-auto">
         <Newspaper className="w-12 h-12 mx-auto text-muted-foreground/20 mb-4" />
-        <h2 className="text-xl font-display font-bold mb-2">Article not found</h2>
+        <h2 className="text-xl font-heading font-bold mb-2">Article not found</h2>
         <p className="text-muted-foreground text-sm mb-5">This post may have been removed or unpublished.</p>
         <Link to="/blog"><Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" />Back to Blog</Button></Link>
       </div>
@@ -312,7 +312,7 @@ export default function BlogPostDetail() {
                 <Badge key={t} variant="outline" className="text-[10px] capitalize"><Tag className="w-2.5 h-2.5 mr-1" />{t}</Badge>
               ))}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold leading-snug">{post.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold leading-snug">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pb-3 border-b border-border">
               <span className="flex items-center gap-2">
                 {post.author_photo
@@ -416,7 +416,7 @@ export default function BlogPostDetail() {
             <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-3">
               <span className="text-lg">🎁</span>
             </div>
-            <p className="font-display font-bold text-sm mb-1">Earn by Sharing</p>
+            <p className="font-heading font-bold text-sm mb-1">Earn by Sharing</p>
             <p className="text-xs text-muted-foreground mb-3">Refer a student and earn MWK commission when they pay fees.</p>
             <Link to="/my-referrals">
               <Button variant="outline" size="sm" className="w-full text-xs">Join Affiliate Program</Button>

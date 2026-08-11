@@ -16,7 +16,7 @@ export default function FeesGateCard() {
           </div>
         </div>
       </div>
-      <h3 className="text-lg font-display font-bold mb-2">Pay Fees to Access These Lessons</h3>
+      <h3 className="text-lg font-heading font-bold mb-2">Pay Fees to Access These Lessons</h3>
       <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
         These lessons are available to students who have paid their school fees. 
         Pay now to unlock all lessons, quizzes, past papers, and more.

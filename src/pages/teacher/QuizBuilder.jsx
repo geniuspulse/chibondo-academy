@@ -163,7 +163,7 @@ export default function QuizBuilder() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">Quiz Builder</h1>
+          <h1 className="text-2xl font-heading font-bold">Quiz Builder</h1>
           <p className="text-sm text-muted-foreground mt-1">Create and manage quizzes</p>
         </div>
         <Button onClick={openNew}><Plus className="w-4 h-4 mr-1" /> New Quiz</Button>

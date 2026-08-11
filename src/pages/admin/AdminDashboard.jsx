@@ -49,7 +49,7 @@ function StatCard({ label, value, sub, icon: Icon, gradient, to, loading }) {
       <div className="relative z-10 mt-4">
         {loading
           ? <Loader2 className="w-6 h-6 text-white/50 animate-spin" />
-          : <p className="text-3xl font-display font-bold text-white leading-none">{value}</p>
+          : <p className="text-3xl font-heading font-bold text-white leading-none">{value}</p>
         }
         <p className="text-sm font-semibold text-white/80 mt-1">{label}</p>
         {sub && <p className="text-xs text-white/50 mt-0.5">{sub}</p>}
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-display font-bold">Overview</h1>
+          <h1 className="text-2xl font-heading font-bold">Overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Welcome back, {currentUser?.full_name?.split(' ')[0] || 'Admin'} · {new Date().toLocaleDateString('en-MW', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
             {loadingPayments
               ? <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
               : <>
-                  <p className="text-4xl font-display font-bold tracking-tight">MWK {confirmedRevenue.toLocaleString()}</p>
+                  <p className="text-4xl font-heading font-bold tracking-tight">MWK {confirmedRevenue.toLocaleString()}</p>
                   <p className="text-sm font-semibold text-white/70 mt-1">Confirmed Revenue</p>
                   <p className="text-xs text-white/40 mt-0.5">
                     From {filteredPayments.filter(p => p.status === 'completed').length} completed payments
@@ -292,7 +292,7 @@ export default function AdminDashboard() {
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center mb-1">
             <BookOpen className="w-4 h-4 text-blue-500" />
           </div>
-          <p className="text-2xl font-display font-bold">{allSubjects.length}</p>
+          <p className="text-2xl font-heading font-bold">{allSubjects.length}</p>
           <p className="text-xs font-semibold text-foreground/80">Total Courses</p>
           <p className="text-[11px] text-muted-foreground">{filteredEnrollments.length} enrolments this period</p>
         </div>
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
           <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center mb-1">
             <Layers className="w-4 h-4 text-orange-500" />
           </div>
-          <p className="text-2xl font-display font-bold">{allLessons.length}</p>
+          <p className="text-2xl font-heading font-bold">{allLessons.length}</p>
           <p className="text-xs font-semibold text-foreground/80">Total Lessons</p>
           <p className="text-[11px] text-muted-foreground">Across {allSubjects.length} courses</p>
         </div>
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
           <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center mb-1">
             <TrendingUp className="w-4 h-4 text-teal-500" />
           </div>
-          <p className="text-2xl font-display font-bold">{avgProgress}%</p>
+          <p className="text-2xl font-heading font-bold">{avgProgress}%</p>
           <p className="text-xs font-semibold text-foreground/80">Avg. Progress</p>
           <p className="text-[11px] text-muted-foreground">{allEnrollments.length} total enrolments</p>
         </div>
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
           <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center mb-1">
             <Gift className="w-4 h-4 text-pink-500" />
           </div>
-          <p className="text-2xl font-display font-bold">{totalAffiliates}</p>
+          <p className="text-2xl font-heading font-bold">{totalAffiliates}</p>
           <p className="text-xs font-semibold text-foreground/80">Affiliates</p>
           <p className="text-[11px] text-muted-foreground">{filteredReferrals.filter(r => ['paid','rewarded'].includes(r.status)).length} conversions</p>
         </div>

@@ -60,7 +60,7 @@ export default function AssignmentGrading() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold">Assignment Grading</h1>
+        <h1 className="text-2xl font-heading font-bold">Assignment Grading</h1>
         <p className="text-sm text-muted-foreground mt-1">{pending.length} submissions awaiting grading</p>
       </div>
 

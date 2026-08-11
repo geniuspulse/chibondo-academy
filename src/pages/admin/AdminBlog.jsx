@@ -175,7 +175,7 @@ export default function AdminBlog() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
             <Newspaper className="w-6 h-6 text-accent" /> Blog Management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">Create and manage articles</p>
@@ -193,7 +193,7 @@ export default function AdminBlog() {
         ].map(({ label,value,icon:Icon }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-4 text-center">
             <Icon className="w-5 h-5 mx-auto mb-1 text-accent opacity-70" />
-            <p className="text-xl font-bold font-display">{value}</p>
+            <p className="text-xl font-bold font-heading">{value}</p>
             <p className="text-xs text-muted-foreground">{label}</p>
           </div>
         ))}

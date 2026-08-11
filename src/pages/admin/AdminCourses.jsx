@@ -282,7 +282,7 @@ export default function AdminCourses() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-display font-bold">Courses</h1>
+          <h1 className="text-2xl font-heading font-bold">Courses</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage all platform courses — create, edit, approve, and delete
           </p>
@@ -300,7 +300,7 @@ export default function AdminCourses() {
               <s.icon className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xl font-bold font-display">
+              <p className="text-xl font-bold font-heading">
                 {loadingSubjects || loadingTopics || loadingLessons
                   ? <span className="inline-block w-6 h-5 rounded bg-muted animate-pulse" />
                   : s.value}

@@ -155,7 +155,7 @@ export default function TeacherCourses() {
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">My Courses</h1>
+          <h1 className="text-2xl font-heading font-bold">My Courses</h1>
           <p className="text-sm text-muted-foreground mt-1">Your assigned courses with live content counts</p>
         </div>
         <Button onClick={() => setOpen(true)} size="sm">
@@ -176,7 +176,7 @@ export default function TeacherCourses() {
                 <s.icon className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xl font-bold font-display">
+                <p className="text-xl font-bold font-heading">
                   {loading ? <span className="inline-block w-6 h-5 bg-muted rounded animate-pulse" /> : s.value}
                 </p>
                 <p className="text-xs text-muted-foreground">{s.label}</p>

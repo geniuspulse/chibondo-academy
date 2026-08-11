@@ -54,7 +54,7 @@ function PostCard({ post, featured = false }) {
             {post.is_featured && <Badge className="bg-accent text-accent-foreground text-[10px]"><Star className="w-2.5 h-2.5 mr-1" />Featured</Badge>}
             {post.category && <Badge className={`text-[10px] ${catColor}`}>{post.category}</Badge>}
           </div>
-          <h2 className="font-display font-bold text-lg sm:text-xl text-white leading-snug line-clamp-2 mb-2 group-hover:text-accent/90 transition-colors">
+          <h2 className="font-heading font-bold text-lg sm:text-xl text-white leading-snug line-clamp-2 mb-2 group-hover:text-accent/90 transition-colors">
             {post.title}
           </h2>
           {post.excerpt && <p className="text-sm text-white/70 line-clamp-2 mb-3 hidden sm:block">{post.excerpt}</p>}
@@ -83,7 +83,7 @@ function PostCard({ post, featured = false }) {
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           {post.category && <Badge className={`text-[10px] ${catColor}`}>{post.category}</Badge>}
         </div>
-        <h3 className="font-display font-bold text-sm leading-snug mb-1.5 group-hover:text-accent transition-colors line-clamp-2 flex-1">
+        <h3 className="font-heading font-bold text-sm leading-snug mb-1.5 group-hover:text-accent transition-colors line-clamp-2 flex-1">
           {post.title}
         </h3>
         {post.excerpt && <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-3">{post.excerpt}</p>}
@@ -165,7 +165,7 @@ export default function BlogPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
             <Newspaper className="w-6 h-6 text-accent" /> Blog
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -241,7 +241,7 @@ export default function BlogPage() {
           {/* Join CTA */}
           {!search && activeCategory === 'All' && (
             <div className="bg-gradient-to-r from-accent/10 via-accent/5 to-primary/10 border border-accent/20 rounded-2xl p-6 sm:p-8 text-center">
-              <h2 className="font-display font-bold text-lg mb-2">Ready to start learning?</h2>
+              <h2 className="font-heading font-bold text-lg mb-2">Ready to start learning?</h2>
               <p className="text-sm text-muted-foreground mb-4">Join hundreds of Malawian students already passing MSCE with Chibondo Academy.</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {isAuthenticated ? (

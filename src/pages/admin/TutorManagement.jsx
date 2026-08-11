@@ -430,7 +430,7 @@ export default function TutorManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
             <GraduationCap className="w-6 h-6 text-primary" /> Tutor Management
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">
