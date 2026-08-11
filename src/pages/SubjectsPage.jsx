@@ -91,8 +91,11 @@ export default function SubjectsPage() {
       />
     <div className="space-y-6">
       {/* Hero Header */}
-      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground">
-        <h1 className="text-2xl font-display font-bold mb-1">All Subjects</h1>
+      <div className="relative overflow-hidden rounded-2xl p-6 border border-border"
+        style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.9) 0%, hsl(var(--chart-3) / 0.8) 100%)' }}>
+        <div className="absolute inset-0 dot-grid opacity-20" />
+        <div className="relative z-10">
+        <h1 className="text-2xl font-heading font-bold mb-1 text-primary-foreground">All Subjects</h1>
         <p className="text-primary-foreground/70 text-sm">
           {subjects.length} courses available · Choose your subjects and start learning
         </p>
@@ -104,6 +107,7 @@ export default function SubjectsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+        </div>
         </div>
       </div>
 
@@ -155,7 +159,7 @@ export default function SubjectsPage() {
               <div key={formKey}>
                 {effectiveGroups.length > 1 && (
                   <div className="flex items-center gap-3 mb-4">
-                    <h2 className="font-display font-bold text-lg">{formName}</h2>
+                    <h2 className="font-heading font-bold text-lg">{formName}</h2>
                     <div className="flex-1 h-px bg-border" />
                     <span className="text-xs text-muted-foreground">{formSubjects.length} subjects</span>
                   </div>
@@ -217,7 +221,7 @@ export default function SubjectsPage() {
 
                         {/* Content */}
                         <div className="p-4 flex flex-col flex-1">
-                          <h3 className="font-display font-bold text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                          <h3 className="font-heading font-bold text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">
                             {subject.name}
                           </h3>
                           {subject.description && (

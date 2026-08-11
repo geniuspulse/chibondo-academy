@@ -2,9 +2,14 @@ import React from "react";
 
 export default function AuthLayout({ title, subtitle, footer, children }) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
-      <div className="w-full max-w-md">
-        {/* Brand header — logo only, title below */}
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background relative overflow-hidden">
+      {/* BBA-style ambient blobs */}
+      <div className="absolute top-[-20%] left-[10%] w-[400px] h-[400px] bg-brand-blue/10 rounded-full blur-[120px] pointer-events-none animate-blob-move" />
+      <div className="absolute bottom-[-20%] right-[10%] w-[400px] h-[400px] bg-brand-purple/10 rounded-full blur-[120px] pointer-events-none animate-blob-move" style={{ animationDelay: "4s" }} />
+      <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Brand header */}
         <div className="text-center mb-6">
           <div className="mx-auto w-16 h-16">
             <svg viewBox="0 0 200 244" xmlns="http://www.w3.org/2000/svg" fill="none" className="w-full h-full drop-shadow-lg">
@@ -24,12 +29,12 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
               <path d="M82 226 Q96 242 110 226 L104 218 L88 218 Z" fill="none" stroke="#C9A84C" strokeWidth="2"/>
             </svg>
           </div>
-          {title && <h1 className="text-lg font-bold mt-3 font-display">{title}</h1>}
+          {title && <h1 className="text-lg font-bold mt-3 font-heading">{title}</h1>}
           {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
         </div>
 
         {/* Card */}
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-2xl shadow-xl border border-border p-6">
           {children}
         </div>
 
