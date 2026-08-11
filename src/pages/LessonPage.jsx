@@ -410,9 +410,9 @@ export default function LessonPage() {
             {hasVideo ? (
               !user && !isGuestPreviewing ? <GuestVideoGate lesson={lesson} /> : <VideoPlayer lesson={lesson} />
             ) : (
-              <div className="bg-slate-900 py-12 px-6 flex flex-col items-center text-center">
+              <div className="bg-card py-12 px-6 flex flex-col items-center text-center">
                 <FileText className="w-12 h-12 text-primary mb-3" />
-                <p className="text-lg font-bold text-white">Reading Lesson</p>
+                <p className="text-lg font-bold text-foreground">Reading Lesson</p>
                 <p className="text-sm text-muted-foreground mt-1">Study notes below — no video for this lesson.</p>
               </div>
             )}
