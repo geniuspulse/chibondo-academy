@@ -107,7 +107,7 @@ export default function SubscriptionPage() {
 
         {/* Hero */}
         <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-center text-primary-foreground">
-          <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1">Unlock Every Lesson</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold mb-1">Unlock Every Lesson</h1>
           <p className="text-primary-foreground/70 text-sm max-w-md mx-auto">
             Pay your school fees to access all lessons, quizzes, past papers, and resources across every subject
           </p>
@@ -147,7 +147,7 @@ export default function SubscriptionPage() {
 
         {/* Pricing — compact rows */}
         <div className="space-y-3">
-          <h2 className="text-lg font-display font-semibold">Choose a Fee Period</h2>
+          <h2 className="text-lg font-heading font-semibold">Choose a Fee Period</h2>
           {plans.map(plan => {
             const isCurrent = hasPaidFees && currentPlan === plan.id;
             const PlanIcon = plan.icon;
