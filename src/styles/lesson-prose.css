@@ -1,3 +1,77 @@
+/* ═══════════════════════════════════════════════════════════════════
+   INLINE STYLE OVERRIDES — kill hardcoded light-mode colors from
+   legacy lesson content. These use !important because they must win
+   over inline style="" attributes, which otherwise beat any CSS rule.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Kill ALL hardcoded text colors — force theme inheritance */
+.lesson-content [style*="color"] {
+  color: inherit !important;
+}
+
+/* Kill ALL hardcoded backgrounds — light pastels become transparent */
+.lesson-content [style*="background"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Kill font-family overrides — use the app font */
+.lesson-content [style*="font-family"] {
+  font-family: inherit !important;
+}
+
+/* Kill max-width + margin:auto constraints from wrapper divs */
+.lesson-content [style*="max-width"] {
+  max-width: none !important;
+  margin: revert !important;
+  padding: revert !important;
+}
+
+/* ── Restore subtle dark-mode tints for callout-style boxes ──
+   These divs have border-left with a color. Give them back a subtle
+   tinted background using the primary accent (same as blockquote). */
+.lesson-content div[style*="border-left"],
+.lesson-content div[style*="border-left: 5px"],
+.lesson-content div[style*="border-left: 6px"] {
+  background: hsl(var(--primary) / 0.05) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* ── Highlighted/colored headings (h1/h2 with inline color) ──
+   These were accent-colored (green/blue). Make them use the primary accent. */
+.lesson-content h1[style*="color"],
+.lesson-content h2[style*="color"],
+.lesson-content h3[style*="color"] {
+  color: hsl(var(--primary)) !important;
+}
+
+/* ── Colored emphasis text (spans/strong with inline color) ── */
+.lesson-content strong[style*="color"],
+.lesson-content span[style*="color"],
+.lesson-content a[style*="color"] {
+  color: hsl(var(--primary)) !important;
+}
+
+/* ── Table cells that had light backgrounds ── */
+.lesson-content td[style*="background"],
+.lesson-content th[style*="background"] {
+  background: hsl(var(--muted)) !important;
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* ── Highlighted text spans (yellow markers etc.) ── */
+.lesson-content span[style*="background"],
+.lesson-content mark,
+.lesson-content [style*="fff4cc"],
+.lesson-content [style*="fff3cd"],
+.lesson-content [style*="ffeeba"],
+.lesson-content [style*="fef9e7"] {
+  background: hsl(var(--primary) / 0.15) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  padding: 0.1rem 0.3rem !important;
+  border-radius: 0.25rem !important;
+}
+
 /* Lesson content prose styles — matches BBA (Brandfletch Business Academy) design */
 
 .lesson-content h1, .lesson-content h2 {

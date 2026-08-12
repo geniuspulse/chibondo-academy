@@ -1,5 +1,5 @@
 import { SectionLoader } from '@/components/BrandedSpinner';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
@@ -7,139 +7,10 @@ import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileTe
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import LessonComments from '@/components/lesson/LessonComments';
+import { useMiniPlayer } from '@/contexts/MiniPlayerContext';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
 import '@/styles/lesson-prose.css';
-
-// ─── VIDEO UTILS ──
-function getYouTubeId(url) {
-  if (!url) return null;
-  for (const p of [/youtu\.be\/([^?#&]+)/, /youtube\.com\/watch\?v=([^?#&]+)/, /youtube\.com\/embed\/([^?#&]+)/, /youtube\.com\/v\/([^?#&]+)/, /youtube\.com\/shorts\/([^?#&]+)/]) {
-    const m = url.match(p); if (m) return m[1];
-  }
-  return null;
-}
-
-const EMBED_ALLOW = "accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share; screen-wake-lock";
-
-// ─── BUNNY PLAYER ──
-function BunnyPlayer({ videoUrl, lesson }) {
-  const [status, setStatus] = useState(null);
-  const match = videoUrl?.match(/iframe\.mediadelivery\.net\/embed\/([^/]+)\/([^?#]+)/);
-  const libraryId = match?.[1];
-  const videoId = match?.[2] || lesson?.bunny_video_id;
-  const apiKey = typeof window !== 'undefined' ? localStorage.getItem('bunny_api_key') : null;
-  const [pollCount, setPollCount] = useState(0);
-
-  useEffect(() => {
-    if (!libraryId || !videoId || !apiKey) { setStatus('ready'); return; }
-    let cancelled = false, timer = null;
-    async function check() {
-      try {
-        const r = await fetch(`/api/bunny?action=status&${new URLSearchParams({ libraryId, videoId, apiKey })}`);
-        if (!r.ok) { setStatus('ready'); return; }
-        const data = await r.json();
-        if (cancelled) return;
-        const st = data.status;
-        setStatus(st);
-        if ((st === 'encoding' || st === 'processing' || st === 'queued') && pollCount < 30) {
-          setPollCount(c => c + 1);
-          timer = setTimeout(check, 8000);
-        }
-      } catch { setStatus('ready'); }
-    }
-    check();
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [libraryId, videoId, apiKey, pollCount]);
-
-  if (status === null || status === 'encoding' || status === 'processing' || status === 'queued') {
-    return (
-      <div className="aspect-video bg-black w-full flex items-center justify-center">
-        <div className="text-center text-white/70 space-y-3">
-          <div className="w-8 h-8 mx-auto border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          <p className="text-sm font-medium">{status === null ? 'Loading video…' : 'Processing video…'}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'failed') {
-    return (
-      <div className="aspect-video bg-black w-full flex items-center justify-center">
-        <p className="text-sm text-red-400">Video encoding failed. Please contact your teacher.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="aspect-video bg-black w-full">
-      <iframe src={videoUrl} className="w-full h-full" allow={EMBED_ALLOW} allowFullScreen
-        referrerPolicy="strict-origin-when-cross-origin" title={lesson?.title || 'Video'} />
-    </div>
-  );
-}
-
-// ─── VIDEO PLAYER ──
-function VideoPlayer({ lesson }) {
-  const [videoError, setVideoError] = useState(false);
-  const { video_url, video_provider } = lesson;
-  if (!video_url) return null;
-
-  const ytId = getYouTubeId(video_url);
-  if (ytId) {
-    const params = 'rel=0&modestbranding=1&iv_load_policy=3&fs=1&playsinline=1&controls=1&origin=' + encodeURIComponent(window.location.origin);
-    return (
-      <div className="aspect-video bg-black w-full select-none" onContextMenu={e => e.preventDefault()}>
-        <iframe src={`https://www.youtube-nocookie.com/embed/${ytId}?${params}`}
-          className="w-full h-full pointer-events-auto" allow={EMBED_ALLOW} allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin" title={lesson.title} loading="lazy" />
-      </div>
-    );
-  }
-
-  if (video_provider === 'bunny' || video_url?.includes('iframe.mediadelivery.net') || video_url?.includes('b-cdn.net'))
-    return <BunnyPlayer videoUrl={video_url} lesson={lesson} />;
-
-  if (video_url?.includes('vimeo.com')) {
-    const vimeoId = video_url.match(/vimeo\.com\/(\d+)/)?.[1];
-    return (
-      <div className="aspect-video bg-black w-full">
-        <iframe src={vimeoId ? `https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0` : video_url}
-          className="w-full h-full" allow={EMBED_ALLOW} allowFullScreen referrerPolicy="strict-origin-when-cross-origin" title={lesson.title} />
-      </div>
-    );
-  }
-
-  if (video_url?.includes('loom.com')) {
-    return (
-      <div className="aspect-video bg-black w-full">
-        <iframe src={video_url.replace('loom.com/share/', 'loom.com/embed/')}
-          className="w-full h-full" allow={EMBED_ALLOW} allowFullScreen title={lesson.title} />
-      </div>
-    );
-  }
-
-  const isDirect = /\.(mp4|webm|ogg|ogv|mov|m4v|avi|mkv|3gp|flv)(\?|$)/i.test(video_url);
-  if (video_provider === 'upload' || isDirect) {
-    return (
-      <div className="aspect-video bg-black w-full">
-        <video src={video_url} controls className="w-full h-full" playsInline preload="metadata"
-          onError={() => setVideoError(true)}>
-          <source src={video_url} type="video/mp4" />
-          <source src={video_url} type="video/webm" />
-        </video>
-      </div>
-    );
-  }
-
-  return (
-    <div className="aspect-video bg-black w-full">
-      <iframe src={video_url} className="w-full h-full" allow={EMBED_ALLOW} allowFullScreen
-        referrerPolicy="strict-origin-when-cross-origin" title={lesson.title}
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation" />
-    </div>
-  );
-}
 
 // ─── MAIN ──
 export default function LessonPage() {
@@ -192,6 +63,25 @@ export default function LessonPage() {
   const autoPreviewIds = !hasExplicitPreviews ? allLessons.slice(0, 3).map(l => l.id) : [];
   const isPreviewLesson = lesson?.is_free || autoPreviewIds.includes(lessonId);
   const isGuestPreviewing = isPreviewLesson && !user;
+
+  // ── Mini-player: keep the video "alive" across navigation ──
+  const hasVideo = !!lesson?.video_url;
+  // Must mirror the locked-screen gating below: preview lessons are always OK;
+  // otherwise only a logged-in, paid-up user gets access. (Guests never get non-preview access.)
+  const hasVideoAccess = isPreviewLesson || (!!user && !isLocked);
+  const dockRef = useRef(null);
+  const { playLesson, registerDock } = useMiniPlayer();
+
+  useEffect(() => {
+    if (hasVideo && hasVideoAccess && lesson) playLesson(lesson);
+  }, [lesson?.id, hasVideo, hasVideoAccess]);
+
+  useEffect(() => {
+    if (hasVideo && hasVideoAccess && dockRef.current) {
+      registerDock(dockRef.current, lessonId);
+      return () => registerDock(null, lessonId);
+    }
+  }, [lessonId, hasVideo, hasVideoAccess]);
 
   const markCompleteMutation = useMutation({
     mutationFn: async () => {
@@ -278,7 +168,7 @@ export default function LessonPage() {
         </div>
         <h1 className="text-2xl font-heading font-bold mb-3">This Lesson is Locked</h1>
         <p className="text-muted-foreground mb-6">
-          Create a free account and subscribe to unlock all {allLessons.length} lessons in this subject.
+          Become a student and subscribe to unlock all {allLessons.length} lessons in this subject.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition">
@@ -296,7 +186,6 @@ export default function LessonPage() {
   const lessonTitle = lesson.seo_title || lesson.title;
   const lessonDesc = lesson.seo_description || (lesson.content || '').replace(/<[^>]+>/g, '').slice(0, 160) || `Watch and study: ${lesson.title}.`;
   const lessonUrl = `${window.location.origin}/lesson/${lessonId}`;
-  const hasVideo = !!lesson.video_url;
 
   return (
     <>
@@ -403,7 +292,7 @@ export default function LessonPage() {
                 <Link to="/register"><Button size="lg">Start Learning</Button></Link>
               </div>
             ) : (
-              <VideoPlayer lesson={lesson} />
+              <div ref={dockRef} className="w-full h-full" />
             )}
           </div>
         )}
@@ -472,7 +361,7 @@ export default function LessonPage() {
                     <div className="mt-4 rounded-xl p-6 text-center border border-primary bg-card shadow-lg">
                       <BookOpen className="w-10 h-10 mx-auto mb-3 text-primary" />
                       <p className="text-sm font-bold">Sign in to read the full notes</p>
-                      <p className="text-xs text-muted-foreground mb-4">Create a free account to access all lesson content</p>
+                      <p className="text-xs text-muted-foreground mb-4">Become a student to access all lesson content</p>
                       <div className="flex gap-3 justify-center flex-wrap">
                         <Link to="/register" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
                           Create Account
@@ -533,7 +422,7 @@ export default function LessonPage() {
               <div className="mb-6 bg-card border border-border rounded-xl p-4 sm:p-6 text-center">
                 <p className="text-base font-bold mb-2">Enjoying the lesson?</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Create a free account to unlock all {allLessons.length} lessons & track your progress
+                  Become a student to unlock all {allLessons.length} lessons & track your progress
                 </p>
                 <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
                   Become a Student

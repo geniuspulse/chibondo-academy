@@ -13,6 +13,7 @@ import { UploadProvider } from '@/lib/UploadContext';
 import RoleGuard from '@/components/RoleGuard';
 import { useOutletContext } from 'react-router-dom';
 import { captureReferralFromURL } from '@/lib/referralCookie';
+import { MiniPlayerProvider } from '@/contexts/MiniPlayerContext';
 
 // Default theme is DARK (BBA-inspired skeleton). Only switch to light if explicitly chosen.
 if (typeof window !== 'undefined') {
@@ -250,8 +251,10 @@ export default function App() {
       <AuthProvider>
         <UploadProvider>
           <Router>
-            <AppRoutes />
-            <Toaster />
+            <MiniPlayerProvider>
+              <AppRoutes />
+              <Toaster />
+            </MiniPlayerProvider>
           </Router>
         </UploadProvider>
       </AuthProvider>

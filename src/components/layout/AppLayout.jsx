@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import MobileSidebar from './MobileSidebar';
 import WhatsAppButton from '../WhatsAppButton';
+import GlobalVideoPlayer from '../lesson/GlobalVideoPlayer';
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => {
@@ -193,6 +194,7 @@ export default function AppLayout() {
 
   return (
     <>
+      <GlobalVideoPlayer />
       {/* Pull-to-refresh indicator — visible during pull and refresh */}
       <div
         className="fixed top-0 left-0 right-0 z-[9998] flex items-center justify-center pointer-events-none"
