@@ -21,7 +21,7 @@ export default function SubjectDetail() {
 
   const referralCode = user?.referral_code || (user?.id ? `CHIB-${user.id.slice(-6).toUpperCase()}` : '');
 
-  const { data: subject } = useQuery({
+  const { data: subject, isLoading: subjectLoading, isError: subjectError } = useQuery({
     queryKey: ['subject', subjectId],
     queryFn: async () => { const r = await db.entities.Subject.filter({ id: subjectId }); return r[0]; },
   });
@@ -132,9 +132,20 @@ export default function SubjectDetail() {
   const totalLessons = lessons.length;
   const progressPct = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
-  if (!subject) return (
+  if (subjectLoading) return (
     <div className="flex items-center justify-center py-20">
       <SectionLoader label="Loading subject…" />
+    </div>
+  );
+
+  if (!subject) return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <BookOpen className="w-16 h-16 text-muted-foreground/20 mb-4" />
+      <h2 className="font-heading text-lg font-bold mb-1">Subject not found</h2>
+      <p className="text-sm text-muted-foreground mb-4">This subject may have been removed or the link is incorrect.</p>
+      <Link to="/subjects" className="text-primary hover:underline text-sm flex items-center gap-1">
+        <ArrowLeft className="w-4 h-4" /> Back to all subjects
+      </Link>
     </div>
   );
 

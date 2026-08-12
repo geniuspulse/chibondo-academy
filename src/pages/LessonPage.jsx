@@ -195,7 +195,7 @@ export default function LessonPage() {
   const [showEnrollBanner, setShowEnrollBanner] = useState(false);
   const [previewTimerStarted, setPreviewTimerStarted] = useState(false);
 
-  const { data: lesson } = useQuery({
+  const { data: lesson, isLoading: lessonLoading } = useQuery({
     queryKey: ['lesson', lessonId],
     queryFn: async () => { const r = await db.entities.Lesson.filter({ id: lessonId }); return r[0]; },
   });
@@ -288,9 +288,20 @@ export default function LessonPage() {
   const lessonsByTopic = {};
   allLessons.forEach(l => { (lessonsByTopic[l.topic_id] ||= []).push(l); });
 
-  if (!lesson) return (
+  if (lessonLoading) return (
     <div className="flex items-center justify-center py-20">
       <SectionLoader label="Loading lesson…" />
+    </div>
+  );
+
+  if (!lesson) return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <BookOpen className="w-16 h-16 text-muted-foreground/20 mb-4" />
+      <h2 className="font-heading text-lg font-bold mb-1">Lesson not found</h2>
+      <p className="text-sm text-muted-foreground mb-4">This lesson may have been removed or the link is incorrect.</p>
+      <Link to="/subjects" className="text-primary hover:underline text-sm flex items-center gap-1">
+        <ArrowLeft className="w-4 h-4" /> Back to subjects
+      </Link>
     </div>
   );
 
