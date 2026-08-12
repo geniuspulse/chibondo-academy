@@ -135,12 +135,12 @@ async function sendOTP(req, res) {
   const token = generateToken();
   const verifyLink = `${APP_URL}/verify-link?t=${token}`;
 
-  // Store in otp_codes table (5-min expiry)
+  // Store in otp_codes table (15-min expiry)
   try {
     const storeRes = await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
       method: 'POST',
       headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-      body: JSON.stringify({ phone: cleanPhone, code, token, expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), used: false }),
+      body: JSON.stringify({ phone: cleanPhone, code, token, expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), used: false }),
     });
     if (!storeRes.ok) { console.error('Failed to store OTP:', await storeRes.text()); return res.status(500).json({ error: 'Failed to generate code' }); }
   } catch (err) { console.error('OTP store error:', err.message); return res.status(500).json({ error: 'Failed to generate code' }); }
@@ -196,7 +196,7 @@ async function sendOTP(req, res) {
       `*Chibondo Academy*\n\n` +
       `Your verification code is: *${code}*\n\n` +
       `Or tap to verify: ${verifyLink}\n\n` +
-      `Expires in 5 minutes. Do not share it with anyone.`;
+      `Expires in 15 minutes. Do not share it with anyone.`;
 
     const textRes = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${WA_PHONE_ID}/messages`, {
       method: 'POST',
@@ -618,7 +618,7 @@ async function generateLink(req, res) {
     headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify({
       phone: cleanPhone, code, token,
-      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       used: false,
     }),
   });
@@ -637,7 +637,7 @@ async function generateLink(req, res) {
     phone: cleanPhone,
     registered: userExists,
     name: userRows[0]?.full_name || null,
-    expires_in_seconds: 300,
+    expires_in_seconds: 900,
   });
 }
 
@@ -844,14 +844,14 @@ async function handleIncomingMessage(req, res) {
           const linkSuffix = isReset ? '&reset=true' : '';
           const verifyLink = `${APP_URL}/verify-link?t=${token}${linkSuffix}`;
 
-          // Store in otp_codes (5-min expiry) — check for errors so failures
+          // Store in otp_codes (15-min expiry) — check for errors so failures
           // are visible instead of silently swallowed
           const otpStoreRes = await fetch(`${SUPABASE_URL}/rest/v1/otp_codes`, {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
             body: JSON.stringify({
               phone: fromPhone, code, token,
-              expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+              expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
               used: false,
             }),
           });
@@ -868,7 +868,7 @@ async function handleIncomingMessage(req, res) {
             await sendTextReply(fromPhone,
               `Hi ${name}! 🔒\n\n` +
               `Tap here to set a new password:\n${verifyLink}\n\n` +
-              `Link expires in 5 minutes. Do not share it with anyone.`
+              `Link expires in 15 minutes. Do not share it with anyone.`
             );
             continue;
           }
@@ -889,20 +889,20 @@ async function handleIncomingMessage(req, res) {
                 await sendTextReply(fromPhone,
                   `Welcome to Chibondo Academy, ${regName}! 🎉\n\n` +
                   `Tap here to verify and log in:\n${verifyLink}\n\n` +
-                  `Link expires in 5 minutes.`
+                  `Link expires in 15 minutes.`
                 );
               } else {
                 await sendTextReply(fromPhone,
                   `Hi ${regName}! 👋\n\n` +
                   `Tap here to verify your number:\n${verifyLink}\n\n` +
-                  `Link expires in 5 minutes.`
+                  `Link expires in 15 minutes.`
                 );
               }
             } catch (regErr) {
               console.error('[wa-otp/webhook] register call failed:', regErr.message);
               await sendTextReply(fromPhone,
                 `Welcome! 🎓\n\nTap here to verify:\n${verifyLink}\n\n` +
-                `Expires in 5 minutes.`
+                `Expires in 15 minutes.`
               );
             }
           } else if (userRows.length > 0) {
@@ -910,7 +910,7 @@ async function handleIncomingMessage(req, res) {
             await sendTextReply(fromPhone,
               `Hi ${name}! 👋\n\n` +
               `Tap here to log in to Chibondo Academy:\n${verifyLink}\n\n` +
-              `Link expires in 5 minutes. Do not share it with anyone.`
+              `Link expires in 15 minutes. Do not share it with anyone.`
             );
           } else {
             await sendTextReply(fromPhone,
