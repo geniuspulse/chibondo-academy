@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
-import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileText, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileText, MessageSquare, List, X, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import LessonComments from '@/components/lesson/LessonComments';
@@ -153,7 +153,7 @@ export default function LessonPage() {
     queryFn: async () => { const r = await db.entities.Lesson.filter({ id: lessonId }); return r[0]; },
   });
 
-  const { data: allLessons = [] } = useQuery({
+  const { data: allLessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['subjectLessons', lesson?.subject_id],
     queryFn: async () => { try { return await db.entities.Lesson.filter({ subject_id: lesson.subject_id }, 'order', 200); } catch { return []; } },
     enabled: !!lesson?.subject_id,
@@ -222,6 +222,7 @@ export default function LessonPage() {
 
   const completedLessons = enrollment?.completed_lessons || [];
   const [activeTab, setActiveTab] = useState('content');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const currentIndex = allLessons.findIndex(l => l.id === lessonId);
   const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
@@ -247,8 +248,8 @@ export default function LessonPage() {
     </div>
   );
 
-  // ── Locked: user without fees ──
-  if (user && isLocked && !isPreviewLesson) {
+  // ── Locked: user without fees (wait for lessons to load first) ──
+  if (user && isLocked && !isPreviewLesson && !lessonsLoading && allLessons.length > 0) {
     return (
       <div className="max-w-2xl mx-auto py-20 px-4 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
@@ -268,8 +269,8 @@ export default function LessonPage() {
     );
   }
 
-  // ── Locked: guest on non-preview lesson ──
-  if (!user && !isPreviewLesson) {
+  // ── Locked: guest on non-preview lesson (wait for lessons to load first) ──
+  if (!user && !isPreviewLesson && !lessonsLoading && allLessons.length > 0) {
     return (
       <div className="max-w-2xl mx-auto py-20 px-4 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
@@ -304,17 +305,91 @@ export default function LessonPage() {
         keywords={lesson.seo_keywords || `${lesson.title}, MSCE, Chibondo Academy`} />
 
       <div className="max-w-4xl mx-auto py-6 px-4">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
-          <Link to="/subjects" className="hover:text-foreground transition">Subjects</Link>
-          <span>/</span>
-          <Link to={`/subjects/${lesson.subject_id}`} className="hover:text-foreground transition">
-            {subject?.name || lesson.subject_name || 'Course'}
-          </Link>
-          <span>/</span>
-          <span className="text-foreground truncate">{lesson.title}</span>
+        {/* Breadcrumb + Lesson Menu Toggle */}
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap min-w-0">
+            <Link to="/subjects" className="hover:text-foreground transition flex-shrink-0">Subjects</Link>
+            <span>/</span>
+            <Link to={`/subjects/${lesson.subject_id}`} className="hover:text-foreground transition flex-shrink-0 truncate">
+              {subject?.name || lesson.subject_name || 'Course'}
+            </Link>
+            <span>/</span>
+            <span className="text-foreground truncate">{lesson.title}</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+          >
+            <List className="w-4 h-4" />
+            <span className="hidden sm:inline">Lessons</span>
+          </button>
         </div>
 
+        {/* Sidebar + Main Content Layout */}
+        <div className="flex gap-6 relative">
+          {/* Lesson Sidebar */}
+          {sidebarOpen && (
+            <>
+              {/* Mobile backdrop */}
+              <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+              {/* Sidebar panel */}
+              <aside className="fixed lg:sticky top-0 lg:top-4 right-0 lg:right-auto w-80 max-w-[85vw] h-screen lg:h-[calc(100vh-2rem)] bg-card border-l lg:border lg:rounded-xl border-border z-50 overflow-y-auto p-4 flex-shrink-0">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <List className="w-4 h-4" />
+                    All Lessons
+                  </h3>
+                  <button onClick={() => setSidebarOpen(false)} className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  {allLessons.map((l, i) => {
+                    const lPreview = l.is_free || (!hasExplicitPreviews && i < 3);
+                    const lLocked = user ? (isLocked && !lPreview) : (!lPreview);
+                    const lCompleted = completedLessons.includes(l.id);
+                    const isCurrent = l.id === lessonId;
+                    return (
+                      <button
+                        key={l.id}
+                        onClick={() => {
+                          if (lLocked) {
+                            if (!user) navigate('/register');
+                            else navigate('/subscription');
+                            return;
+                          }
+                          navigate(`/lesson/${l.id}`);
+                          setSidebarOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors text-sm",
+                          isCurrent ? "bg-primary/10 text-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        )}
+                      >
+                        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                          {lCompleted ? (
+                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                          ) : lLocked ? (
+                            <Lock className="w-3.5 h-3.5" />
+                          ) : (
+                            <span className="text-[11px] font-bold text-muted-foreground/60">{i + 1}</span>
+                          )}
+                        </span>
+                        <span className="flex-1 min-w-0 truncate">{l.title}</span>
+                        {lPreview && !lCompleted && (
+                          <span className="flex-shrink-0 text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">FREE</span>
+                        )}
+                        {isCurrent && <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </aside>
+            </>
+          )}
+
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
         {/* Video Player */}
         {hasVideo && (
           <div className="mb-6 bg-black rounded-xl overflow-hidden aspect-video">
@@ -536,6 +611,8 @@ export default function LessonPage() {
               <CheckCircle2 className="w-5 h-5" />
             </Link>
           )}
+          </div>
+          </div>
         </div>
       </div>
     </>
