@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head><title>Diag</title></head>
+<body>
+<h1>Diagnostic</h1>
+<pre id="log"></pre>
+<script>
+const log = (msg) => { document.getElementById('log').textContent += msg + '\n'; };
+const URL = 'https://nckjjfxlmmsnmnexcgzg.supabase.co/rest/v1';
+const ANON = 'sb_publishable_YszBdQpXfPl7w-Ps9mhK_w_XuFUqKER';
+const TOKEN_KEY = 'aca_access_token';
+
+function getToken() {
+  try { return JSON.parse(localStorage.getItem(TOKEN_KEY) || 'null')?.access_token || null; } catch { return null; }
+}
+
+async function test() {
+  log('1. Token: ' + getToken());
+  log('2. ANON key: ' + ANON.substring(0, 20) + '...');
+  log('3. URL: ' + URL);
+  
+  try {
+    const token = getToken();
+    const auth = `Bearer ${token || ANON}`;
+    log('4. Auth header: ' + auth.substring(0, 30) + '...');
+    
+    const res = await fetch(`${URL}/subjects?order=order_num.asc&limit=100&status=eq.published`, {
+      method: 'GET',
+      headers: {
+        'apikey': ANON,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        'Authorization': auth
+      }
+    });
+    
+    log('5. Status: ' + res.status);
+    log('6. Headers: ' + JSON.stringify(Object.fromEntries(res.headers.entries())));
+    
+    if (!res.ok) {
+      const text = await res.text();
+      log('7. ERROR RESPONSE: ' + text);
+      return;
+    }
+    
+    const data = await res.json();
+    log('8. Success! Got ' + data.length + ' subjects');
+    log('9. First: ' + JSON.stringify(data[0]?.name));
+  } catch(e) {
+    log('EXCEPTION: ' + e.message + '\n' + e.stack);
+  }
+  
+  // Also test with no auth token
+  log('\n--- Test 2: No token, just anon key ---');
+  try {
+    const res2 = await fetch(`${URL}/subjects?order=order_num.asc&limit=100&status=eq.published`, {
+      method: 'GET',
+      headers: {
+        'apikey': ANON,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON}`
+      }
+    });
+    log('Status: ' + res2.status);
+    if (res2.ok) {
+      const data2 = await res2.json();
+      log('Got ' + data2.length + ' subjects');
+    } else {
+      log('Error: ' + await res2.text());
+    }
+  } catch(e2) {
+    log('EXCEPTION: ' + e2.message);
+  }
+  
+  // Check for service worker
+  log('\n--- Service Worker Check ---');
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    log('Registered SWs: ' + regs.length);
+    for (const r of regs) {
+      log('  SW: ' + r.active?.scriptURL + ' state: ' + r.active?.state);
+    }
+  } else {
+    log('No SW support');
+  }
+  
+  // Check localStorage
+  log('\n--- Storage ---');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.includes('aca_') || key.includes('supabase') || key.includes('token'))
+      log('  ' + key + ': ' + localStorage.getItem(key).substring(0, 80));
+  }
+}
+test();
+</script>
+</body></html>
