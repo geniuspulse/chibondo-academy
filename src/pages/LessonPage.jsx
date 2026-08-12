@@ -281,7 +281,7 @@ export default function LessonPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition">
-            Create Free Account
+            Become a Student
           </Link>
           <Link to={`/subjects/${lesson.subject_id}`} className="inline-block px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition">
             Back to Course
@@ -461,7 +461,7 @@ export default function LessonPage() {
                   Create a free account to unlock all {allLessons.length} lessons & track your progress
                 </p>
                 <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
-                  Create Free Account
+                  Become a Student
                 </Link>
                 <p className="text-center text-xs text-muted-foreground mt-3">
                   Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
@@ -488,7 +488,7 @@ export default function LessonPage() {
                 <p className="text-sm text-muted-foreground mb-4">Sign in to join the discussion</p>
                 <div className="flex gap-3 justify-center">
                   <Link to="/register" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
-                    Create Free Account
+                    Become a Student
                   </Link>
                   <Link to="/login" className="px-5 py-2.5 rounded-full border border-border text-muted-foreground hover:text-foreground transition text-sm font-medium">
                     Log in
