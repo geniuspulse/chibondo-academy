@@ -276,7 +276,7 @@ export default function SubjectDetail() {
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
               {totalLessons} lessons · {topicCount} topics
-              {firstLessonId && ' · 1 free preview'}
+              {(hasExplicitPreviews || autoPreviewIds.length > 0) && ' · free preview lessons'}
             </p>
           </div>
 
