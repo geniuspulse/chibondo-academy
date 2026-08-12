@@ -108,8 +108,11 @@ export default function SubjectDetail() {
   };
 
   const firstLesson = lessons.length > 0 ? lessons[0] : null;
+  const firstPreviewLesson = lessons.find(l => isPreviewLesson(l.id)) || firstLesson;
   const ctaConfig = !user
-    ? { label: 'Get Started', to: '/register' }
+    ? firstPreviewLesson
+      ? { label: 'Watch for Free', to: `/lesson/${firstPreviewLesson.id}` }
+      : { label: 'Get Started', to: '/register' }
     : !hasPaidFees
     ? { label: 'Pay Fees to Unlock', to: '/subscription' }
     : !isEnrolled

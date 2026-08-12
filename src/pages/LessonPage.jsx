@@ -436,16 +436,19 @@ export default function LessonPage() {
           </div>
         )}
 
-        {/* Guest CTA */}
+        {/* Guest CTA — BBA-style */}
         {!user && (
-          <div className="mb-6 bg-card border border-primary/30 rounded-xl p-6 text-center">
-            <p className="text-sm font-bold mb-2">Enjoying the lesson? 🎬</p>
-            <p className="text-xs text-muted-foreground mb-4">
+          <div className="mb-6 bg-card border border-border rounded-xl p-6 text-center">
+            <p className="text-base font-bold mb-2">Enjoying the lesson?</p>
+            <p className="text-sm text-muted-foreground mb-4">
               Create a free account to unlock all {allLessons.length} lessons & track your progress
             </p>
             <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
               Create Free Account
             </Link>
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
+            </p>
           </div>
         )}
 
