@@ -97,7 +97,7 @@ export default function SubjectsPage() {
         <div className="relative z-10">
         <h1 className="text-2xl font-heading font-bold mb-1 text-primary-foreground">All Subjects</h1>
         <p className="text-primary-foreground/70 text-sm">
-          {subjects.length} courses available · Choose your subjects and start learning
+          {isLoading ? 'Loading courses…' : `${subjects.length} courses available · Choose your subjects and start learning`}
         </p>
         <div className="relative mt-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

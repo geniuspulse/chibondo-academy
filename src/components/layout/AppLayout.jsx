@@ -57,8 +57,8 @@ export default function AppLayout() {
         throw err;
       }
     },
-    retry: 2,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5_000),
+    retry: 1,
+    retryDelay: 1000,
     staleTime: 30 * 60_000,  // 30 min — background re-check, but cached user shown in the meantime
     gcTime:    60 * 60_000,  // 60 min — keep in cache across navigation / tab switches
   });

@@ -91,7 +91,7 @@ export default function LibraryPage() {
         <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground">
           <h1 className="text-xl sm:text-2xl font-heading font-bold mb-1">Library</h1>
           <p className="text-primary-foreground/70 text-sm mb-4">
-            {validResources.length} resources · Books, past papers & exam tips for MSCE
+            {isLoading ? 'Loading resources…' : `${validResources.length} resources · Books, past papers & exam tips for MSCE`}
           </p>
 
           {/* Search integrated into hero */}
