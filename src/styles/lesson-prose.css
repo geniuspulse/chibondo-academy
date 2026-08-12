@@ -1,12 +1,144 @@
-.lesson-prose h1, .lesson-prose h2, .lesson-prose h3 { font-weight: 700; margin: 1.2em 0 0.5em; color: hsl(var(--foreground)); }
-.lesson-prose h2 { font-size: 1.2em; border-bottom: 2px solid hsl(var(--primary) / 0.3); padding-bottom: 0.3em; }
-.lesson-prose p { margin: 0.75em 0; line-height: 1.75; }
-.lesson-prose ul, .lesson-prose ol { margin: 0.75em 0 0.75em 1.5em; }
-.lesson-prose li { margin: 0.4em 0; }
-.lesson-prose strong { color: hsl(var(--primary)); }
-.lesson-prose table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.9em; }
-.lesson-prose th { background: hsl(var(--primary) / 0.1); padding: 0.5em 0.75em; border: 1px solid hsl(var(--border)); font-weight: 600; text-align: left; }
-.lesson-prose td { padding: 0.5em 0.75em; border: 1px solid hsl(var(--border)); }
-.lesson-prose code { background: hsl(var(--muted)); padding: 0.15em 0.4em; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
-.lesson-prose blockquote { border-left: 3px solid hsl(var(--primary)); padding-left: 1em; margin: 1em 0; color: hsl(var(--muted-foreground)); font-style: italic; }
-.lesson-prose img { max-width: 100%; border-radius: 8px; margin: 1em 0; }
+/* Lesson content prose styles — matches BBA (Brandfletch Business Academy) design */
+
+.lesson-content h1, .lesson-content h2 {
+  color: hsl(var(--foreground));
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.lesson-content h3 {
+  color: hsl(var(--foreground));
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.lesson-content h4, .lesson-content h5, .lesson-content h6 {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.lesson-content p {
+  color: hsl(var(--muted-foreground));
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
+}
+
+.lesson-content ul, .lesson-content ol {
+  color: hsl(var(--muted-foreground));
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.lesson-content ul {
+  list-style-type: disc;
+}
+
+.lesson-content ol {
+  list-style-type: decimal;
+}
+
+.lesson-content li {
+  margin-bottom: 0.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.lesson-content strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.lesson-content em {
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.lesson-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.lesson-content a:hover {
+  opacity: 0.8;
+}
+
+.lesson-content blockquote {
+  border-left: 3px solid hsl(var(--primary));
+  padding: 0.5rem 1rem;
+  margin: 1.5rem 0;
+  background: hsl(var(--primary) / 0.05);
+  border-radius: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.lesson-content code {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  color: hsl(var(--primary));
+}
+
+.lesson-content pre {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.lesson-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.lesson-content img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.lesson-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.lesson-content th, .lesson-content td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.lesson-content th {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.lesson-content hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 2rem 0;
+}
+
+.lesson-content iframe {
+  width: 100%;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+}
