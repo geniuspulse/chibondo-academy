@@ -185,9 +185,9 @@ const AppRoutes = () => {
         <Route path="/fees" element={<SubscriptionPage />} />
       <Route path="/pay-fees" element={<PayFees />} />
       <Route path="/pay-fees/:planId" element={<PayFees />} />
+      <Route path="/lesson/:lessonId" element={<LessonPage />} />
         {/* ── AUTHENTICATED-ONLY ROUTES (redirect to login if guest) ── */}
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-          <Route path="/lesson/:lessonId" element={<LessonPage />} />
           <Route path="/dashboard" element={<StudentDashboard />} />
           <Route path="/discussions" element={<DiscussionsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
