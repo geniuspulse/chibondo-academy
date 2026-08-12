@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
-import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import LessonComments from '@/components/lesson/LessonComments';
@@ -221,6 +221,7 @@ export default function LessonPage() {
   });
 
   const completedLessons = enrollment?.completed_lessons || [];
+  const [activeTab, setActiveTab] = useState('content');
   const currentIndex = allLessons.findIndex(l => l.id === lessonId);
   const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
@@ -341,123 +342,169 @@ export default function LessonPage() {
           </div>
         )}
 
-        {/* Lesson Content Card */}
-        <div className="bg-card border border-border rounded-xl p-6 sm:p-8 mb-6">
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
-              {isPreviewLesson && (
-                <span className="inline-block text-[10px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2 py-1 rounded mb-3">
-                  Free Preview
-                </span>
-              )}
-              <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-foreground">{lesson.title}</h1>
-              {lesson.description && (
-                <p className="text-sm text-muted-foreground mt-2">{lesson.description}</p>
-              )}
-            </div>
-          </div>
-
-          {/* HTML Content */}
-          {lesson.content ? (
-            !user && !isGuestPreviewing ? (
-              <div className="relative">
-                <div className="lesson-content pointer-events-none select-none"
-                  style={{ maxHeight: '8rem', overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)' }}
-                  dangerouslySetInnerHTML={{ __html: lesson.content }} />
-                <div className="mt-4 rounded-xl p-6 text-center border border-primary bg-card shadow-lg">
-                  <BookOpen className="w-10 h-10 mx-auto mb-3 text-primary" />
-                  <p className="text-sm font-bold">Sign in to read the full notes</p>
-                  <p className="text-xs text-muted-foreground mb-4">Create a free account to access all lesson content</p>
-                  <div className="flex gap-3 justify-center">
-                    <Link to="/register" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
-                      Create Account
-                    </Link>
-                    <Link to="/login" className="px-5 py-2.5 rounded-full border border-border text-muted-foreground hover:text-foreground transition text-sm font-medium">
-                      Log in
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="lesson-content" dangerouslySetInnerHTML={{ __html: lesson.content }} />
-            )
-          ) : (
-            <p className="text-muted-foreground">No content available for this lesson yet.</p>
+        {/* Lesson Title */}
+        <div className="mb-4">
+          {isPreviewLesson && (
+            <span className="inline-block text-[10px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2 py-1 rounded mb-2">
+              Free Preview
+            </span>
+          )}
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-heading font-extrabold text-foreground leading-tight">{lesson.title}</h1>
+          {lesson.description && (
+            <p className="text-sm text-muted-foreground mt-2">{lesson.description}</p>
           )}
         </div>
 
-        {/* Mark as Complete Button */}
-        {user && enrollment && (
-          <div className="mb-6">
-            <button
-              onClick={() => markCompleteMutation.mutate()}
-              disabled={markCompleteMutation.isPending}
-              className={cn(
-                "w-full sm:w-auto px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2",
-                isCompleted
-                  ? "bg-emerald-500/10 text-emerald-500 border-2 border-emerald-500/30 hover:bg-emerald-500/20"
-                  : "bg-emerald-500 text-black hover:bg-emerald-600"
-              )}
-            >
-              {markCompleteMutation.isPending ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : isCompleted ? (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  Completed — Mark as Incomplete
-                </>
+        {/* Tabs: Content | Discussion */}
+        <div className="mb-4 flex items-center gap-1 border-b border-border">
+          <button
+            onClick={() => setActiveTab('content')}
+            className={cn(
+              "flex items-center gap-2 px-4 sm:px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px",
+              activeTab === 'content'
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <BookOpen className="w-4 h-4" />
+            Content
+          </button>
+          <button
+            onClick={() => setActiveTab('discussion')}
+            className={cn(
+              "flex items-center gap-2 px-4 sm:px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px",
+              activeTab === 'discussion'
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Discussion
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'content' && (
+          <>
+            {/* Lesson Content Card */}
+            <div className="bg-card border border-border rounded-xl p-4 sm:p-6 lg:p-8 mb-6">
+              {lesson.content ? (
+                !user && !isGuestPreviewing ? (
+                  <div className="relative">
+                    <div className="lesson-content pointer-events-none select-none"
+                      style={{ maxHeight: '8rem', overflow: 'hidden', maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)' }}
+                      dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                    <div className="mt-4 rounded-xl p-6 text-center border border-primary bg-card shadow-lg">
+                      <BookOpen className="w-10 h-10 mx-auto mb-3 text-primary" />
+                      <p className="text-sm font-bold">Sign in to read the full notes</p>
+                      <p className="text-xs text-muted-foreground mb-4">Create a free account to access all lesson content</p>
+                      <div className="flex gap-3 justify-center flex-wrap">
+                        <Link to="/register" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
+                          Create Account
+                        </Link>
+                        <Link to="/login" className="px-5 py-2.5 rounded-full border border-border text-muted-foreground hover:text-foreground transition text-sm font-medium">
+                          Log in
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="lesson-content" dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                )
               ) : (
-                'Mark Lesson as Complete'
+                <p className="text-muted-foreground">No content available for this lesson yet.</p>
               )}
-            </button>
-          </div>
-        )}
-
-        {/* Progress indicator */}
-        {user && enrollment && allLessons.length > 0 && (
-          <div className="mb-6 flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
             </div>
-            <span className="font-semibold text-foreground whitespace-nowrap">{progressPct}%</span>
-          </div>
+
+            {/* Mark as Complete Button */}
+            {user && enrollment && (
+              <div className="mb-6">
+                <button
+                  onClick={() => markCompleteMutation.mutate()}
+                  disabled={markCompleteMutation.isPending}
+                  className={cn(
+                    "w-full sm:w-auto px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2",
+                    isCompleted
+                      ? "bg-emerald-500/10 text-emerald-500 border-2 border-emerald-500/30 hover:bg-emerald-500/20"
+                      : "bg-emerald-500 text-black hover:bg-emerald-600"
+                  )}
+                >
+                  {markCompleteMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : isCompleted ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      Completed — Mark as Incomplete
+                    </>
+                  ) : (
+                    'Mark Lesson as Complete'
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Progress indicator */}
+            {user && enrollment && allLessons.length > 0 && (
+              <div className="mb-6 flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+                </div>
+                <span className="font-semibold text-foreground whitespace-nowrap">{progressPct}%</span>
+              </div>
+            )}
+
+            {/* Guest CTA — BBA-style */}
+            {!user && (
+              <div className="mb-6 bg-card border border-border rounded-xl p-4 sm:p-6 text-center">
+                <p className="text-base font-bold mb-2">Enjoying the lesson?</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create a free account to unlock all {allLessons.length} lessons & track your progress
+                </p>
+                <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
+                  Create Free Account
+                </Link>
+                <p className="text-center text-xs text-muted-foreground mt-3">
+                  Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
+                </p>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Discussion / Comments */}
-        {user && (
-          <div className="mb-6">
-            <LessonComments
-              lessonId={lessonId}
-              lessonTitle={lesson.title}
-              lessonUrl={lessonUrl}
-              subjectId={lesson.subject_id}
-              user={user}
-            />
-          </div>
-        )}
-
-        {/* Guest CTA — BBA-style */}
-        {!user && (
-          <div className="mb-6 bg-card border border-border rounded-xl p-6 text-center">
-            <p className="text-base font-bold mb-2">Enjoying the lesson?</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a free account to unlock all {allLessons.length} lessons & track your progress
-            </p>
-            <Link to="/register" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
-              Create Free Account
-            </Link>
-            <p className="text-center text-xs text-muted-foreground mt-3">
-              Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
-            </p>
+        {/* Discussion Tab */}
+        {activeTab === 'discussion' && (
+          <div className="bg-card border border-border rounded-xl p-4 sm:p-6 lg:p-8 mb-6">
+            {user ? (
+              <LessonComments
+                lessonId={lessonId}
+                lessonTitle={lesson.title}
+                lessonUrl={lessonUrl}
+                subjectId={lesson.subject_id}
+                user={user}
+              />
+            ) : (
+              <div className="text-center py-10">
+                <MessageSquare className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground mb-4">Sign in to join the discussion</p>
+                <div className="flex gap-3 justify-center">
+                  <Link to="/register" className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition">
+                    Create Free Account
+                  </Link>
+                  <Link to="/login" className="px-5 py-2.5 rounded-full border border-border text-muted-foreground hover:text-foreground transition text-sm font-medium">
+                    Log in
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Prev/Next Navigation */}
-        <div className="flex items-center justify-between gap-4 pt-4 border-t border-border">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-4 border-t border-border">
           {prevLesson ? (
             <Link
               to={`/lesson/${prevLesson.id}`}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl bg-card border border-border hover:border-primary/50 transition group max-w-[45%]"
+              className="flex items-center gap-3 px-4 sm:px-5 py-3 rounded-xl bg-card border border-border hover:border-primary/50 transition group sm:max-w-[45%]"
             >
               <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition flex-shrink-0" />
               <div className="min-w-0">
@@ -472,7 +519,7 @@ export default function LessonPage() {
           {nextLesson ? (
             <Link
               to={`/lesson/${nextLesson.id}`}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl bg-card border border-border hover:border-primary/50 transition group max-w-[45%] text-right"
+              className="flex items-center gap-3 px-4 sm:px-5 py-3 rounded-xl bg-card border border-border hover:border-primary/50 transition group sm:max-w-[45%] sm:text-right"
             >
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Next</p>
@@ -483,7 +530,7 @@ export default function LessonPage() {
           ) : (
             <Link
               to={`/subjects/${lesson.subject_id}`}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl bg-emerald-500 text-black font-bold hover:bg-emerald-600 transition"
+              className="flex items-center justify-center gap-3 px-5 py-3 rounded-xl bg-emerald-500 text-black font-bold hover:bg-emerald-600 transition"
             >
               <span>Finish Course</span>
               <CheckCircle2 className="w-5 h-5" />

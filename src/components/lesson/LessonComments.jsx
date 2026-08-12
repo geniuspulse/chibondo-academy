@@ -321,13 +321,11 @@ export default function LessonComments({ lessonId, lessonTitle, lessonUrl, user,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['lessonComments', lessonId] });
       setNewComment('');
+      toast.success('Comment posted!');
     },
     onError: (err) => {
       console.error('[LessonComments] save error:', err);
       toast.error('Failed to post comment: ' + (err?.message || 'Unknown error'));
-    },
-    onSuccess: () => {
-      toast.success('Comment posted!');
     },
   });
 
