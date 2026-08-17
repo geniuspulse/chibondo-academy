@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import MobileSidebar from './MobileSidebar';
 import WhatsAppButton from '../WhatsAppButton';
+import ExpiryBanner from '../ExpiryBanner';
 import GlobalVideoPlayer from '../lesson/GlobalVideoPlayer';
 
 export default function AppLayout() {
@@ -287,6 +288,11 @@ export default function AppLayout() {
             notificationCount={notifications.length}
             onMenuClick={() => setMobileOpen(true)}
           />
+        {enrichedUser && enrichedUser.role === 'user' && (
+          <div className="px-4 lg:px-6 pt-2 max-w-7xl mx-auto w-full">
+            <ExpiryBanner />
+          </div>
+        )}
         <main key={location.pathname} className={isChatPage ? "chat-main-layout" : "flex-1 p-4 lg:p-6 pb-24 lg:pb-6 w-full max-w-7xl mx-auto page-enter"}>
           <Outlet context={{ user: enrichedUser, notifications }} />
           <WhatsAppButton />

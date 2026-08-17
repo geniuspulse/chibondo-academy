@@ -3,12 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/supabaseClient';
-import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileText, MessageSquare, List, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, Lock, PlayCircle, FileText, MessageSquare, List, X, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import LessonComments from '@/components/lesson/LessonComments';
 import { useMiniPlayer } from '@/contexts/MiniPlayerContext';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/hooks/useSubscription';
+import ExpiryBanner from '@/components/ExpiryBanner';
 import SEO from '@/components/SEO';
 import '@/styles/lesson-prose.css';
 
@@ -42,20 +44,7 @@ export default function LessonPage() {
     enabled: !!user?.id && !!lesson?.subject_id,
   });
 
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const r = await db.entities.Subscription.filter({ student_id: user.id, status: 'active' });
-      if (!r[0]) return null;
-      const sub = r[0];
-      if ((sub.expires_at || sub.end_date) && new Date(sub.expires_at || sub.end_date) < new Date()) return null;
-      return sub;
-    },
-    enabled: !!user?.id,
-  });
-
-  const hasPaidFees = !!subscription;
+  const { isExpired, hasPaidFees } = useSubscription(user?.id);
   const isLocked = !!user && !hasPaidFees;
 
   // ── Lesson Preview Feature ──
@@ -143,13 +132,19 @@ export default function LessonPage() {
     return (
       <div className="max-w-2xl mx-auto py-20 px-4 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
-          <Lock className="w-8 h-8 text-primary" />
+          {isExpired ? <AlertTriangle className="w-8 h-8 text-destructive" /> : <Lock className="w-8 h-8 text-primary" />}
         </div>
-        <h1 className="text-2xl font-heading font-bold mb-3">This Lesson is Locked</h1>
-        <p className="text-muted-foreground mb-6">Pay your school fees to unlock all lessons and content.</p>
+        <h1 className="text-2xl font-heading font-bold mb-3">
+          {isExpired ? 'Your Subscription Has Expired' : 'This Lesson is Locked'}
+        </h1>
+        <p className="text-muted-foreground mb-6">
+          {isExpired
+            ? 'Your school fees subscription has expired. Renew to regain access to all lessons and content.'
+            : 'Pay your school fees to unlock all lessons and content.'}
+        </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/subscription" className="inline-block px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition">
-            Pay Fees Now
+            {isExpired ? 'Renew Now' : 'Pay Fees Now'}
           </Link>
           <Link to={`/subjects/${lesson.subject_id}`} className="inline-block px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition">
             Back to Course

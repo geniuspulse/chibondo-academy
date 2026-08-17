@@ -61,7 +61,7 @@ export default function StudentDashboard() {
             }
           } catch (err) { console.warn('Frontend referral tracking failed:', err); }
         })()
-      .then(() => console.log("✅ Referral tracked:", pendingCode))
+      
       .catch(err => console.warn("Referral tracking failed:", err));
   }, [user?.id]);
 
@@ -79,7 +79,12 @@ export default function StudentDashboard() {
     queryFn: async () => {
       if (!userId) return null;
       const results = await db.entities.Subscription.filter({ student_id: userId, status: 'active' });
-      return results[0] || null;
+      if (!results || results.length === 0) return null;
+      const sub = results[0];
+      const expiry = sub.expires_at || sub.end_date;
+      if (expiry && new Date(expiry) < new Date()) return null;
+      if (!expiry && sub.plan && sub.plan !== 'free') return null;
+      return sub;
     },
     enabled: !!userId,
     staleTime: 60_000,

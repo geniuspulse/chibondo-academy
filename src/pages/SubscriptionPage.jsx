@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Check, Zap, Crown, Loader2, BookOpen, Calendar, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/hooks/useSubscription';
+import { AlertTriangle } from 'lucide-react';
 import SEO from '@/components/SEO';
 
 export default function SubscriptionPage() {
@@ -28,22 +30,7 @@ export default function SubscriptionPage() {
     staleTime: 5 * 60_000,
   });
 
-  const { data: subscription, refetch: refetchSubscription } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const results = await db.entities.Subscription.filter({ student_id: user.id, status: 'active' });
-      return results[0] || null;
-    },
-    enabled: !!user?.id,
-  });
-
-  const hasPaidFees = subscription && subscription.status === 'active';
-  const subDaysLeft = (() => {
-    const expiry = subscription?.expires_at || subscription?.end_date;
-    if (!expiry) return null;
-    return Math.ceil((new Date(expiry) - new Date()) / 86400000);
-  })();
+  const { subscription, isExpired, hasPaidFees, daysLeft: subDaysLeft } = useSubscription(user?.id);
 
   // PayChangu return redirect verification
   useEffect(() => {
@@ -118,6 +105,24 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
+        {/* Expired subscription — prominent renewal notice */}
+        {isExpired && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <div>
+                <p className="font-semibold text-sm text-destructive">Subscription Expired</p>
+                <p className="text-xs text-muted-foreground">
+                  Your access to lessons has been suspended. Renew to continue learning.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => document.getElementById('pricing-cards')?.scrollIntoView({ behavior: 'smooth' })}>
+              Renew Now
+            </Button>
+          </div>
+        )}
+
         {/* Active subscription — simple status */}
         {hasPaidFees && (
           <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between">
@@ -127,9 +132,9 @@ export default function SubscriptionPage() {
                 <p className="font-semibold text-sm">
                   {subscription.plan === 'trial' ? 'Trial' : 'Active'} — {subscription.plan}
                 </p>
-                {subDaysLeft !== null && (
+                {subDaysLeft !== null && subDaysLeft > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {subDaysLeft > 0 ? `${subDaysLeft} days remaining` : 'Expired'}
+                    {subDaysLeft} days remaining
                   </p>
                 )}
               </div>

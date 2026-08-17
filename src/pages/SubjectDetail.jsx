@@ -10,6 +10,9 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/hooks/useSubscription';
+import ExpiryBanner from '@/components/ExpiryBanner';
+import { AlertTriangle } from 'lucide-react';
 
 export default function SubjectDetail() {
   const { subjectId } = useParams();
@@ -46,21 +49,11 @@ export default function SubjectDetail() {
     enabled: !!user?.id,
   });
 
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const r = await db.entities.Subscription.filter({ student_id: user.id, status: 'active' });
-      if (!r[0]) return null;
-      const sub = r[0];
-      if ((sub.expires_at || sub.end_date) && new Date(sub.expires_at || sub.end_date) < new Date()) return null;
-      return sub;
-    },
-    enabled: !!user?.id,
-  });
-
-  const hasPaidFees = !!subscription;
+  const { isExpired, hasPaidFees } = useSubscription(user?.id);
   const isEnrolled = !!enrollment || justEnrolled;
+
+  // ── Expiry / Renewal banner ──
+  // (rendered in the page body below)
 
   // ── Lesson preview logic ──
   // Preview lessons are marked with is_free=true in the course builder.
@@ -405,8 +398,27 @@ export default function SubjectDetail() {
           </div>
         </div>
 
-        {/* Subscribe banner for non-paying users */}
-        {user && !hasPaidFees && (
+        {/* Expiry banner for expired subscriptions */}
+        {user && !hasPaidFees && isExpired && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-5 text-center">
+            <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center mx-auto mb-3">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+            <h3 className="font-heading font-bold text-base mb-1">Your Subscription Has Expired</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Renew your subscription to regain access to all {totalLessons} lessons, quizzes, and past papers.
+            </p>
+            <Button
+              onClick={() => navigate('/subscription')}
+              className="px-6 py-3 rounded-full bg-destructive text-destructive-foreground font-bold hover:opacity-90 transition-all"
+            >
+              Renew Now
+            </Button>
+          </div>
+        )}
+
+        {/* Subscribe banner for non-paying users (not expired, just never paid) */}
+        {user && !hasPaidFees && !isExpired && (
           <div className="bg-card border border-primary/30 rounded-2xl p-5 text-center">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6 text-primary" />

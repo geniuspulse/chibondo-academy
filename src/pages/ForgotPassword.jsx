@@ -155,7 +155,7 @@ export default function ForgotPassword() {
     if (digits.length < 9) return setError("Please enter a valid phone number");
 
     setSent(true);
-    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || "265991234567";
+    const bizNumber = import.meta.env.VITE_WA_BUSINESS_NUMBER || "265997353102";
     const prefilled = encodeURIComponent("Reset");
     window.location.href = `https://wa.me/${bizNumber}?text=${prefilled}`;
   };
